@@ -1,0 +1,48 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The live site is published to the root of the `gh-pages` branch, which
+# GitHub Pages serves (Settings → Pages → Source: Deploy from a branch →
+# gh-pages, / (root)). Pull-request previews live beside it in pr-preview/
+# (see preview.yml) and are left untouched here.
+permissions:
+  contents: write
+
+# One deploy at a time; don't cancel an in-progress one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run check
+
+      # Served at https://<user>.github.io/<repo>/. Routing is in the hash, so
+      # the base path only matters for asset URLs and no 404 fallback is needed.
+      - name: Build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - name: Publish to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean-exclude: pr-preview/
+          force: false
