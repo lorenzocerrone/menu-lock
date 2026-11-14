@@ -165,7 +165,13 @@ kinds of change).
 - A change that can't be read in a link is dropped; the rest of the plan is kept.
 - "View recipe" from a planned meal opens `#/recipe/<id>?meal=<date>.<position>`, which
   shows that meal's servings and changes; the steps are always the recipe's own words.
-- The meal's sheet has "Change ingredients"; the plan says "changed" beside the meal.
+- The meal's sheet reads top to bottom as the meal itself: when it is, how long it
+  takes, the recipe's description, the servings, then its ingredients as this meal has
+  them. Tapping an ingredient changes it in place. What is done to the meal as a whole
+  (view the recipe and steps, move, remove) comes last. (The user found the first
+  version, a sheet of actions with "Change ingredients" hidden behind a row, too blank:
+  you were asked to change ingredients you could not see.)
+- The plan says "changed" beside a meal that has changes.
 
 ## Phase 5: PWA and cutover (2026-11-14)
 

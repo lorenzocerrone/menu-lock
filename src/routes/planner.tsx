@@ -23,12 +23,12 @@ import { DATA } from "../dataset";
 import { type IsoDate, planDays, WEEKDAY_SHORT, weekday, ymd } from "../lib/dates";
 import {
 	formatAddedTo,
-	formatCount,
 	formatDate,
 	formatDay,
 	formatMealDetails,
 	formatMovedTo,
 	formatPlanCaption,
+	formatTotalTime,
 	formatUnknownRecipe,
 } from "../lib/format";
 import { day, isEmpty, isNote, lastDate, type MealEntry, mealCount } from "../lib/plan";
@@ -220,7 +220,7 @@ function MealSheet({
 	const today = useApp((s) => s.today);
 	const { setServings, reorderMeal, moveMeal, removeMeal, setNoteBuy, changeMeal, resetChange } =
 		useApp((s) => s);
-	const [view, setView] = useState<"meal" | "move" | "changes">("meal");
+	const [moving, setMoving] = useState(false);
 	const meals = day(plan, place.date);
 	const entry = meals[place.index];
 	if (!entry) return null;
@@ -230,7 +230,7 @@ function MealSheet({
 		onPlace({ date: place.date, index: place.index + by });
 	};
 
-	if (view === "move") {
+	if (moving) {
 		return (
 			<Sheet open onClose={onClose} title="Move to…">
 				<DayPicker
@@ -245,50 +245,20 @@ function MealSheet({
 			</Sheet>
 		);
 	}
-	if (view === "changes" && recipe && !isNote(entry)) {
-		return (
-			<Sheet open onClose={onClose} title="Change ingredients">
-				<MealChanges
-					recipe={recipe}
-					meal={entry}
-					onChange={(change) => changeMeal(place.date, place.index, change)}
-					onReset={(key) => resetChange(place.date, place.index, key)}
-					onBack={() => setView("meal")}
-				/>
-			</Sheet>
-		);
-	}
-	return (
-		<Sheet open onClose={onClose} title={mealTitle(entry)}>
-			<p className="font-mono text-muted text-xs">{formatDay(place.date, today)}</p>
-			{recipe && !isNote(entry) ? (
-				<>
-					<div className="flex min-h-14 items-center justify-between gap-3 border-rule-soft border-b">
-						<span>Servings</span>
-						<Stepper
-							value={entry.servings ?? recipe.servings}
-							onChange={(n) => setServings(place.date, place.index, n)}
-							label="Servings"
-						/>
-					</div>
-					<button type="button" onClick={() => setView("changes")} className={rowButton}>
-						Change ingredients
-						<span className="font-mono text-muted text-xs">
-							{entry.changes?.length ? `${formatCount(entry.changes.length, "change")} ›` : "›"}
-						</span>
-					</button>
-				</>
-			) : null}
-			{isNote(entry) ? (
-				<button
-					type="button"
-					aria-pressed={entry.buy ?? false}
-					onClick={() => setNoteBuy(place.date, place.index, !entry.buy)}
+
+	/** What can be done with the meal as a whole: under everything there is to read. */
+	const actions = (
+		<div className="mt-5 border-rule-soft border-t">
+			{recipe ? (
+				<Link
+					to="/recipe/$id"
+					params={{ id: recipe.id }}
+					// The recipe as this meal has it: its servings and its changes.
+					search={(prev) => ({ ...prev, meal: `${place.date}.${place.index}` })}
 					className={rowButton}
 				>
-					Also on the grocery list
-					<Stamp on={entry.buy ?? false} />
-				</button>
+					View recipe and steps <span className="font-mono text-muted">›</span>
+				</Link>
 			) : null}
 			<button
 				type="button"
@@ -306,20 +276,9 @@ function MealSheet({
 			>
 				Move down <span className="font-mono text-muted">↓</span>
 			</button>
-			<button type="button" onClick={() => setView("move")} className={rowButton}>
+			<button type="button" onClick={() => setMoving(true)} className={rowButton}>
 				Move to… <span className="font-mono text-muted">›</span>
 			</button>
-			{recipe ? (
-				<Link
-					to="/recipe/$id"
-					params={{ id: recipe.id }}
-					// The recipe as this meal has it: its servings and its changes.
-					search={(prev) => ({ ...prev, meal: `${place.date}.${place.index}` })}
-					className={rowButton}
-				>
-					View recipe <span className="font-mono text-muted">›</span>
-				</Link>
-			) : null}
 			<button
 				type="button"
 				onClick={() => {
@@ -330,6 +289,57 @@ function MealSheet({
 			>
 				Remove
 			</button>
+		</div>
+	);
+	const when = formatDay(place.date, today);
+
+	// A recipe: what it is, for how many, and its ingredients (each one tappable to change it).
+	if (recipe && !isNote(entry)) {
+		return (
+			<Sheet open onClose={onClose} title={recipe.title}>
+				<MealChanges
+					recipe={recipe}
+					meal={entry}
+					onChange={(change) => changeMeal(place.date, place.index, change)}
+					onReset={(key) => resetChange(place.date, place.index, key)}
+					header={
+						<>
+							<p className="font-mono text-muted text-xs">
+								{[when, formatTotalTime(recipe), recipe.cuisine].filter(Boolean).join(" · ")}
+							</p>
+							{recipe.description ? <p className="mt-2">{recipe.description}</p> : null}
+							<div className="mt-3 flex min-h-14 items-center justify-between gap-3 border-rule-soft border-y">
+								<span>Servings</span>
+								<Stepper
+									value={entry.servings ?? recipe.servings}
+									onChange={(n) => setServings(place.date, place.index, n)}
+									label="Servings"
+								/>
+							</div>
+						</>
+					}
+					footer={actions}
+				/>
+			</Sheet>
+		);
+	}
+
+	// Something that is not a recipe, or a recipe this build doesn't know.
+	return (
+		<Sheet open onClose={onClose} title={mealTitle(entry)}>
+			<p className="font-mono text-muted text-xs">{when}</p>
+			{isNote(entry) ? (
+				<button
+					type="button"
+					aria-pressed={entry.buy ?? false}
+					onClick={() => setNoteBuy(place.date, place.index, !entry.buy)}
+					className={`${rowButton} mt-2`}
+				>
+					Also on the grocery list
+					<Stamp on={entry.buy ?? false} />
+				</button>
+			) : null}
+			{actions}
 		</Sheet>
 	);
 }

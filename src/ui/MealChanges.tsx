@@ -1,14 +1,15 @@
 /**
- * Change a planned meal's ingredients, for that meal only: swap one, leave one
- * out, use more or less, add one. Shown inside the meal's sheet. Amounts are
- * shown for the meal's servings and stored for the recipe's own.
+ * A planned meal's ingredients, in its sheet: the list as this meal has it, and,
+ * by tapping a line, the changes for that meal only (swap one, leave one out,
+ * use more or less, add one). Amounts are shown for the meal's servings and
+ * stored for the recipe's own.
  */
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { DATA } from "../dataset";
 import { applyChanges, type PlannedLine } from "../lib/changes";
 import type { Recipe } from "../lib/data";
 import { parseNumber, suggest } from "../lib/extras";
-import { formatAmountInput, formatLineAmount, formatLineChange } from "../lib/format";
+import { formatAmountInput, formatCount, formatLineAmount, formatLineChange } from "../lib/format";
 import type { MealChange, RecipeMeal } from "../lib/plan";
 import { convertibleUnits } from "../lib/units";
 import { buttonDanger, buttonPaper, buttonPrimary, input, rowButton } from "./styles";
@@ -20,8 +21,10 @@ type Props = {
 	onChange: (change: MealChange) => void;
 	/** Put an ingredient back to the recipe's own. */
 	onReset: (key: string) => void;
-	/** Leave the ingredient list (back to the meal). */
-	onBack: () => void;
+	/** Shown above the ingredient list (the meal's summary), but not while one ingredient is being edited. */
+	header?: ReactNode;
+	/** Shown under the ingredient list (the meal's other actions), likewise. */
+	footer?: ReactNode;
 };
 
 /** The recipe ingredient a line stands for: itself, or the one it was swapped in for. */
@@ -199,14 +202,14 @@ type View =
 	| { at: "add" };
 
 export function MealChanges(props: Props) {
-	const { recipe, meal, onChange, onReset, onBack } = props;
+	const { recipe, meal, onChange, onReset, header, footer } = props;
 	const [view, setView] = useState<View>({ at: "list" });
 	const { lines, skipped } = applyChanges(recipe, meal.changes, DATA.dictionary);
 	const servings = meal.servings ?? recipe.servings;
 	const inMeal = new Set([...lines.map((l) => l.key), ...recipe.lines.map((l) => l.key)]);
 	const back = (
 		<button type="button" onClick={() => setView({ at: "list" })} className={`${buttonPaper} mb-4`}>
-			‹ Ingredients
+			‹ {recipe.title}
 		</button>
 	);
 
@@ -253,12 +256,16 @@ export function MealChanges(props: Props) {
 
 	return (
 		<>
-			<button type="button" onClick={onBack} className={`${buttonPaper} mb-4`}>
-				‹ {recipe.title}
-			</button>
-			<p className="mb-2 text-muted">
-				For this meal only. The recipe stays as it is; the grocery list follows.
-			</p>
+			{header}
+			<div className="mt-5 flex items-baseline justify-between gap-3">
+				<h3 className="font-bold text-lg">Ingredients</h3>
+				{meal.changes?.length ? (
+					<span className="font-mono text-sienna text-xs">
+						{formatCount(meal.changes.length, "change")}
+					</span>
+				) : null}
+			</div>
+			<p className="mb-1 font-mono text-muted text-xs">Tap one to change it, for this meal only.</p>
 			<ul aria-label="Ingredients of this meal">
 				{lines.map((line, i) => (
 					<li key={i}>
@@ -300,6 +307,7 @@ export function MealChanges(props: Props) {
 			>
 				+ Add an ingredient
 			</button>
+			{footer}
 		</>
 	);
 }

@@ -30,7 +30,7 @@ test("something that is not a recipe goes on a day, to buy or not", async ({ pag
 	await expect(row(page, "Frozen pizza")).toBeVisible();
 	await page.getByRole("link", { name: "Plan" }).click();
 	await today.getByRole("button", { name: /^Frozen pizza/ }).click();
-	await expect(dialog.getByRole("button", { name: /Change ingredients/ })).toHaveCount(0);
+	await expect(dialog.getByRole("list", { name: "Ingredients of this meal" })).toHaveCount(0);
 	await dialog.getByRole("button", { name: /Also on the grocery list/ }).click();
 	await dialog.getByRole("button", { name: "Close" }).click();
 	await expect(today.getByRole("listitem").first()).not.toContainText("to buy");
@@ -45,8 +45,14 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 	const dialog = page.getByRole("dialog");
 	const lines = dialog.getByRole("list", { name: "Ingredients of this meal" });
 
+	// The meal's sheet says what the meal is before anything else: summary, servings, ingredients.
 	await today.getByRole("button", { name: "Lentil Dal", exact: true }).click();
-	await dialog.getByRole("button", { name: /Change ingredients/ }).click();
+	await expect(dialog.getByText(/Creamy spiced red lentils/)).toBeVisible();
+	await expect(dialog.getByText(/^Today · 40 min · Indian$/)).toBeVisible();
+	await expect(lines.getByRole("button", { name: /^Garlic/ })).toContainText("3 cloves");
+	await dialog.getByRole("button", { name: "More servings" }).click();
+	await expect(lines.getByRole("button", { name: /^Garlic/ })).toContainText("3.75 cloves");
+	await dialog.getByRole("button", { name: "Fewer servings" }).click();
 
 	// Swap: onion for red onion, keeping "1".
 	await lines.getByRole("button", { name: /^Onion/ }).click();
@@ -80,12 +86,8 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 	await lines.getByRole("button", { name: /^Lentils/ }).click();
 	await dialog.getByLabel("Amount").fill("lots");
 	await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
-	await dialog.getByRole("button", { name: "‹ Ingredients" }).click();
-
 	await dialog.getByRole("button", { name: "‹ Lentil Dal" }).click();
-	await expect(dialog.getByRole("button", { name: /Change ingredients/ })).toContainText(
-		"4 changes",
-	);
+	await expect(dialog.getByText("4 changes")).toBeVisible();
 	await dialog.getByRole("button", { name: "Close" }).click();
 	await expect(today.getByRole("listitem").first()).toContainText("changed");
 
@@ -124,7 +126,6 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 		.first()
 		.getByRole("button", { name: /^Lentil Dal/ })
 		.click();
-	await dialog.getByRole("button", { name: /Change ingredients/ }).click();
 	await lines.getByRole("button", { name: /^Salt/ }).click(); // put back
 	await expect(lines.getByRole("button", { name: /^Salt/ })).toContainText("to taste");
 	await lines.getByRole("button", { name: /^Red onion/ }).click();
@@ -133,10 +134,7 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 	await lines.getByRole("button", { name: /^Lemon/ }).click();
 	await dialog.getByRole("button", { name: "Remove" }).click();
 	await expect(lines.getByRole("button", { name: /^Lemon/ })).toHaveCount(0);
-	await dialog.getByRole("button", { name: "‹ Lentil Dal" }).click();
-	await expect(dialog.getByRole("button", { name: /Change ingredients/ })).toContainText(
-		"1 change",
-	);
+	await expect(dialog.getByText("1 change", { exact: true })).toBeVisible();
 });
 
 test("a meal's amounts are edited for its servings", async ({ page }) => {
@@ -148,7 +146,6 @@ test("a meal's amounts are edited for its servings", async ({ page }) => {
 		.first()
 		.getByRole("button", { name: /^Lentil Dal/ })
 		.click();
-	await dialog.getByRole("button", { name: /Change ingredients/ }).click();
 	const lines = dialog.getByRole("list", { name: "Ingredients of this meal" });
 	await lines.getByRole("button", { name: /^Garlic/ }).click();
 	await expect(dialog.getByLabel("Amount")).toHaveValue("6");
