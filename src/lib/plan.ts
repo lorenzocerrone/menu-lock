@@ -19,7 +19,14 @@ export type MealChange =
 	/** More or less of it. */
 	| { kind: "set"; key: string; amount?: number; unit?: string }
 	/** An ingredient the recipe doesn't have. */
-	| { kind: "add"; key: string; amount?: number; unit?: string };
+	| { kind: "add"; key: string; amount?: number; unit?: string }
+	/**
+	 * Use something that is not in the dictionary instead, as typed. Its quantity
+	 * is free text: shown as written, never scaled or added up.
+	 */
+	| { kind: "swapFree"; key: string; name: string; quantity: string | null }
+	/** Add something that is not in the dictionary, as typed. `key` is `custom:<name>`. */
+	| { kind: "addFree"; key: string; name: string; quantity: string | null };
 
 /** A planned recipe. `servings` absent means the recipe's own; `changes` absent means none. */
 export type RecipeMeal = { recipe: string; servings?: number; changes?: MealChange[] };

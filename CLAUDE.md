@@ -64,8 +64,10 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
   `docs/decisions.md`. This ends when the user says people rely on the app.
 - Recipe ids and ingredient keys are in share links and in plans; rename one only with
   a reason, and update every recipe and test that uses it.
-- **Closed-world ingredients**: every recipe line references a dictionary key and
-  converts into that ingredient's shopping unit, or validation fails.
+- **Closed-world ingredients in recipe files**: every recipe line references a
+  dictionary key and converts into that ingredient's shopping unit, or validation
+  fails. Only a planned meal's changes and the grocery extras may name something that
+  is not in the dictionary, kept as typed.
 - Routing is in the hash; `plan` is retained on every route by the root route's search
   middleware. Use `<Link to="…">`, never hand-built hrefs.
 - Colours and fonts come from `src/styles/tokens.css` (Tailwind utilities `bg-paper`,

@@ -6,8 +6,8 @@ import type { Recipe } from "../lib/data";
 import type { IsoDate } from "../lib/dates";
 import {
 	formatAddedTo,
-	formatLineAmount,
 	formatLineChange,
+	formatPlannedAmount,
 	formatPlannedFor,
 	formatStepNumber,
 	formatTiming,
@@ -144,7 +144,7 @@ function RecipeView({ recipe, planned }: { recipe: Recipe; planned: Planned | nu
 							</span>
 							<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
 							<span className="shrink-0 font-mono text-sm">
-								<Roll>{formatLineAmount(line, servings, recipe.servings)}</Roll>
+								<Roll>{formatPlannedAmount(line, servings, recipe.servings)}</Roll>
 							</span>
 						</li>
 					))}

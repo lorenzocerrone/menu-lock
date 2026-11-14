@@ -8,9 +8,11 @@
  *
  * Two things menu.lock added, which cooking-rs never wrote: a meal that is not
  * a recipe, `{"note":"Frozen pizza","buy":true}`, and a planned recipe's
- * ingredient changes, `{"recipe":"lentil_dal","changes":[{"swap":"scallion","for":"onion"}]}`.
+ * ingredient changes, `{"recipe":"lentil_dal","changes":[{"swap":"scallion","for":"onion"}]}`
+ * (or, for something typed freely, `{"swap":"scallion","name":"Shallots","quantity":"2"}`).
  */
 import { z } from "zod";
+import { freeKey } from "./changes";
 import { type Dictionary, lookup } from "./data";
 import { type IsoDate, isIsoDate } from "./dates";
 import {
@@ -29,7 +31,10 @@ type WireChange =
 	| { skip: string }
 	| { swap: string; for: string; amount?: number; unit?: string }
 	| { set: string; amount?: number; unit?: string }
-	| { add: string; amount?: number; unit?: string };
+	| { add: string; amount?: number; unit?: string }
+	/** Freely typed, not in the dictionary: the name and the quantity as written. */
+	| { swap: string; name: string; quantity: string | null }
+	| { addName: string; quantity: string | null };
 /**
  * A meal is a bare recipe id (its own servings, no changes), `{recipe,
  * servings?, changes?}`, or `{note, buy?}` for something that is not a recipe.
@@ -61,6 +66,9 @@ const wireChange = z.looseObject({
 	set: z.string().optional(),
 	add: z.string().optional(),
 	for: z.string().optional(),
+	name: z.string().optional(),
+	addName: z.string().optional(),
+	quantity: z.string().nullish().catch(undefined),
 	amount: z.number().positive().nullish().catch(undefined),
 	unit: z.string().nullish().catch(undefined),
 });
@@ -78,6 +86,9 @@ const wirePlan = z.looseObject({
 });
 
 function writeChange(change: MealChange): WireChange {
+	if (change.kind === "swapFree")
+		return { swap: change.key, name: change.name, quantity: change.quantity };
+	if (change.kind === "addFree") return { addName: change.name, quantity: change.quantity };
 	const quantity: { amount?: number; unit?: string } = {};
 	if (change.kind !== "skip") {
 		if (change.amount !== undefined) quantity.amount = change.amount;
@@ -138,7 +149,13 @@ function readChange(raw: unknown, dictionary: Dictionary): MealChange | null {
 	if (unit) quantity.unit = unit;
 	const known = (key: string | undefined): key is string =>
 		key !== undefined && dictionary.entries.has(key);
+	const name = (c.addName ?? c.name)?.trim();
+	const text = c.quantity?.trim() || null;
 	if (c.skip) return { kind: "skip", key: c.skip };
+	if (c.swap && c.for === undefined && name)
+		return { kind: "swapFree", key: c.swap, name, quantity: text };
+	if (c.addName !== undefined)
+		return name ? { kind: "addFree", key: freeKey(name), name, quantity: text } : null;
 	if (c.swap) return known(c.for) ? { kind: "swap", key: c.swap, for: c.for, ...quantity } : null;
 	if (c.set) return { kind: "set", key: c.set, ...quantity };
 	if (known(c.add)) return { kind: "add", key: c.add, ...quantity };

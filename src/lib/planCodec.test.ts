@@ -164,6 +164,26 @@ describe("what menu.lock added to the wire", () => {
 		);
 	});
 
+	it("writes ingredients typed freely with their name and quantity as written", () => {
+		let plan = addMeal(EMPTY_PLAN, d(0), "dal");
+		plan = setChanges(plan, d(0), 0, [
+			{ kind: "swapFree", key: "scallion", name: "Shallots", quantity: "2" },
+			{ kind: "addFree", key: "custom:bay leaves", name: "Bay leaves", quantity: null },
+		]);
+		const json = JSON.stringify(toWire(plan));
+		expect(json).toBe(
+			'{"dates":{"2026-10-25":[{"recipe":"dal","changes":[' +
+				'{"swap":"scallion","name":"Shallots","quantity":"2"},{"addName":"Bay leaves","quantity":null}]}]}}',
+		);
+		expect(read(json)).toEqual(plan);
+		// Nameless ones are dropped.
+		expect(
+			read(
+				'{"dates":{"2026-10-25":[{"recipe":"dal","changes":[{"addName":"  "},{"swap":"salt","name":""}]}]}}',
+			)?.dates[TODAY],
+		).toEqual([{ recipe: "dal" }]);
+	});
+
 	it("drops a change it can't read and keeps the rest", () => {
 		const meal = (changes: string) =>
 			read(`{"dates":{"2026-10-25":[{"recipe":"dal","changes":${changes}}]}}`)?.dates[TODAY]?.[0];

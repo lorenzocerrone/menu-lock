@@ -57,7 +57,7 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 	// Swap: onion for red onion, keeping "1".
 	await lines.getByRole("button", { name: /^Onion/ }).click();
 	await dialog.getByRole("button", { name: /Swap for another ingredient/ }).click();
-	await dialog.getByLabel("Search ingredients").fill("red on");
+	await dialog.getByLabel("Ingredient", { exact: true }).fill("red on");
 	await dialog.getByRole("button", { name: /^Red onion/ }).click();
 	await expect(dialog.getByLabel("Amount")).toHaveValue("1");
 	await dialog.getByRole("button", { name: "Save" }).click();
@@ -76,7 +76,7 @@ test("a planned meal changes its ingredients, and the grocery list follows", asy
 	await dialog.getByRole("button", { name: "Leave out" }).click();
 	await expect(lines.getByRole("button", { name: /^Salt/ })).toContainText("left out");
 	await dialog.getByRole("button", { name: "+ Add an ingredient" }).click();
-	await dialog.getByLabel("Search ingredients").fill("lemon");
+	await dialog.getByLabel("Ingredient", { exact: true }).fill("lemon");
 	await dialog.getByRole("button", { name: /^Lemon/ }).click();
 	await dialog.getByLabel("Amount").fill("1");
 	await dialog.getByRole("button", { name: "Save" }).click();
@@ -158,4 +158,89 @@ test("a meal's amounts are edited for its servings", async ({ page }) => {
 	await page.getByRole("button", { name: "Close" }).click();
 	await page.getByRole("link", { name: /^Grocery/ }).click();
 	await expect(row(page, "Garlic")).toContainText("32 g"); // 8 cloves for this meal
+});
+
+test("an ingredient that is not in the list is used as typed", async ({ page }) => {
+	await open(page, "/planner", { dates: { [iso(0)]: [{ recipe: "lentil_dal", servings: 8 }] } });
+	const dialog = page.getByRole("dialog");
+	const lines = dialog.getByRole("list", { name: "Ingredients of this meal" });
+	const search = dialog.getByLabel("Ingredient", { exact: true });
+	const suggestions = dialog.getByRole("list", { name: "Suggestions" });
+	await page
+		.getByRole("region")
+		.first()
+		.getByRole("button", { name: /^Lentil Dal/ })
+		.click();
+
+	// Swap the onion for shallots, which the ingredient list doesn't have.
+	await lines.getByRole("button", { name: /^Onion/ }).click();
+	await dialog.getByRole("button", { name: /Swap for another ingredient/ }).click();
+	await search.fill("shallots");
+	await expect(suggestions.getByRole("listitem")).toHaveCount(1); // nothing like it in the list
+	await dialog.getByRole("button", { name: "Use “Shallots” as typed" }).click();
+	await dialog.getByLabel("Quantity").fill("3");
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await expect(lines.getByRole("button", { name: /^Shallots/ })).toContainText("instead of Onion");
+	await expect(lines.getByRole("button", { name: /^Shallots/ })).toContainText("3");
+
+	// Add bay leaves, with no quantity.
+	await dialog.getByRole("button", { name: "+ Add an ingredient" }).click();
+	await search.fill("bay leaves");
+	await dialog.getByRole("button", { name: "Use “Bay leaves” as typed" }).click();
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await expect(lines.getByRole("button", { name: /^Bay leaves/ })).toContainText("added");
+
+	// A name that is in the list is offered from the list, typos forgiven, and not "as typed".
+	await dialog.getByRole("button", { name: "+ Add an ingredient" }).click();
+	await search.fill("lemmon");
+	await expect(suggestions.getByRole("button", { name: /^Lemon/ })).toBeVisible();
+	await search.fill("lemons");
+	await expect(suggestions.getByRole("button", { name: /^Lemon/ })).toBeVisible();
+	await expect(dialog.getByRole("button", { name: /as typed/ })).toHaveCount(0);
+	await dialog.getByRole("button", { name: "‹ Lentil Dal" }).click();
+	await dialog.getByRole("button", { name: "Close" }).click();
+
+	// On the grocery list they are under Other, as typed, for that recipe; the onion is gone.
+	await page.getByRole("link", { name: /^Grocery/ }).click();
+	const other = page.getByRole("region", { name: "Other" });
+	await expect(other).toContainText("Shallots");
+	await expect(row(page, "Shallots")).toContainText("3");
+	await expect(row(page, "Shallots")).toContainText("Lentil Dal");
+	await expect(other).toContainText("Bay leaves");
+	await expect(row(page, "Onion")).toHaveCount(0);
+
+	// It travels with the link, and can be put back.
+	await page.reload();
+	await expect(row(page, "Shallots")).toBeVisible();
+	await page.getByRole("link", { name: "Plan" }).click();
+	await page
+		.getByRole("region")
+		.first()
+		.getByRole("button", { name: /^Lentil Dal/ })
+		.click();
+	await lines.getByRole("button", { name: /^Shallots/ }).click();
+	await dialog.getByRole("button", { name: /Back to the recipe/ }).click();
+	await expect(lines.getByRole("button", { name: /^Onion/ })).toContainText("2"); // 1 onion, for 8
+	await lines.getByRole("button", { name: /^Bay leaves/ }).click();
+	await dialog.getByRole("button", { name: "Remove" }).click();
+	await expect(lines.getByRole("button", { name: /^Bay leaves/ })).toHaveCount(0);
+});
+
+test("the grocery extras suggest ingredients as you type, typos forgiven", async ({ page }) => {
+	await open(page, "/grocery");
+	const field = page.getByLabel("Add an extra");
+	const suggestions = page.getByRole("list", { name: "Suggestions" });
+	await field.fill("mlik 1 l");
+	await expect(suggestions.getByRole("button").first()).toContainText("Milk");
+	await field.fill("brocoli");
+	await expect(suggestions.getByRole("button")).toHaveText([/Broccoli/]);
+	await field.fill("oil");
+	await expect(suggestions.getByRole("button")).toHaveText([
+		/Olive oil/,
+		/Sesame oil/,
+		/Vegetable oil/,
+	]);
+	await field.fill("2 courgetes");
+	await suggestions.getByRole("button", { name: /^Zucchini/ }).click();
+	await expect(row(page, "Zucchini")).toContainText("400 g");
 });

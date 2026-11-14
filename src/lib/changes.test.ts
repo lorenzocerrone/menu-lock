@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyChanges, changeFor, withChange, withoutChange } from "./changes";
+import { applyChanges, changeFor, freeKey, withChange, withoutChange } from "./changes";
 import { fixtureData, recipeFile } from "./fixtures";
 import type { MealChange } from "./plan";
 
@@ -95,6 +95,32 @@ describe("applyChanges", () => {
 			["lemon", 1, 0.5, "add"],
 			["milk", null, null, "add"],
 		]);
+	});
+
+	it("takes ingredients typed freely, which are not in the dictionary", () => {
+		const { lines } = apply(
+			{ kind: "swapFree", key: "scallion", name: "Shallots", quantity: " 2 " },
+			{ kind: "addFree", key: freeKey("Bay leaves"), name: "Bay leaves", quantity: null },
+		);
+		expect(lines[0]).toEqual({
+			key: "custom:shallots",
+			name: "Shallots",
+			amount: null,
+			unit: null,
+			optional: false,
+			perServing: null,
+			free: { quantity: "2" },
+			change: "swap",
+			instead: { key: "scallion", name: "Scallion" },
+		});
+		expect(lines.at(-1)).toMatchObject({
+			key: "custom:bay leaves",
+			name: "Bay leaves",
+			free: { quantity: null },
+			change: "add",
+		});
+		expect(lines).toHaveLength(5);
+		expect(freeKey("  Bay   LEAVES ")).toBe("custom:bay leaves");
 	});
 
 	it("ignores changes it can't apply", () => {

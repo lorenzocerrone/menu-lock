@@ -4,7 +4,7 @@
  * The changes live on the meal in the plan, so the grocery list follows them
  * and they travel with the link.
  */
-import { type Dictionary, makeLine, type Recipe, type RecipeLine } from "./data";
+import { type Dictionary, makeLine, normalizeName, type Recipe, type RecipeLine } from "./data";
 import type { MealChange } from "./plan";
 
 /** A line of a planned meal, with what was changed about it, if anything. */
@@ -13,7 +13,30 @@ export type PlannedLine = RecipeLine & {
 	change?: "swap" | "set" | "add";
 	/** For a swap: the key and name of the recipe's ingredient it replaces. */
 	instead?: { key: string; name: string };
+	/**
+	 * Set when the ingredient was typed freely and is not in the dictionary: its
+	 * quantity as written. Such a line has no amount: nothing scales or sums it.
+	 */
+	free?: { quantity: string | null };
 };
+
+/** The key of a freely typed ingredient: stable per name, and never a dictionary key. */
+export function freeKey(name: string): string {
+	return `custom:${normalizeName(name)}`;
+}
+
+/** A line for an ingredient that is not in the dictionary. */
+function freeLine(name: string, quantity: string | null): PlannedLine {
+	return {
+		key: freeKey(name),
+		name,
+		amount: null,
+		unit: null,
+		optional: false,
+		perServing: null,
+		free: { quantity: quantity?.trim() || null },
+	};
+}
 
 /** The unit of a resolved line as a recipe would write it: pieces are written without a unit. */
 function unitText(line: RecipeLine): string | undefined {
@@ -31,7 +54,9 @@ export function applyChanges(
 	dictionary: Dictionary,
 ): { lines: PlannedLine[]; skipped: RecipeLine[] } {
 	if (!changes || changes.length === 0) return { lines: recipe.lines, skipped: [] };
-	const byKey = new Map(changes.filter((c) => c.kind !== "add").map((c) => [c.key, c]));
+	const byKey = new Map(
+		changes.filter((c) => c.kind !== "add" && c.kind !== "addFree").map((c) => [c.key, c]),
+	);
 	const lines: PlannedLine[] = [];
 	const skipped: RecipeLine[] = [];
 
@@ -60,12 +85,21 @@ export function applyChanges(
 			lines.push(
 				made ? { ...made, change: "swap", instead: { key: line.key, name: line.name } } : line,
 			);
+		} else if (change.kind === "swapFree") {
+			lines.push({
+				...freeLine(change.name, change.quantity),
+				change: "swap",
+				instead: { key: line.key, name: line.name },
+			});
 		}
 	}
 	for (const change of changes) {
-		if (change.kind !== "add") continue;
-		const made = makeLine(dictionary, change.key, change.amount, change.unit, recipe.servings);
-		if (made) lines.push({ ...made, change: "add" });
+		if (change.kind === "addFree") {
+			lines.push({ ...freeLine(change.name, change.quantity), change: "add" });
+		} else if (change.kind === "add") {
+			const made = makeLine(dictionary, change.key, change.amount, change.unit, recipe.servings);
+			if (made) lines.push({ ...made, change: "add" });
+		}
 	}
 	return { lines, skipped };
 }

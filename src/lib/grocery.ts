@@ -91,11 +91,16 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		else line.amount = (line.amount ?? 0) + amount;
 	};
 
-	/** Non-recipe things on the plan that are to be bought, by name. */
-	const notes: string[] = [];
+	/**
+	 * Hand-typed things, which have no dictionary entry: custom extras, non-recipe
+	 * items on the plan that are to be bought, and ingredients typed freely into a
+	 * meal. `source` is what the line is for; `extra` marks a grocery-page extra.
+	 */
+	const typed: { name: string; quantity: string | null; source?: string; extra: boolean }[] = [];
 	for (const meal of entriesIn(plan, from, to)) {
 		if (isNote(meal)) {
-			if (meal.buy) notes.push(meal.note);
+			if (meal.buy)
+				typed.push({ name: meal.note, quantity: null, source: PLAN_SOURCE, extra: false });
 			continue;
 		}
 		const recipe = data.recipeById.get(meal.recipe);
@@ -103,6 +108,15 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		const servings = meal.servings ?? recipe.servings;
 		// The meal's own version of the recipe, if it changed any ingredient.
 		for (const item of applyChanges(recipe, meal.changes, data.dictionary).lines) {
+			if (item.free) {
+				typed.push({
+					name: item.name,
+					quantity: item.free.quantity,
+					source: recipe.title,
+					extra: false,
+				});
+				continue;
+			}
 			const line = lineFor(item.key);
 			if (!line) continue;
 			add(line, item.perServing === null ? null : item.perServing * servings, item.optional);
@@ -125,17 +139,12 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		line.extra = true;
 	}
 
-	// Hand-typed things (custom extras, and non-recipe items on the plan that are
-	// to be bought) join the line of the dictionary ingredient they name, if it
+	// Hand-typed things join the line of the dictionary ingredient they name, if it
 	// is on the list; otherwise they get their own line in "Other", by name.
-	const typed = [
-		...plan.extras.flatMap((extra) =>
-			extra.kind === "custom"
-				? [{ name: extra.name, quantity: extra.quantity, planned: false }]
-				: [],
-		),
-		...notes.map((name) => ({ name, quantity: null, planned: true })),
-	];
+	for (const extra of plan.extras) {
+		if (extra.kind === "custom")
+			typed.push({ name: extra.name, quantity: extra.quantity, extra: true });
+	}
 	for (const extra of typed) {
 		const name = extra.name.trim();
 		if (name === "") continue;
@@ -160,11 +169,9 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 			lines.set(key, slot);
 		}
 		slot.line.optional = false;
-		if (extra.planned) {
-			if (!slot.line.sources.includes(PLAN_SOURCE)) slot.line.sources.push(PLAN_SOURCE);
-		} else {
-			slot.line.extra = true;
-		}
+		if (extra.extra) slot.line.extra = true;
+		if (extra.source && !slot.line.sources.includes(extra.source))
+			slot.line.sources.push(extra.source);
 		const quantity = extra.quantity?.trim();
 		if (quantity) slot.line.customQuantities.push(quantity);
 	}

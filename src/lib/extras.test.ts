@@ -26,25 +26,45 @@ describe("extras", () => {
 			expect(parseNumber(bad), bad).toBeNull();
 	});
 
-	it("suggests starts-with matches first, then contains, by name, capped", () => {
-		const names = (q: string, max: number) => suggest(dictionary, q, max).map((s) => s.name);
-		expect(names("bre", 5)).toEqual(["Bread", "Breadcrumbs"]);
-		expect(names("crumb", 5)).toEqual(["Breadcrumbs"]);
+	const names = (q: string, max = 5) => suggest(dictionary, q, max).map((s) => s.name);
+
+	it("suggests names that start with it, then a word that does, then names containing it", () => {
+		expect(names("bre")).toEqual(["Bread", "Breadcrumbs"]);
+		expect(names("crumb")).toEqual(["Breadcrumbs"]);
 		expect(names("B", 1)).toEqual(["Bread"]);
-		expect(names("  ", 5)).toEqual([]);
-		expect(names("zzz", 5)).toEqual([]);
-		expect(names("on", 5)).toEqual(["Onion", "Lemon", "Salmon fillet", "Scallion"]);
+		expect(names("  ")).toEqual([]);
+		expect(names("zzz")).toEqual([]);
+		// Onion starts with it; Scallion has a word that does (its alias "spring onion"); the rest contain it.
+		expect(names("on")).toEqual(["Onion", "Scallion", "Lemon", "Salmon fillet"]);
+		expect(names("oil")).toEqual(["Olive oil"]); // a word of the name
+		expect(names("fillet")).toEqual(["Salmon fillet"]);
 		// A plural finds its singular.
-		expect(names("eggs", 5)).toEqual(["Egg"]);
-		expect(names("lemons", 5)).toEqual(["Lemon"]);
-		expect(names("tomatoes", 5)).toEqual(["Chopped tomatoes"]);
+		expect(names("eggs")).toEqual(["Egg"]);
+		expect(names("lemons")).toEqual(["Lemon"]);
+		expect(names("tomatoes")).toEqual(["Chopped tomatoes"]);
 		// An alias finds its entry.
-		expect(names("spring", 5)).toEqual(["Scallion"]);
+		expect(names("spring")).toEqual(["Scallion"]);
 		expect(suggest(dictionary, "milk", 5)[0]).toEqual({
 			key: "milk",
 			name: "Milk",
 			aisle: "Dairy & Eggs",
 		});
+	});
+
+	it("forgives typos and half-typed words", () => {
+		expect(names("galric")).toEqual(["Garlic"]); // two letters swapped
+		expect(names("onoin")[0]).toBe("Onion");
+		expect(names("garlc")).toEqual(["Garlic"]); // a letter missing
+		expect(names("lemmon")).toEqual(["Lemon"]); // a letter too many
+		expect(names("scalion")).toEqual(["Scallion"]);
+		expect(names("galr")).toEqual(["Garlic"]); // still typing, already wrong
+		expect(names("guancale")).toEqual(["Guanciale"]);
+		expect(names("brd")).toEqual(["Bread", "Breadcrumbs"]); // letters in order
+		// Exact matches come before near misses.
+		expect(names("salt")[0]).toBe("Salt");
+		// Two letters are too few to guess from.
+		expect(names("xq")).toEqual([]);
+		expect(names("qqqq")).toEqual([]);
 	});
 
 	it("makes a catalog extra when the quantity converts, else keeps it as typed", () => {
@@ -70,6 +90,9 @@ describe("extras", () => {
 			amount: 0.5,
 			unit: "ml",
 		});
+		// Something that is counted: a bare number is pieces, whatever it is sold in.
+		expect(make("onions", "2", "onion")).toEqual({ kind: "catalog", key: "onion", amount: 2 });
+		expect(make("garlic", "3", "garlic")).toEqual({ kind: "catalog", key: "garlic", amount: 3 });
 		// A pcs ingredient without a unit stays a bare count.
 		expect(make("eggs", "6", "egg")).toEqual({ kind: "catalog", key: "egg", amount: 6 });
 		// Piece labels resolve too, kept as typed.

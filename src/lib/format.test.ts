@@ -19,6 +19,7 @@ import {
 	formatMovedTo,
 	formatOption,
 	formatPlanCaption,
+	formatPlannedAmount,
 	formatPlannedFor,
 	formatQuantity,
 	formatRange,
@@ -279,6 +280,17 @@ describe("format", () => {
 		expect(
 			formatLineChange({ ...base, change: "swap", instead: { key: "scallion", name: "Scallion" } }),
 		).toBe("instead of Scallion");
+		expect(formatPlannedAmount(base, 4, 2)).toBe("2");
+		const typed = {
+			...base,
+			key: "custom:shallots",
+			name: "Shallots",
+			amount: null,
+			unit: null,
+			perServing: null,
+		};
+		expect(formatPlannedAmount({ ...typed, free: { quantity: "1 bunch" } }, 4, 2)).toBe("1 bunch");
+		expect(formatPlannedAmount({ ...typed, free: { quantity: null } }, 4, 2)).toBe("");
 		expect(formatPlannedFor("2026-10-26", "2026-10-25")).toBe("As planned for tomorrow");
 		expect(formatPlannedFor("2026-10-28", "2026-10-25")).toBe("As planned for Wed 28 Oct");
 		expect(formatAmountInput(1.5)).toBe("1.5");

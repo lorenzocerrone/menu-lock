@@ -39,10 +39,73 @@ export function parseExtra(input: string): ParsedExtra {
 /** A dictionary ingredient offered while typing. */
 export type Suggestion = { key: string; name: string; aisle: string };
 
+/** How many edits apart two short strings are; swapping two neighbouring letters counts as one. */
+function editDistance(a: string, b: string): number {
+	let twoBack: number[] = [];
+	let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
+	for (let i = 1; i <= a.length; i++) {
+		const row = [i];
+		for (let j = 1; j <= b.length; j++) {
+			const same = a[i - 1] === b[j - 1];
+			let best = Math.min(
+				(previous[j] ?? 0) + 1,
+				(row[j - 1] ?? 0) + 1,
+				(previous[j - 1] ?? 0) + (same ? 0 : 1),
+			);
+			if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+				best = Math.min(best, (twoBack[j - 2] ?? 0) + 1);
+			row.push(best);
+		}
+		twoBack = previous;
+		previous = row;
+	}
+	return previous[b.length] ?? 0;
+}
+
+/** True when the letters of `needle` appear in `text` in that order ("brd" in "bread"). */
+function inOrder(needle: string, text: string): boolean {
+	let at = 0;
+	for (const letter of text) if (letter === needle[at]) at++;
+	return at === needle.length;
+}
+
 /**
- * Dictionary ingredients whose name or an alias matches `name`
- * (case-insensitive, singular or plural): starts-with first, then contains,
- * each sorted by name. Empty input gives nothing.
+ * How well `needle` matches a name, lower is better, `null` for no match:
+ * 0 the name starts with it; 1 one of its words does; 2 it is inside the name;
+ * 3 it is a near miss of the start of a word (a typo: "galric", "onoin");
+ * 4 its letters appear in order ("brd").
+ */
+function matchRank(needle: string, name: string): number | null {
+	if (name.startsWith(needle)) return 0;
+	const words = name.split(/[\s-]+/);
+	if (words.some((word) => word.startsWith(needle))) return 1;
+	if (name.includes(needle)) return 2;
+	if (needle.length < 3) return null;
+	// Guesses, kept tight so they don't drown the real matches: the first letter
+	// must be right (typos rarely hit it).
+	const candidates = words.filter((word) => word[0] === needle[0]);
+	// One slip from four letters on, two from eight; compared with as much of
+	// each word as has been typed, so it works while typing.
+	const slips = needle.length >= 8 ? 2 : needle.length >= 4 ? 1 : 0;
+	const near = candidates.some(
+		(word) =>
+			slips > 0 &&
+			word.length >= needle.length - 1 &&
+			Math.min(
+				editDistance(needle, word.slice(0, needle.length)),
+				editDistance(needle, word.slice(0, needle.length + 1)),
+			) <= slips,
+	);
+	if (near) return 3;
+	return candidates.some((word) => inOrder(needle, word)) ? 4 : null;
+}
+
+/**
+ * Dictionary ingredients for what is being typed, best first: names (or
+ * aliases) that start with it, then a word that does, then names containing
+ * it, then near misses and letters in order, so a typo or a half-typed word
+ * still finds its ingredient. Singular and plural are the same; within a group
+ * the shorter name comes first. Empty input gives nothing.
  */
 export function suggest(dictionary: Dictionary, name: string, max: number): Suggestion[] {
 	const needle = name.trim().toLowerCase();
@@ -51,17 +114,23 @@ export function suggest(dictionary: Dictionary, name: string, max: number): Sugg
 	const needles = [needle];
 	if (needle.endsWith("es") && needle.length > 3) needles.push(needle.slice(0, -2));
 	if (needle.endsWith("s") && needle.length > 2) needles.push(needle.slice(0, -1));
-	const prefix: Suggestion[] = [];
-	const inner: Suggestion[] = [];
+
+	const ranked: { rank: number; suggestion: Suggestion }[] = [];
 	for (const [key, entry] of dictionary.entries) {
 		const names = [entry.name, ...(entry.aliases ?? [])].map((n) => n.toLowerCase());
-		const suggestion = { key, name: entry.name, aisle: entry.aisle };
-		if (names.some((n) => needles.some((needle) => n.startsWith(needle)))) prefix.push(suggestion);
-		else if (names.some((n) => needles.some((needle) => n.includes(needle))))
-			inner.push(suggestion);
+		const ranks = names.flatMap((n) =>
+			needles.map((form) => matchRank(form, n) ?? Number.POSITIVE_INFINITY),
+		);
+		const rank = Math.min(...ranks);
+		if (Number.isFinite(rank))
+			ranked.push({ rank, suggestion: { key, name: entry.name, aisle: entry.aisle } });
 	}
-	const byName = (a: Suggestion, b: Suggestion) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-	return [...prefix.sort(byName), ...inner.sort(byName)].slice(0, max);
+	// Within a group, the shorter name first ("Milk" before "Coconut milk"), then by name.
+	const byName = (a: string, b: string) => a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
+	return ranked
+		.sort((a, b) => a.rank - b.rank || byName(a.suggestion.name, b.suggestion.name))
+		.slice(0, max)
+		.map((r) => r.suggestion);
 }
 
 /**
@@ -79,9 +148,11 @@ export function toExtra(parsed: ParsedExtra, key: string | null, dictionary: Dic
 
 	const [number, unit, ...more] = parsed.quantity.split(/\s+/);
 	const amount = number === undefined ? null : parseNumber(number);
-	// No unit means the shopping unit ("flour 500" is 500 g), written out for
-	// g and ml, since on the wire a bare number counts pieces.
-	const written = unit ?? (entry.unit === "pcs" ? undefined : entry.unit);
+	// No unit: pieces for something that is counted ("2 onions", "3 garlic" as
+	// cloves), else the shopping unit ("flour 500" is 500 g), written out since on
+	// the wire a bare number counts pieces.
+	const counted = entry.unit === "pcs" || entry.count?.perPiece !== undefined;
+	const written = unit ?? (counted ? undefined : entry.unit);
 	const resolved = resolveUnit(written, entry.count);
 	if (
 		amount === null ||

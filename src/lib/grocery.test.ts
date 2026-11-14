@@ -199,6 +199,38 @@ describe("aggregate", () => {
 		expect(allLines(later).map((l) => l.key)).toEqual(["garlic", "lemon", "onion"]);
 	});
 
+	it("lists a meal's freely typed ingredients in Other, as typed, for that recipe", () => {
+		const data = fixtureData([
+			recipeFile("soup", 2, [{ ingredient: "scallion", amount: 2 }, { ingredient: "salt" }]),
+		]);
+		let plan = addMeal(EMPTY_PLAN, d(0), "soup");
+		plan = setServings(plan, d(0), 0, 4);
+		plan = setChanges(plan, d(0), 0, [
+			{ kind: "swapFree", key: "scallion", name: "Shallots", quantity: "2" },
+			{ kind: "addFree", key: "custom:bay leaves", name: "Bay leaves", quantity: null },
+		]);
+		plan = addMeal(plan, d(1), "soup");
+		plan = setChanges(plan, d(1), 0, [
+			{ kind: "addFree", key: "custom:shallots", name: "shallots", quantity: "1 bunch" },
+		]);
+		const list = aggregate(plan, d(0), d(13), data);
+		expect(names(list)).toEqual(["Produce", "Spices & Oils", "Other"]);
+		// Not scaled with the servings and not added up: the quantities side by side.
+		expect(find(list, "custom:shallots")).toMatchObject({
+			name: "Shallots",
+			amount: null,
+			customQuantities: ["2", "1 bunch"],
+			sources: ["SOUP"],
+			extra: false,
+		});
+		expect(formatLineQuantity(find(list, "custom:shallots"))).toBe("2 + 1 bunch");
+		expect(find(list, "custom:bay leaves")).toMatchObject({
+			customQuantities: [],
+			sources: ["SOUP"],
+		});
+		expect(find(list, "scallion").amount).toBe(30); // only the second meal's
+	});
+
 	it("lists non-recipe items that are to be bought, once, in Other", () => {
 		const data = fixtureData([
 			recipeFile("r", 1, [{ ingredient: "flour", amount: 100, unit: "g" }]),

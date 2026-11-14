@@ -241,6 +241,19 @@ export function formatMealDetails(meal: MealEntry): string[] {
 	];
 }
 
+/**
+ * The amount column of a planned meal's line: like a recipe line, except that a
+ * freely typed ingredient shows its quantity as written (and nothing when it has none).
+ */
+export function formatPlannedAmount(
+	line: PlannedLine,
+	servings: number,
+	recipeServings: number,
+): string {
+	if (line.free) return line.free.quantity ?? "";
+	return formatLineAmount(line, servings, recipeServings);
+}
+
 /** What was changed about a planned meal's ingredient line: "instead of Scallion", "added", "changed". */
 export function formatLineChange(line: PlannedLine): string | null {
 	if (line.change === "swap") return `instead of ${line.instead?.name ?? "another"}`;

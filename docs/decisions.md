@@ -118,6 +118,22 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Typing an ingredient: suggestions that forgive (2026-11-14)
+
+The user asked for more autocomplete wherever an ingredient is typed. `suggest`
+(`src/lib/extras.ts`) now ranks the dictionary for what is being typed: names (or
+aliases) that start with it, then a word of the name that does ("oil" finds Olive
+oil), then names containing it, then near misses of the start of a word (one slip
+from four letters, two from eight; "galric", "brocoli", "courgete"), then its letters
+in order ("mlk"). Guesses need the right first letter, so they don't drown the real
+matches. Singular and plural are the same; within a group the shorter name is first.
+It is used by the grocery page's extras and by a meal's swap and add.
+
+Also changed: in the extras line, a bare number now means pieces for an ingredient
+that is counted ("2 courgettes" is two zucchini, "3 garlic" three cloves) and the
+shopping unit otherwise ("flour 500" is 500 g). cooking-rs read every bare number as
+the shopping unit, which made "2 onions" two grams.
+
 ## Standing decision: no users yet, so no compatibility burden (2026-11-14)
 
 The user: "App has no users so no need to worry about breaking links or changing
@@ -160,8 +176,15 @@ kinds of change).
 - A swap without an amount keeps the recipe's amount when it means something for the
   new ingredient (2 scallions become 2 onions); when it doesn't (2 tbsp of something
   sold by weight), the line becomes "to taste" rather than a wrong number.
-- Only dictionary ingredients can be swapped in or added: the grocery list must be able
-  to add them up. Something not in the dictionary is an extra on the grocery page.
+- An ingredient that is not in the dictionary can be swapped in or added **as typed**
+  (the user: the strict list collided with changing a meal on the fly). It has a name
+  and a free-text quantity; on the grocery list it is a line in Other, for that recipe,
+  with its quantities side by side: not added up, not scaled with the servings, not in
+  its real aisle. On the wire: `{"swap":"onion","name":"Shallots","quantity":"3"}` and
+  `{"addName":"Bay leaves","quantity":null}`. When the name is in the dictionary, the
+  dictionary's entry is offered and "as typed" is not.
+- **Recipe files stay strict** (closed world): that is what makes the grocery list add
+  up. The slack is only in a meal's changes and in the grocery page's extras.
 - A change that can't be read in a link is dropped; the rest of the plan is kept.
 - "View recipe" from a planned meal opens `#/recipe/<id>?meal=<date>.<position>`, which
   shows that meal's servings and changes; the steps are always the recipe's own words.
