@@ -121,11 +121,12 @@ at the end of its aisle's group.
 
 ## Tags and cuisines in use
 
-Tags: `quick` (about 30 min or less in total), `dinner`, `breakfast`, `comfort`,
-`no-cook`, `pasta`, `soup`, `salad`, `make-ahead`, `classic`. Reuse these; add a new one
-only if it would be useful as a filter. Not `vegetarian`: computed.
-Cuisines: American, British, Chinese, French, Greek, Indian, Italian, Japanese, Mexican,
-Middle Eastern. Reuse the same spelling.
+Tags: one course tag per recipe, `pasta`, `risotto`, `main`, `side`, `salad`, `dessert`
+or `party` (dips and finger food), plus any of `quick` (about 30 min or less in total),
+`comfort`, `no-cook`, `make-ahead`, `classic`. Reuse these; add a new one only if it
+would be useful as a filter. Not `vegetarian`: computed.
+Cuisines: Asian, Greek, Italian, Mexican, Middle Eastern. Reuse the same spelling; leave
+it out when the dish has no clear one.
 
 ## What `npm run check` checks in the data
 

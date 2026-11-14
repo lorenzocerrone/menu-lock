@@ -118,6 +118,30 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## The household's own recipes (2026-11-14)
+
+The user replaced the 25 placeholder recipes with their own list (Italian notes,
+translated to English; they will edit the details themselves). 39 recipes:
+
+- **The user's dishes** (author `Lorenzo`): 10 pastas, 4 risottos, 9 mains and one-dish
+  meals, and the tiramisù. Amounts, times and steps were written by Claude from the
+  standard version of each dish, for the user to correct. "Sughero finto" was read as
+  _sugo finto_ (the meatless ragù); "wrap … proteina" uses chicken, the description says
+  any protein works.
+- **What the user asked Claude to add** (author `Claude`): 4 sides, 3 more desserts,
+  3 salads, 5 dips and party dishes.
+- **Course tags**: every recipe has one of `pasta`, `risotto`, `main`, `side`, `salad`,
+  `dessert`, `party`, so the tag filter works as a course filter. `dinner`,
+  `breakfast` and `soup` are no longer used.
+- **Dictionary**: 59 new entries (130 in all). The old entries that no recipe uses are
+  kept: they still help when typing extras and a meal's changes. Saffron is bought and
+  counted in sachets.
+- **Illustrations**: only the carbonara's is still used; the other 24 old SVGs are
+  deleted (they are in the history) and the new recipes get the placeholder until the
+  illustration session (plan §10).
+- The browser tests now use `beef_stew_wine_olives` where they used `lentil_dal` (it has
+  the same shape: 1 onion, garlic in cloves, salt to taste, serves 4).
+
 ## Typing an ingredient: suggestions that forgive (2026-11-14)
 
 The user asked for more autocomplete wherever an ingredient is typed. `suggest`
