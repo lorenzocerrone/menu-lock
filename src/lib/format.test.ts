@@ -1,0 +1,171 @@
+import { describe, expect, it } from "vitest";
+import { addDays } from "./dates";
+import { fixtureData, recipeFile } from "./fixtures";
+import {
+	formatDate,
+	formatDay,
+	formatDayInline,
+	formatGroceryAmount,
+	formatLineAmount,
+	formatLineQuantity,
+	formatQuantity,
+	formatRange,
+	formatSources,
+	formatSummary,
+	formatText,
+	formatTiming,
+	formatTotalTime,
+	trimDecimals,
+} from "./format";
+import type { GroceryLine } from "./grocery";
+import type { CountSpec } from "./schema";
+
+const clove: CountSpec = { label: "clove", perPiece: 4 };
+
+function line(over: Partial<GroceryLine> = {}): GroceryLine {
+	return {
+		key: "k",
+		name: "Thing",
+		unit: "g",
+		amount: null,
+		toTaste: false,
+		optional: false,
+		sources: [],
+		extra: false,
+		customQuantities: [],
+		...over,
+	};
+}
+
+describe("format", () => {
+	it("trims decimals", () => {
+		expect(trimDecimals(1.5, 2)).toBe("1.5");
+		expect(trimDecimals(2, 2)).toBe("2");
+		expect(trimDecimals(0.333, 2)).toBe("0.33");
+		expect(trimDecimals(100, 0)).toBe("100");
+		expect(trimDecimals(10.04, 1)).toBe("10");
+	});
+
+	it("writes a recipe quantity in the authored unit", () => {
+		expect(formatQuantity(200, "g", undefined)).toBe("200 g");
+		expect(formatQuantity(0.5, "cup", undefined)).toBe("0.5 cup");
+		expect(formatQuantity(2, "tbsp", undefined)).toBe("2 tbsp");
+		expect(formatQuantity(1.333, "kg", undefined)).toBe("1.33 kg");
+		expect(formatQuantity(4, "pcs", undefined)).toBe("4");
+		expect(formatQuantity(1, "pcs", clove)).toBe("1 clove");
+		expect(formatQuantity(3, "pcs", clove)).toBe("3 cloves");
+	});
+
+	it("rescales a recipe line with the servings; to taste never scales", () => {
+		const data = fixtureData([
+			recipeFile("r", 2, [
+				{ ingredient: "garlic", amount: 3, unit: "cloves" },
+				{ ingredient: "garlic", amount: 10, unit: "g" },
+				{ ingredient: "olive_oil", amount: 2, unit: "tbsp" },
+				{ ingredient: "egg", amount: 2 },
+				{ ingredient: "onion", amount: 1, unit: "pcs" },
+				{ ingredient: "salt" },
+			]),
+		]);
+		const lines = data.recipeById.get("r")?.lines ?? [];
+		const at = (servings: number) => lines.map((l) => formatLineAmount(l, servings, 2));
+		expect(at(2)).toEqual(["3 cloves", "10 g", "2 tbsp", "2", "1", "to taste"]);
+		expect(at(3)).toEqual(["4.5 cloves", "15 g", "3 tbsp", "3", "1.5", "to taste"]);
+		expect(at(1)).toEqual(["1.5 cloves", "5 g", "1 tbsp", "1", "0.5", "to taste"]);
+		const [garlic] = lines;
+		expect(garlic && formatLineAmount(garlic, 2, 6)).toBe("1 clove");
+	});
+
+	it("rounds grocery amounts for the shop", () => {
+		const cases: [number, Pick<GroceryLine, "unit" | "count">, string][] = [
+			[2.5, { unit: "g" }, "2.5 g"],
+			[2.54, { unit: "g" }, "2.5 g"],
+			[249.6, { unit: "g" }, "250 g"],
+			[999, { unit: "g" }, "999 g"],
+			[1000, { unit: "g" }, "1 kg"],
+			[1500, { unit: "g" }, "1.5 kg"],
+			[1234, { unit: "g" }, "1.23 kg"],
+			[1250, { unit: "g" }, "1.25 kg"],
+			[500, { unit: "ml" }, "500 ml"],
+			[1200, { unit: "ml" }, "1.2 l"],
+			[1.3, { unit: "pcs" }, "2"],
+			[1.2, { unit: "pcs" }, "2"],
+			[2.0000001, { unit: "pcs" }, "2"],
+			[4, { unit: "pcs" }, "4"],
+			[1, { unit: "pcs", count: { label: "can", perPiece: 400 } }, "1 can"],
+			[2, { unit: "pcs", count: { label: "can", perPiece: 400 } }, "2 cans"],
+			[2.2, { unit: "pcs", count: clove }, "3 cloves"],
+			[0.5, { unit: "pcs", count: { label: "can", perPiece: 400 } }, "1 can"],
+			// Grams stay grams even when the ingredient has a piece spec.
+			[12, { unit: "g", count: clove }, "12 g"],
+		];
+		for (const [amount, of, want] of cases)
+			expect(formatGroceryAmount(amount, of), want).toBe(want);
+	});
+
+	it("joins a line's amount, custom quantities, to taste and optional", () => {
+		expect(formatLineQuantity(line({ amount: 5, toTaste: true }))).toBe("5 g + to taste");
+		expect(formatLineQuantity(line({ toTaste: true, optional: true }))).toBe("to taste (optional)");
+		expect(formatLineQuantity(line({ amount: 100, optional: true }))).toBe("100 g (optional)");
+		expect(formatLineQuantity(line({ customQuantities: ["1 loaf", "2 rolls"] }))).toBe(
+			"1 loaf + 2 rolls",
+		);
+		expect(formatLineQuantity(line({ amount: 500, customQuantities: ["1 bag"] }))).toBe(
+			"500 g + 1 bag",
+		);
+		expect(formatLineQuantity(line())).toBe("");
+	});
+
+	it("says what a line is for", () => {
+		expect(formatSources(line({ sources: ["Carbonara", "Lentil Dal"] }))).toBe(
+			"Carbonara, Lentil Dal",
+		);
+		expect(formatSources(line({ extra: true }))).toBe("extra");
+		expect(formatSources(line({ sources: ["Lentil Dal"], extra: true }))).toBe("Lentil Dal, extra");
+		expect(formatSources(line())).toBe("");
+	});
+
+	it("exports the list as text", () => {
+		expect(formatText([])).toBe("No meals selected yet.");
+		const list = [
+			{ name: "Produce", lines: [line({ amount: 1500 }), line({ name: "Salt", toTaste: true })] },
+			{ name: "Other", lines: [line({ name: "Candles", unit: null })] },
+		];
+		expect(formatText(list)).toBe("Produce\n- Thing: 1.5 kg\n- Salt: to taste\n\nOther\n- Candles");
+	});
+
+	it("summarises the list", () => {
+		expect(formatSummary(3, 12, "Today – Sat 31", 5)).toBe(
+			"3 of 12 left to buy · Today – Sat 31 · 5 meals",
+		);
+		expect(formatSummary(0, 1, "Today", 1)).toBe("0 of 1 left to buy · Today · 1 meal");
+	});
+
+	it("writes recipe times", () => {
+		expect(formatTotalTime({ totalTime: 25 })).toBe("25 min");
+		expect(formatTotalTime({ totalTime: null })).toBeNull();
+		expect(formatTiming({ prepTime: 10, cookTime: 15 })).toBe("10 min prep + 15 min cook");
+		expect(formatTiming({ prepTime: 10 })).toBe("10 min prep");
+		expect(formatTiming({ cookTime: 15 })).toBe("15 min cook");
+		expect(formatTiming({})).toBe("");
+	});
+
+	it("labels days and ranges", () => {
+		const today = "2026-10-25"; // a Sunday
+		const d = (n: number) => addDays(today, n);
+		expect(formatDay(today, today)).toBe("Today");
+		expect(formatDay(d(1), today)).toBe("Tomorrow");
+		expect(formatDay(d(2), today)).toBe("Tue 27 Oct");
+		expect(formatDay(d(7), today)).toBe("Sun 1 Nov");
+		expect(formatDay(d(-1), today)).toBe("Sat 24 Oct");
+		expect(formatDate(today)).toBe("Sun 25 Oct");
+		expect(formatDayInline(today, today)).toBe("today");
+		expect(formatDayInline(d(1), today)).toBe("tomorrow");
+		expect(formatDayInline(d(2), today)).toBe("Tue 27 Oct");
+
+		expect(formatRange(today, today, today)).toBe("Today");
+		expect(formatRange(today, d(1), today)).toBe("Today – Tomorrow");
+		expect(formatRange(today, d(6), today)).toBe("Today – Sat 31");
+		expect(formatRange(d(2), d(9), today)).toBe("Tue 27 – Tue 3");
+	});
+});

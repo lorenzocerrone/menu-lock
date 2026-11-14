@@ -4,6 +4,8 @@ test("the three tabs navigate with hash routes", async ({ page }) => {
 	await page.goto("/");
 	await expect(page.getByRole("heading", { name: "menu.lock" })).toBeVisible();
 	await expect(page.getByRole("heading", { name: "Recipes" })).toBeVisible();
+	// The bundled data loaded and passed validation in the browser.
+	await expect(page.getByText(/^\d+ recipes resolved from \d+ ingredients/)).toBeVisible();
 
 	await page.getByRole("link", { name: "Plan" }).click();
 	await expect(page).toHaveURL(/#\/planner$/);
