@@ -6,9 +6,11 @@ import {
 	retainSearchParams,
 } from "@tanstack/react-router";
 import { z } from "zod";
+import { type QuerySearch, queryFromSearch, queryToSearch } from "./lib/filters";
 import { GroceryPage } from "./routes/grocery";
 import { LabRoute } from "./routes/lab";
 import { PlannerPage } from "./routes/planner";
+import { RecipePage } from "./routes/recipe";
 import { RecipesPage } from "./routes/recipes";
 import { Shell } from "./ui/Shell";
 
@@ -36,6 +38,15 @@ const recipesRoute = createRoute({
 	getParentRoute: () => shellRoute,
 	path: "/",
 	component: RecipesPage,
+	// The recipe search and filters (q, diet, by, cuisine, tag, time), cleaned of anything unreadable.
+	validateSearch: (search: Record<string, unknown>): QuerySearch =>
+		queryToSearch(queryFromSearch(search)),
+});
+
+const recipeRoute = createRoute({
+	getParentRoute: () => shellRoute,
+	path: "/recipe/$id",
+	component: RecipePage,
 });
 
 const plannerRoute = createRoute({
@@ -61,7 +72,7 @@ const labRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-	shellRoute.addChildren([recipesRoute, plannerRoute, groceryRoute, labRoute]),
+	shellRoute.addChildren([recipesRoute, recipeRoute, plannerRoute, groceryRoute, labRoute]),
 ]);
 
 export const router = createRouter({

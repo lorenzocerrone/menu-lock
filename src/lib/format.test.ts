@@ -2,20 +2,34 @@ import { describe, expect, it } from "vitest";
 import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
 import {
+	formatAddedTo,
+	formatCount,
 	formatDate,
 	formatDay,
 	formatDayInline,
+	formatExtra,
+	formatFiltersButton,
 	formatGroceryAmount,
+	formatLeft,
 	formatLineAmount,
 	formatLineQuantity,
+	formatMovedTo,
+	formatOption,
+	formatPlanCaption,
 	formatQuantity,
 	formatRange,
+	formatRecipeMeta,
+	formatResolvedFrom,
 	formatServes,
+	formatShown,
+	formatShowRecipes,
 	formatSources,
+	formatStepNumber,
 	formatSummary,
 	formatText,
 	formatTiming,
 	formatTotalTime,
+	formatUnknownRecipe,
 	trimDecimals,
 } from "./format";
 import type { GroceryLine } from "./grocery";
@@ -144,6 +158,12 @@ describe("format", () => {
 
 	it("writes recipe times", () => {
 		expect(formatServes(4)).toBe("serves 4");
+		expect(formatRecipeMeta({ totalTime: 25, cuisine: "Italian", servings: 2 })).toEqual([
+			"25 min",
+			"Italian",
+			"serves 2",
+		]);
+		expect(formatRecipeMeta({ totalTime: null, servings: 1 })).toEqual(["serves 1"]);
 		expect(formatTotalTime({ totalTime: 25 })).toBe("25 min");
 		expect(formatTotalTime({ totalTime: null })).toBeNull();
 		expect(formatTiming({ prepTime: 10, cookTime: 15 })).toBe("10 min prep + 15 min cook");
@@ -169,5 +189,62 @@ describe("format", () => {
 		expect(formatRange(today, d(1), today)).toBe("Today – Tomorrow");
 		expect(formatRange(today, d(6), today)).toBe("Today – Sat 31");
 		expect(formatRange(d(2), d(9), today)).toBe("Tue 27 – Tue 3");
+	});
+
+	it("counts things, with the right noun", () => {
+		expect(formatCount(1, "meal")).toBe("1 meal");
+		expect(formatCount(0, "meal")).toBe("0 meals");
+		expect(formatCount(2, "loaf", "loaves")).toBe("2 loaves");
+		expect(formatShown(12, 25)).toBe("12 of 25");
+		expect(formatFiltersButton(0)).toBe("Filters");
+		expect(formatFiltersButton(2)).toBe("Filters · 2");
+		expect(formatShowRecipes(12)).toBe("Show 12 recipes");
+		expect(formatShowRecipes(1)).toBe("Show 1 recipe");
+		expect(formatOption("Italian", 6)).toBe("Italian 6");
+		expect(formatPlanCaption(8, 14)).toBe("8 meals · 14 days");
+		expect(formatPlanCaption(1, 14)).toBe("1 meal · 14 days");
+		expect(formatResolvedFrom(1)).toBe("resolved from 1 meal");
+		expect(formatLeft(40, 43)).toBe("40 / 43");
+		expect(formatStepNumber(0)).toBe("1");
+		expect(formatUnknownRecipe("ghost")).toBe("Unknown recipe (ghost)");
+	});
+
+	it("words the toasts", () => {
+		const today = "2026-10-25";
+		expect(formatAddedTo(today, today)).toBe("Added to today");
+		expect(formatAddedTo(addDays(today, 1), today)).toBe("Added to tomorrow");
+		expect(formatMovedTo(addDays(today, 6), today)).toBe("Moved to Sat 31 Oct");
+	});
+
+	it("lists an extra by name and what was asked for", () => {
+		const { dictionary } = fixtureData([recipeFile("r", 1, [{ ingredient: "salt" }])]);
+		expect(formatExtra({ kind: "catalog", key: "milk", amount: 1, unit: "l" }, dictionary)).toEqual(
+			{
+				name: "Milk",
+				quantity: "1 l",
+			},
+		);
+		expect(formatExtra({ kind: "catalog", key: "egg", amount: 6 }, dictionary)).toEqual({
+			name: "Egg",
+			quantity: "6",
+		});
+		expect(formatExtra({ kind: "catalog", key: "salt" }, dictionary)).toEqual({
+			name: "Salt",
+			quantity: "",
+		});
+		expect(formatExtra({ kind: "catalog", key: "gone" }, dictionary)).toEqual({
+			name: "gone",
+			quantity: "",
+		});
+		expect(
+			formatExtra({ kind: "custom", name: "Toilet paper", quantity: "1 pack" }, dictionary),
+		).toEqual({
+			name: "Toilet paper",
+			quantity: "1 pack",
+		});
+		expect(formatExtra({ kind: "custom", name: "Candles", quantity: null }, dictionary)).toEqual({
+			name: "Candles",
+			quantity: "",
+		});
 	});
 });

@@ -12,6 +12,8 @@ import { preview } from "vite";
 /** Add a line here for every new screen. `hash` is the route, with any fixture plan. */
 const SCREENS = [
 	{ name: "recipes", hash: "#/" },
+	{ name: "recipes-filtered", hash: "#/?diet=veg&time=20" },
+	{ name: "recipe", hash: "#/recipe/lentil_dal" },
 	{ name: "planner", hash: "#/planner" },
 	{ name: "grocery", hash: "#/grocery" },
 	// The reference screens of the chosen design (needs VITE_LAB=1; `npm run shots` sets it).

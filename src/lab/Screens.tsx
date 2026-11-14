@@ -128,7 +128,6 @@ export function Planner({ model }: { model: LabModel }) {
 											<p className="flex h-line items-center text-faint">Nothing pinned yet</p>
 										) : (
 											d.meals.map(({ entry, recipe }, i) => (
-												// biome-ignore lint/suspicious/noArrayIndexKey: a day may hold the same recipe twice
 												<p key={i} className="flex h-line items-center gap-2.5">
 													<span className="size-1.5 shrink-0 rounded-full bg-sienna" />
 													<span className="min-w-0 flex-1 truncate font-medium">

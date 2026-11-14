@@ -39,6 +39,8 @@
 	--rule-mid: color-mix(in srgb, var(--ink) 24%, transparent);
 	--sienna-line: color-mix(in srgb, var(--sienna) 55%, transparent);
 	--tape: color-mix(in srgb, var(--sienna) 30%, var(--panel));
+	/* The veil behind an open sheet: dark in both themes. */
+	--scrim: rgb(28 20 10 / 0.45);
 	/* The height of one ruled line. */
 	--line: 2.25rem;
 }
@@ -57,6 +59,7 @@
 	--color-rule: var(--rule);
 	--color-rule-soft: var(--rule-soft);
 	--color-rule-mid: var(--rule-mid);
+	--color-scrim: var(--scrim);
 	/* A paper card resting on the page, and one that floats above it. */
 	--shadow-card: 0 2px 0 var(--rule-soft);
 	--shadow-lift: 0 2px 0 var(--rule-soft), 0 10px 20px -10px var(--rule);

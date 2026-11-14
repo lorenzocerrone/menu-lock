@@ -1,7 +1,9 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { useGrocery } from "../state/app";
 import { PREVIEW } from "../state/storage";
 import { spring } from "./motion";
+import { Toasts } from "./Toasts";
 
 const TABS = [
 	{ to: "/", label: "Recipes" },
@@ -16,6 +18,9 @@ const TABS = [
  */
 export function Shell() {
 	const { pathname } = useLocation();
+	const { left } = useGrocery();
+	// A recipe is read without the tabs: its "Add to week" button takes their place.
+	const tabs = !pathname.startsWith("/recipe/");
 	return (
 		<div className="paper-grain min-h-dvh bg-paper text-ink">
 			<div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4">
@@ -29,6 +34,7 @@ export function Shell() {
 				</header>
 
 				<nav
+					hidden={!tabs}
 					aria-label="Sections"
 					className="fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] wide:static wide:mt-3 wide:px-0 wide:pb-0"
 				>
@@ -49,7 +55,12 @@ export function Shell() {
 											className="absolute inset-0 rounded-[4px] bg-sienna"
 										/>
 									) : null}
-									<span className="relative">{tab.label}</span>
+									<span className="relative">
+										{tab.label}
+										{tab.to === "/grocery" && left > 0 ? (
+											<span className="ml-1.5 text-xs opacity-80">{left}</span>
+										) : null}
+									</span>
 								</Link>
 							);
 						})}
@@ -60,6 +71,7 @@ export function Shell() {
 					<Outlet />
 				</main>
 			</div>
+			<Toasts />
 		</div>
 	);
 }

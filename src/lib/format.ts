@@ -2,9 +2,10 @@
  * Every user-facing number, date and quantity string. Pure: the UI calls into
  * here, so what something says is decided (and tested) in one place.
  */
-import type { Recipe, RecipeLine } from "./data";
+import type { Dictionary, Recipe, RecipeLine } from "./data";
 import { daysUntil, type IsoDate, MONTH_SHORT, WEEKDAY_SHORT, weekday, ymd } from "./dates";
 import type { GroceryAisle, GroceryLine } from "./grocery";
+import type { Extra } from "./plan";
 import type { CountSpec } from "./schema";
 import { labelFor, type Unit } from "./units";
 
@@ -104,6 +105,15 @@ export function formatServes(servings: number): string {
 	return `serves ${servings}`;
 }
 
+/** The facts under a recipe's title: "25 min", "Italian", "serves 2", leaving out what it lacks. */
+export function formatRecipeMeta(
+	recipe: Pick<Recipe, "totalTime" | "cuisine" | "servings">,
+): string[] {
+	return [formatTotalTime(recipe), recipe.cuisine, formatServes(recipe.servings)].filter(
+		(part): part is string => !!part,
+	);
+}
+
 /** Total time as a short label ("40 min"), if any time is set. */
 export function formatTotalTime(recipe: Pick<Recipe, "totalTime">): string | null {
 	return recipe.totalTime === null ? null : `${recipe.totalTime} min`;
@@ -147,4 +157,75 @@ export function formatRange(from: IsoDate, to: IsoDate, today: IsoDate): string 
 		return `${WEEKDAY_SHORT[weekday(date)]} ${ymd(date)[2]}`;
 	};
 	return to <= from ? short(from) : `${short(from)} – ${short(to)}`;
+}
+
+/** A count with its noun: "1 meal", "3 meals", "0 recipes". */
+export function formatCount(n: number, singular: string, plural = `${singular}s`): string {
+	return `${n} ${n === 1 ? singular : plural}`;
+}
+
+/** The recipe list's caption: "12 of 25". */
+export function formatShown(shown: number, total: number): string {
+	return `${shown} of ${total}`;
+}
+
+/** The filter button: "Filters", or "Filters · 2" when some are active. */
+export function formatFiltersButton(active: number): string {
+	return active === 0 ? "Filters" : `Filters · ${active}`;
+}
+
+/** The filter sheet's confirm button: "Show 12 recipes", "Show 1 recipe". */
+export function formatShowRecipes(n: number): string {
+	return `Show ${formatCount(n, "recipe")}`;
+}
+
+/** A filter option with what it would give: "Italian 6". */
+export function formatOption(label: string, count: number): string {
+	return `${label} ${count}`;
+}
+
+/** The plan's caption: "8 meals · 14 days". */
+export function formatPlanCaption(meals: number, days: number): string {
+	return `${formatCount(meals, "meal")} · ${formatCount(days, "day")}`;
+}
+
+/** The receipt's header line: "resolved from 8 meals". */
+export function formatResolvedFrom(meals: number): string {
+	return `resolved from ${formatCount(meals, "meal")}`;
+}
+
+/** The receipt's total: "40 / 43". */
+export function formatLeft(left: number, total: number): string {
+	return `${left} / ${total}`;
+}
+
+/** A meal whose recipe this build doesn't know (a link from a newer version). */
+export function formatUnknownRecipe(id: string): string {
+	return `Unknown recipe (${id})`;
+}
+
+/** The toast after adding a recipe to a day: "Added to tomorrow". */
+export function formatAddedTo(date: IsoDate, today: IsoDate): string {
+	return `Added to ${formatDayInline(date, today)}`;
+}
+
+/** The toast after moving a meal: "Moved to Fri 31 Oct". */
+export function formatMovedTo(date: IsoDate, today: IsoDate): string {
+	return `Moved to ${formatDayInline(date, today)}`;
+}
+
+/** A step's number in a recipe: "1", "2". */
+export function formatStepNumber(index: number): string {
+	return String(index + 1);
+}
+
+/** An extra as listed under the grocery list: its name and what was asked for. */
+export function formatExtra(
+	extra: Extra,
+	dictionary: Dictionary,
+): { name: string; quantity: string } {
+	if (extra.kind === "custom") return { name: extra.name, quantity: extra.quantity ?? "" };
+	const name = dictionary.entries.get(extra.key)?.name ?? extra.key;
+	if (extra.amount === undefined) return { name, quantity: "" };
+	return { name, quantity: [trimDecimals(extra.amount, 2), extra.unit].filter(Boolean).join(" ") };
 }

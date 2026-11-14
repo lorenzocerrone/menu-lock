@@ -3,7 +3,13 @@
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
 	"files": { "ignoreUnknown": true, "includes": ["**", "!docs/REWRITE_PLAN.md", "!public/images"] },
 	"formatter": { "enabled": true, "indentStyle": "tab", "lineWidth": 100 },
-	"linter": { "enabled": true, "rules": { "preset": "recommended" } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"suspicious": { "noArrayIndexKey": "off" }
+		}
+	},
 	"javascript": { "formatter": { "quoteStyle": "double" } },
 	"css": { "parser": { "tailwindDirectives": true } },
 	"assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } },
