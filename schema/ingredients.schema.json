@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "propertyNames": {
+    "type": "string",
+    "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Display name, capitalised: shown on the recipe and the grocery list."
+      },
+      "unit": {
+        "type": "string",
+        "enum": ["g", "ml", "pcs"],
+        "description": "The shopping unit: how it is bought and summed."
+      },
+      "aisle": {
+        "type": "string",
+        "enum": [
+          "Produce",
+          "Meat",
+          "Fish",
+          "Dairy & Eggs",
+          "Pasta & Grains",
+          "Bakery",
+          "Legumes",
+          "Pantry",
+          "Frozen",
+          "Spices & Oils"
+        ],
+        "description": "Grocery aisle. Meat and Fish make a recipe non-vegetarian."
+      },
+      "count": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "description": "What one piece is called: \"clove\", \"can\", \"fillet\".",
+            "type": "string",
+            "minLength": 1
+          },
+          "plural": {
+            "description": "Plural of the label, if it is not label + \"s\".",
+            "type": "string",
+            "minLength": 1
+          },
+          "perPiece": {
+            "description": "One piece in the shopping unit (g or ml). For a pcs ingredient: the grams in one piece.",
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false,
+        "description": "How the ingredient is counted in pieces."
+      },
+      "aliases": {
+        "description": "Other names for the same thing to buy.",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "required": ["name", "unit", "aisle"],
+    "additionalProperties": false
+  },
+  "description": "The ingredient dictionary: key → entry."
+}

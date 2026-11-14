@@ -1,14 +1,16 @@
 /* Design tokens: the parchment / ink / sienna paper style carried over from
-   cooking-rs. Phase 1 evolves these; every colour in the app comes from here. */
+   cooking-rs, as settled in phase 1 (docs/decisions.md, "Design rules").
+   Every colour in the app comes from here. */
 
 :root {
 	--paper: #efe8d8;
 	--panel: #f8f3e7;
 	--inset: #fbf8ef;
 	--ink: #3b3327;
-	--muted: #7c6e54;
+	--muted: #756649;
+	/* Decoration and done things only: too light for text that must be read. */
 	--faint: #9e8b68;
-	--sienna: #a85e30;
+	--sienna: #9a5426;
 	--on-sienna: #fbf6ea;
 	--danger: #9b3b2e;
 	--rule: rgb(62 51 36 / 0.42);
@@ -33,6 +35,17 @@
 	}
 }
 
+/* Derived from the tokens above, so they follow light and dark by themselves. */
+:root {
+	--rule-mid: color-mix(in srgb, var(--ink) 24%, transparent);
+	--sienna-line: color-mix(in srgb, var(--sienna) 55%, transparent);
+	--tape: color-mix(in srgb, var(--sienna) 30%, var(--panel));
+	/* The veil behind an open sheet: dark in both themes. */
+	--scrim: rgb(28 20 10 / 0.45);
+	/* The height of one ruled line. */
+	--line: 2.75rem;
+}
+
 /* Tailwind utilities for the tokens: bg-paper, text-ink, border-rule, font-mono… */
 @theme inline {
 	--color-paper: var(--paper);
@@ -46,6 +59,12 @@
 	--color-danger: var(--danger);
 	--color-rule: var(--rule);
 	--color-rule-soft: var(--rule-soft);
+	--color-rule-mid: var(--rule-mid);
+	--color-scrim: var(--scrim);
+	/* A paper card resting on the page, and one that floats above it. */
+	--shadow-card: 0 2px 0 var(--rule-soft);
+	--shadow-lift: 0 2px 0 var(--rule-soft), 0 10px 20px -10px var(--rule);
+	--spacing-line: var(--line);
 	--font-sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
 	--font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, monospace;
 	--radius-card: 6px;

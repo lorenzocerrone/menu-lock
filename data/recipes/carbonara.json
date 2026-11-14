@@ -1,0 +1,25 @@
+{
+  "id": "carbonara",
+  "title": "Spaghetti Carbonara",
+  "author": "Claude",
+  "servings": 2,
+  "description": "The Roman classic: silky egg-and-pecorino sauce, crisp guanciale, and plenty of black pepper. No cream.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "quick", "classic"],
+  "prepTime": 10,
+  "cookTime": 15,
+  "image": "carbonara.svg",
+  "ingredients": [
+    { "ingredient": "spaghetti", "amount": 200, "unit": "g" },
+    { "ingredient": "guanciale", "amount": 100, "unit": "g" },
+    { "ingredient": "egg", "amount": 4 },
+    { "ingredient": "pecorino", "amount": 50, "unit": "g" },
+    { "ingredient": "black_pepper" }
+  ],
+  "steps": [
+    "Boil the spaghetti in salted water.",
+    "Crisp the guanciale in a pan.",
+    "Whisk egg yolks with grated pecorino and pepper.",
+    "Toss drained pasta with guanciale, then the egg mixture off the heat."
+  ]
+}

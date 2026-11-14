@@ -24,6 +24,18 @@ npm run shots    # screenshots of every screen into shots/
 npm run build    # static site into dist/
 ```
 
+## Data
+
+Recipes are JSON files in `data/recipes/`, one per recipe; `data/ingredients.json` is the
+ingredient dictionary they refer to (name, shopping unit, aisle, piece size). Every
+recipe ingredient must be in the dictionary and its amount must convert into that
+ingredient's shopping unit, so the grocery list is always one number in one unit per
+line. `npm run check` validates all of it and says which file and line is wrong.
+
+To add a recipe, open Claude Code in this repo and paste or dictate it, attach a photo of
+it, or send a link (the `add-recipe` skill): it maps the ingredients to the dictionary,
+shows a preview to confirm, runs the checks and commits.
+
 ## Stack
 
 Vite, React, TypeScript (strict), TanStack Router (hash history), Zustand, Tailwind CSS,

@@ -1,5 +1,10 @@
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link, Outlet, useLocation } from "@tanstack/react-router";
+import { motion } from "motion/react";
+import { useGrocery } from "../state/app";
 import { PREVIEW } from "../state/storage";
+import { spring } from "./motion";
+import { Roll } from "./Roll";
+import { Toasts } from "./Toasts";
 
 const TABS = [
 	{ to: "/", label: "Recipes" },
@@ -7,37 +12,71 @@ const TABS = [
 	{ to: "/grocery", label: "Grocery" },
 ] as const;
 
-/** The app frame: wordmark, the three tabs (bottom bar on phones, top bar from 720px), the page. */
+/**
+ * The app frame: grainy paper, the wordmark, and the three tabs as a paper
+ * strip with a sienna pill on the current one. The strip floats at the bottom
+ * on phones and sits at the top from 720px.
+ */
 export function Shell() {
+	const { pathname } = useLocation();
+	const { left } = useGrocery();
+	// A recipe is read without the tabs: its "Add to week" button takes their place.
+	const tabs = !pathname.startsWith("/recipe/");
 	return (
-		<div className="mx-auto flex min-h-dvh max-w-3xl flex-col">
-			<header className="flex items-baseline gap-3 px-4 pt-5 pb-3">
-				<h1 className="font-bold font-mono text-lg tracking-tight">
-					menu<span className="text-sienna">.lock</span>
-				</h1>
-				{PREVIEW ? <span className="font-mono text-muted text-xs">preview · {PREVIEW}</span> : null}
-			</header>
+		<div className="paper-grain min-h-dvh bg-paper text-ink">
+			<div className="mx-auto flex min-h-dvh max-w-3xl flex-col px-4">
+				<header className="flex items-baseline gap-3 pt-4">
+					<h1 className="font-bold font-mono text-sm tracking-tight">
+						menu<span className="text-sienna">.lock</span>
+					</h1>
+					{PREVIEW ? (
+						<span className="font-mono text-muted text-xs">preview · {PREVIEW}</span>
+					) : null}
+				</header>
 
-			<nav
-				aria-label="Sections"
-				className="fixed inset-x-0 bottom-0 z-10 flex border-rule-soft border-t bg-panel pb-[env(safe-area-inset-bottom)] wide:static wide:mx-4 wide:rounded-card wide:border wide:pb-0"
-			>
-				{TABS.map((tab) => (
-					<Link
-						key={tab.to}
-						to={tab.to}
-						activeOptions={{ exact: true }}
-						className="flex min-h-14 flex-1 items-center justify-center font-mono text-muted text-sm wide:min-h-11"
-						activeProps={{ className: "text-sienna font-bold", "aria-current": "page" }}
-					>
-						{tab.label}
-					</Link>
-				))}
-			</nav>
+				<nav
+					hidden={!tabs}
+					aria-label="Sections"
+					className="fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] wide:static wide:mt-3 wide:px-0 wide:pb-0"
+				>
+					<div className="vt-tabs mx-auto flex max-w-md rounded-card border border-rule-soft bg-inset p-1 shadow-lift wide:mx-0 wide:shadow-card">
+						{TABS.map((tab) => {
+							const current = pathname === tab.to;
+							return (
+								<Link
+									key={tab.to}
+									to={tab.to}
+									viewTransition
+									aria-current={current ? "page" : undefined}
+									className={`relative flex min-h-11 flex-1 items-center justify-center font-mono text-sm ${current ? "text-on-sienna" : "text-muted"}`}
+								>
+									{current ? (
+										<motion.span
+											layoutId="tab-pill"
+											transition={spring}
+											className="absolute inset-0 rounded-[4px] bg-sienna"
+										/>
+									) : null}
+									<span className="relative">
+										{tab.label}
+										{tab.to === "/grocery" && left > 0 ? (
+											<>
+												{" "}
+												<Roll className="text-xs opacity-80">{String(left)}</Roll>
+											</>
+										) : null}
+									</span>
+								</Link>
+							);
+						})}
+					</div>
+				</nav>
 
-			<main className="flex-1 px-4 pt-4 pb-24 wide:pb-8">
-				<Outlet />
-			</main>
+				<main className="flex-1 pt-2 pb-28 wide:pb-10">
+					<Outlet />
+				</main>
+			</div>
+			<Toasts />
 		</div>
 	);
 }

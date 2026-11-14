@@ -1,0 +1,102 @@
+/* Paper: the textures and paper objects of the design (docs/decisions.md,
+   "Design rules"). Every colour is derived from the tokens. */
+
+/* Paper grain, laid over a surface. */
+.paper-grain {
+	position: relative;
+	isolation: isolate;
+}
+.paper-grain::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	opacity: 0.5;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .55 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+	.paper-grain::after {
+		opacity: 0.35;
+		mix-blend-mode: soft-light;
+	}
+}
+
+/* The grocery list: a till receipt with torn zigzag ends. */
+.receipt {
+	--z: 6px;
+	padding-block: calc(var(--z) + 1.25rem);
+	background: var(--inset);
+	mask:
+		conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom /
+		calc(2 * var(--z)) 51% repeat-x,
+		conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / calc(2 * var(--z))
+		51% repeat-x;
+	filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--ink) 14%, transparent));
+}
+.receipt-barcode {
+	height: 2.25rem;
+	background-image: repeating-linear-gradient(
+		to right,
+		var(--ink) 0 2px,
+		transparent 2px 5px,
+		var(--ink) 5px 6px,
+		transparent 6px 8px,
+		var(--ink) 8px 11px,
+		transparent 11px 13px
+	);
+	opacity: 0.75;
+}
+
+/* A strip of tape holding a recipe card. */
+.tape {
+	position: absolute;
+	width: 3.25rem;
+	height: 1.1rem;
+	background: var(--tape);
+	opacity: 0.8;
+}
+
+/* A day of the plan: a notebook page. A sienna margin line after the date,
+   and ruled lines under the meals (each row is one --line tall). */
+.plan-margin {
+	border-right: 1.5px solid var(--sienna-line);
+}
+.plan-lines {
+	background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--rule-soft) 0);
+	background-size: 100% var(--line);
+}
+
+/* A line drawn through something that is done (a ticked grocery line, a finished
+   step). On an inline element it draws across every wrapped line. */
+.strike {
+	background: linear-gradient(currentColor, currentColor) no-repeat 0 56% / 0% 1.5px;
+	transition: background-size 0.28s ease-out;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+.strike[data-on="true"] {
+	background-size: 100% 1.5px;
+}
+
+/* Moving between pages (the router starts a view transition on the links that
+   ask for one). Pages cross-fade quickly; a recipe's illustration and title
+   travel between its card and its page; the tab strip stays put. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.16s;
+}
+::view-transition-group(*) {
+	animation-duration: 0.28s;
+	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.vt-tabs {
+	view-transition-name: tabs;
+}
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none;
+	}
+}

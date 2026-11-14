@@ -1,0 +1,24 @@
+{
+  "id": "caprese_salad",
+  "title": "Caprese Salad",
+  "author": "Claude",
+  "servings": 2,
+  "description": "Ripe tomato, fresh mozzarella, and basil with good olive oil. Summer on a plate.",
+  "cuisine": "Italian",
+  "tags": ["salad", "no-cook", "quick"],
+  "prepTime": 10,
+  "cookTime": 0,
+  "image": "caprese_salad.svg",
+  "ingredients": [
+    { "ingredient": "tomato", "amount": 300, "unit": "g" },
+    { "ingredient": "mozzarella", "amount": 200, "unit": "g" },
+    { "ingredient": "basil", "amount": 10, "unit": "g" },
+    { "ingredient": "olive_oil", "amount": 20, "unit": "ml" },
+    { "ingredient": "salt" }
+  ],
+  "steps": [
+    "Slice the tomatoes and mozzarella into rounds.",
+    "Alternate them on a plate with basil leaves.",
+    "Drizzle with olive oil and season with salt."
+  ]
+}

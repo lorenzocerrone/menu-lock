@@ -6,8 +6,10 @@ import {
 	retainSearchParams,
 } from "@tanstack/react-router";
 import { z } from "zod";
+import { type QuerySearch, queryFromSearch, queryToSearch } from "./lib/filters";
 import { GroceryPage } from "./routes/grocery";
 import { PlannerPage } from "./routes/planner";
+import { RecipePage } from "./routes/recipe";
 import { RecipesPage } from "./routes/recipes";
 import { Shell } from "./ui/Shell";
 
@@ -20,30 +22,47 @@ const rootSearch = z.object({
 });
 
 const rootRoute = createRootRoute({
-	component: Shell,
 	validateSearch: rootSearch,
 	search: { middlewares: [retainSearchParams(["plan"])] },
 });
 
-const recipesRoute = createRoute({
+/** The app frame (wordmark and tabs) around the three pages. */
+const shellRoute = createRoute({
 	getParentRoute: () => rootRoute,
+	id: "shell",
+	component: Shell,
+});
+
+const recipesRoute = createRoute({
+	getParentRoute: () => shellRoute,
 	path: "/",
 	component: RecipesPage,
+	// The recipe search and filters (q, diet, by, cuisine, tag, time), cleaned of anything unreadable.
+	validateSearch: (search: Record<string, unknown>): QuerySearch =>
+		queryToSearch(queryFromSearch(search)),
+});
+
+const recipeRoute = createRoute({
+	getParentRoute: () => shellRoute,
+	path: "/recipe/$id",
+	component: RecipePage,
 });
 
 const plannerRoute = createRoute({
-	getParentRoute: () => rootRoute,
+	getParentRoute: () => shellRoute,
 	path: "/planner",
 	component: PlannerPage,
 });
 
 const groceryRoute = createRoute({
-	getParentRoute: () => rootRoute,
+	getParentRoute: () => shellRoute,
 	path: "/grocery",
 	component: GroceryPage,
 });
 
-const routeTree = rootRoute.addChildren([recipesRoute, plannerRoute, groceryRoute]);
+const routeTree = rootRoute.addChildren([
+	shellRoute.addChildren([recipesRoute, recipeRoute, plannerRoute, groceryRoute]),
+]);
 
 export const router = createRouter({
 	routeTree,
