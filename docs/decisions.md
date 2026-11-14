@@ -9,11 +9,11 @@ is now the one to edit).
 | Phase                     | State                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------- |
 | 0. Bootstrap              | Done. Live at `lorenzocerrone.github.io/menu-lock/`                              |
-| 1. Design direction       | **Next** (brief below)                                                           |
+| 1. Design direction       | Done: direction B, with the notebook plan (design rules below)                   |
 | 2. Data and logic         | Done (done before phase 1: it needs no decisions and gives the design real data) |
-| 3. Screens at parity      | Not started                                                                      |
-| 4. Motion and personality | Not started                                                                      |
-| 5. PWA and cutover        | Not started                                                                      |
+| 3. Screens at parity      | Done (signed off by the user on the preview)                                     |
+| 4. Motion and personality | Done                                                                             |
+| 5. PWA and cutover        | Done: menu.lock is live and cooking-rs redirects to it (2026-11-14)              |
 
 Also done: the `add-recipe` skill (plan §9), in `.claude/skills/add-recipe/`.
 
@@ -141,10 +141,15 @@ The app part:
 - `npm audit` reports low and moderate findings in the build-time dependencies of
   `workbox-build`; nothing of it ships in the app.
 
-The cutover (in the cooking-rs repo): see that repo's branch
-`claude/friendly-hopper-lmxc5w`. **Not merged: it goes live only when the user says so,
-and only after menu.lock itself is live** (PR #2 merged), or old links would redirect to
-the placeholder.
+The cutover, done on 2026-11-14 after menu.lock went live (the user confirmed nobody
+relied on the old site): cooking-rs's deployed site is now `redirect/index.html` from
+that repo (also its `404.html`), which sends every old address to the same page here
+with its plan and recipe filters, plus a `sw.js` that removes the old app's service
+worker. The mapping is tested in that repo (`node redirect/test.mjs`).
+
+The rewrite is complete. What the plan lists for later (§10): a tag-based set of
+illustrations, hosting on Cloudflare, family sync, a better way to add recipes from the
+phone.
 
 ## Phase 4: motion and personality (2026-11-14)
 
