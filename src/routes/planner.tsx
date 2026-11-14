@@ -25,6 +25,7 @@ import {
 	formatAddedTo,
 	formatDate,
 	formatDay,
+	formatDayInline,
 	formatExtra,
 	formatMealDetails,
 	formatMovedTo,
@@ -35,11 +36,13 @@ import {
 import { day, isEmpty, isItem, lastDate, type MealEntry, mealCount } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
+import { ExtraInput } from "../ui/ExtraInput";
 import { ItemEditor } from "../ui/ItemEditor";
 import { MealChanges } from "../ui/MealChanges";
 import { PageTitle } from "../ui/PageTitle";
 import { RecipePicker } from "../ui/RecipePicker";
 import { Sheet } from "../ui/Sheet";
+import { Stamp } from "../ui/Stamp";
 import { Stepper } from "../ui/Stepper";
 import { buttonDanger, buttonPaper, rowButton } from "../ui/styles";
 import { copyText, toast } from "../ui/toast";
@@ -62,7 +65,7 @@ const mealTitle = (entry: MealEntry) =>
 function MealLine({ entry, children }: { entry: MealEntry; children?: ReactNode }) {
 	return (
 		<>
-			{/* A recipe is a filled dot; an ingredient on its own is a ring. */}
+			{/* A recipe is a filled dot; an extra is a ring. */}
 			<span
 				className={`size-1.5 shrink-0 rounded-full ${isItem(entry) ? "ring-[1.5px] ring-sienna" : "bg-sienna"}`}
 			/>
@@ -120,11 +123,12 @@ type DayProps = {
 	today: IsoDate;
 	meals: readonly MealEntry[];
 	onAdd: () => void;
+	onExtra: () => void;
 	onOpen: (index: number) => void;
 };
 
 /** One day: a notebook page when it is today or has meals, else a single ruled row. */
-function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
+function Day({ date, today, meals, onAdd, onExtra, onOpen }: DayProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: dayId(date) });
 	const isToday = date === today;
 	const label = formatDay(date, today);
@@ -194,14 +198,24 @@ function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
 						</AnimatePresence>
 					</ul>
 				</SortableContext>
-				<button
-					type="button"
-					onClick={onAdd}
-					aria-label={`Add a meal on ${formatDate(date)}`}
-					className="flex h-line w-full items-center font-mono text-sienna text-xs"
-				>
-					+ add a meal
-				</button>
+				<div className="flex h-line items-center gap-5 font-mono text-sienna text-xs">
+					<button
+						type="button"
+						onClick={onAdd}
+						aria-label={`Add a meal on ${formatDate(date)}`}
+						className="flex h-full items-center"
+					>
+						+ add a meal
+					</button>
+					<button
+						type="button"
+						onClick={onExtra}
+						aria-label={`Add an extra on ${formatDate(date)}`}
+						className="flex h-full items-center"
+					>
+						+ add an extra
+					</button>
+				</div>
 			</div>
 		</section>
 	);
@@ -325,7 +339,7 @@ function MealSheet({
 		);
 	}
 
-	// An ingredient on its own, or a recipe this build doesn't know.
+	// An extra, or a recipe this build doesn't know.
 	return (
 		<Sheet open onClose={onClose} title={mealTitle(entry)}>
 			<p className="font-mono text-muted text-xs">{when}</p>
@@ -348,6 +362,13 @@ export function PlannerPage() {
 	const today = useApp((s) => s.today);
 	const { addMeal, addItem, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
 	const [adding, setAdding] = useState<IsoDate | null>(null);
+	// The day an extra is being added to, and whether it will go on the grocery list.
+	const [extraFor, setExtraFor] = useState<IsoDate | null>(null);
+	const [buyExtra, setBuyExtra] = useState(true);
+	const openExtra = (date: IsoDate) => {
+		setBuyExtra(true); // every extra starts on the grocery list
+		setExtraFor(date);
+	};
 	const [open, setOpen] = useState<Place | null>(null);
 	const [clearing, setClearing] = useState(false);
 	const [dragging, setDragging] = useState<Place | null>(null);
@@ -417,6 +438,7 @@ export function PlannerPage() {
 								today={today}
 								meals={day(plan, date)}
 								onAdd={() => setAdding(date)}
+								onExtra={() => openExtra(date)}
 								onOpen={(index) => setOpen({ date, index })}
 							/>
 						</li>
@@ -438,10 +460,9 @@ export function PlannerPage() {
 			>
 				<RecipePicker
 					recipes={DATA.recipes}
-					onItem={(item, buy) => {
-						if (!adding) return;
-						addItem(adding, item, buy);
-						toast(formatAddedTo(adding, today));
+					onExtra={() => {
+						// The same day, the other sheet.
+						if (adding) openExtra(adding);
 						setAdding(null);
 					}}
 					onPick={(recipe) => {
@@ -451,6 +472,37 @@ export function PlannerPage() {
 						setAdding(null);
 					}}
 				/>
+			</Sheet>
+
+			<Sheet
+				open={extraFor !== null}
+				onClose={() => setExtraFor(null)}
+				title={extraFor ? `Extra for ${formatDayInline(extraFor, today)}` : "Add an extra"}
+			>
+				<p className="mb-3 text-muted">
+					Anything that is not a recipe: an ingredient from the list, or whatever you type.
+				</p>
+				<ExtraInput
+					autoFocus
+					onAdd={(item) => {
+						if (!extraFor) return;
+						addItem(extraFor, item, buyExtra);
+						toast(formatAddedTo(extraFor, today));
+						setExtraFor(null);
+					}}
+				/>
+				<button
+					type="button"
+					aria-pressed={buyExtra}
+					onClick={() => setBuyExtra(!buyExtra)}
+					className={`${rowButton} mt-4`}
+				>
+					On the grocery list
+					<Stamp on={buyExtra} />
+				</button>
+				<p className="mt-2 font-mono text-muted text-xs">
+					Switch it off for something you already have (leftovers): it stays on the plan only.
+				</p>
 			</Sheet>
 
 			{open ? <MealSheet place={open} onClose={() => setOpen(null)} onPlace={setOpen} /> : null}

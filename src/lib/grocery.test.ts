@@ -231,44 +231,47 @@ describe("aggregate", () => {
 		expect(find(list, "scallion").amount).toBe(30); // only the second meal's
 	});
 
-	it("lists a day's ingredients that are to be bought: summed if listed, in Other if typed", () => {
+	it("lists a day's extras that are to be bought, like any extra", () => {
 		const data = fixtureData([
 			recipeFile("r", 2, [{ ingredient: "salmon", amount: 2, unit: "fillets" }]),
 		]);
-		const pizza = (quantity: string | null) =>
-			({ kind: "custom", name: "Frozen pizza", quantity }) as const;
-		let plan = addItem(EMPTY_PLAN, d(0), pizza(null), true);
+		let plan = addItem(
+			EMPTY_PLAN,
+			d(0),
+			{ kind: "custom", name: "Frozen pizza", quantity: null },
+			true,
+		);
 		plan = addItem(plan, d(2), { kind: "custom", name: "frozen pizza", quantity: "2 boxes" }, true);
-		plan = addItem(plan, d(0), { kind: "custom", name: "Leftovers", quantity: null }, false); // not to buy
+		plan = addItem(plan, d(0), { kind: "custom", name: "Leftovers", quantity: null }, false); // plan only
 		plan = addItem(plan, d(9), { kind: "custom", name: "Ice cream", quantity: null }, true); // out of range
 		plan = addItem(plan, d(1), { kind: "catalog", key: "salmon", amount: 1, unit: "fillet" }, true);
 		plan = addItem(plan, d(1), { kind: "catalog", key: "egg", amount: 6 }, true);
-		plan = addItem(plan, d(1), { kind: "catalog", key: "milk" }, false); // not to buy
+		plan = addItem(plan, d(1), { kind: "catalog", key: "milk" }, false); // plan only
 		plan = addMeal(plan, d(0), "r");
 		const list = aggregate(plan, d(0), d(5), data);
 		expect(names(list)).toEqual(["Fish", "Dairy & Eggs", "Other"]);
 		// From the list: added to the recipe's amount, in its aisle, never scaled.
-		expect(find(list, "salmon")).toMatchObject({
-			amount: 375,
-			sources: ["R", "plan"],
-			extra: false,
+		expect(find(list, "salmon")).toMatchObject({ amount: 375, sources: ["R"], extra: true });
+		expect(find(list, "egg")).toMatchObject({
+			amount: 6,
+			sources: [],
+			extra: true,
+			optional: false,
 		});
-		expect(find(list, "egg")).toMatchObject({ amount: 6, sources: ["plan"], optional: false });
 		// Typed: one line in Other, the quantities as written.
 		expect(find(list, "custom:frozen pizza")).toMatchObject({
 			name: "Frozen pizza",
 			amount: null,
 			customQuantities: ["2 boxes"],
-			sources: ["plan"],
-			extra: false,
-		});
-		expect(allLines(list)).toHaveLength(3);
-		// It joins a custom extra of the same name.
-		const withExtra = addExtra(plan, { kind: "custom", name: "Frozen pizza", quantity: "1" });
-		expect(find(aggregate(withExtra, d(0), d(5), data), "custom:frozen pizza")).toMatchObject({
-			customQuantities: ["2 boxes", "1"],
+			sources: [],
 			extra: true,
 		});
+		expect(allLines(list)).toHaveLength(3);
+		// It joins an extra of the same name that has no day.
+		const withExtra = addExtra(plan, { kind: "custom", name: "Frozen pizza", quantity: "1" });
+		expect(
+			find(aggregate(withExtra, d(0), d(5), data), "custom:frozen pizza").customQuantities,
+		).toEqual(["2 boxes", "1"]);
 	});
 
 	it("orders aisles as in the shop and lines by name", () => {

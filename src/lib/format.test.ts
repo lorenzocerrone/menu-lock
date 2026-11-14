@@ -266,17 +266,18 @@ describe("format", () => {
 			details({ recipe: "dal", servings: 6, changes: [{ kind: "skip", key: "salt" }] }),
 		).toEqual(["serves 6", "changed"]);
 		expect(details({ recipe: "dal", changes: [] })).toEqual([]);
-		// An ingredient on a day: how much, and whether it is to be bought.
-		expect(details({ item: { kind: "custom", name: "Leftover pizza", quantity: null } })).toEqual(
-			[],
-		);
+		// An extra on a day: how much, and "plan only" when it is not to be bought.
+		expect(details({ item: { kind: "custom", name: "Leftover pizza", quantity: null } })).toEqual([
+			"plan only",
+		]);
 		expect(
 			details({ item: { kind: "custom", name: "Frozen pizza", quantity: "2 boxes" }, buy: true }),
-		).toEqual(["2 boxes", "buy"]);
+		).toEqual(["2 boxes"]);
 		expect(
 			details({ item: { kind: "catalog", key: "salmon", amount: 2, unit: "fillets" }, buy: true }),
-		).toEqual(["2 fillets", "buy"]);
-		expect(details({ item: { kind: "catalog", key: "milk" } })).toEqual([]);
+		).toEqual(["2 fillets"]);
+		expect(details({ item: { kind: "catalog", key: "milk" } })).toEqual(["plan only"]);
+		expect(details({ item: { kind: "catalog", key: "milk" }, buy: true })).toEqual([]);
 
 		const base = {
 			key: "onion",

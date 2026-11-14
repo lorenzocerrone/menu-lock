@@ -42,7 +42,8 @@ src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforce
 src/dataset.ts   the bundled data, validated and resolved once (DATA)
 src/state/       the store (store.ts), its one instance and hooks (app.ts), URL sync, storage
 src/ui/          reusable components: Shell, Sheet, Chip, Stepper, RecipeCard, RecipeFilters,
-                 RecipePicker, DayPicker, MealChanges, PageTitle, Stamp, Roll, Underline, Toasts;
+                 RecipePicker, DayPicker, MealChanges, ExtraInput, ItemEditor, PageTitle, Stamp,
+                 Roll, Underline, Toasts;
                  styles.ts, motion.ts
 src/routes/      pages: recipes, recipe, planner, grocery; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), paper.css (textures), base.css

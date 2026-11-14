@@ -32,9 +32,10 @@ export type MealChange =
 export type RecipeMeal = { recipe: string; servings?: number; changes?: MealChange[] };
 
 /**
- * An ingredient on a day, without a recipe: one from the dictionary ("Salmon
- * fillet, 2 fillets") or anything typed ("Leftover pizza"). `buy`: it is also
- * on the grocery list.
+ * An extra on a day: the same thing as a grocery extra (a dictionary
+ * ingredient, or anything typed: "Leftover pizza"), but it sits on a day of the
+ * plan. `buy`: it is on the grocery list, as extras are; without it, it is on
+ * the plan only.
  */
 export type ItemMeal = { item: Extra; buy?: true };
 
@@ -105,7 +106,7 @@ export function addMeal(plan: Plan, date: IsoDate, recipe: string): Plan {
 	return withDay(plan, date, [...day(plan, date), { recipe }]);
 }
 
-/** Append an ingredient (not a recipe) to a day. */
+/** Append an extra to a day. */
 export function addItem(plan: Plan, date: IsoDate, item: Extra, buy: boolean): Plan {
 	if (item.kind === "custom" && item.name.trim() === "") return plan;
 	return withDay(plan, date, [...day(plan, date), buy ? { item, buy: true } : { item }]);

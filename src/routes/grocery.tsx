@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "motion/react";
-import { type FormEvent, memo, useState } from "react";
+import { memo } from "react";
 import { DATA } from "../dataset";
-import { parseExtra, suggest, toExtra } from "../lib/extras";
 import {
+	formatDay,
 	formatExtra,
 	formatLeft,
 	formatLineQuantity,
@@ -22,85 +22,65 @@ import {
 	rangeEnd,
 	sameRange,
 } from "../lib/grocery";
-import { entriesIn } from "../lib/plan";
+import { day, entriesIn, isItem, plannedDates } from "../lib/plan";
 import { store, useApp, useGrocery } from "../state/app";
 import { groceryList } from "../state/store";
 import { Chip } from "../ui/Chip";
+import { ExtraInput } from "../ui/ExtraInput";
 import { spring, stampSpring } from "../ui/motion";
 import { PageTitle } from "../ui/PageTitle";
 import { Roll } from "../ui/Roll";
 import { Stamp } from "../ui/Stamp";
-import { buttonPaper, buttonPrimary, input } from "../ui/styles";
+import { buttonPaper } from "../ui/styles";
 import { copyText } from "../ui/toast";
 
-/** Things to buy that are in no recipe: one line to type them, and the list of them. */
+/**
+ * Things to buy that are in no recipe: one line to type them, and the list of
+ * them, which also shows the extras that sit on a day of the plan.
+ */
 function Extras() {
-	const extras = useApp((s) => s.plan.extras);
+	const plan = useApp((s) => s.plan);
+	const today = useApp((s) => s.today);
 	const addExtra = useApp((s) => s.addExtra);
 	const removeExtra = useApp((s) => s.removeExtra);
-	const [text, setText] = useState("");
-	const parsed = parseExtra(text);
-	const suggestions = suggest(DATA.dictionary, parsed.name, 5);
-
-	const add = (key: string | null) => {
-		if (parsed.name === "") return;
-		addExtra(toExtra(parsed, key, DATA.dictionary));
-		setText("");
-	};
-	const submit = (event: FormEvent) => {
-		event.preventDefault();
-		add(null);
-	};
+	const removeMeal = useApp((s) => s.removeMeal);
+	// The extras on a day that are to be bought, with where they are.
+	const planned = plannedDates(plan).flatMap((date) =>
+		day(plan, date).flatMap((meal, index) =>
+			isItem(meal) && meal.buy ? [{ date, index, item: meal.item }] : [],
+		),
+	);
+	const rows = [
+		...plan.extras.map((item, index) => ({ item, when: null, remove: () => removeExtra(index) })),
+		...planned.map(({ item, date, index }) => ({
+			item,
+			when: formatDay(date, today),
+			remove: () => removeMeal(date, index),
+		})),
+	];
 
 	return (
 		<section className="mt-8">
 			<h3 className="font-bold text-xl">Extras</h3>
-			<p className="mt-1 text-muted text-sm">Anything else to buy. They travel with the link.</p>
-			<form onSubmit={submit} className="mt-3 flex gap-2">
-				<input
-					value={text}
-					onChange={(event) => setText(event.target.value)}
-					placeholder="milk 1 l"
-					aria-label="Add an extra"
-					autoComplete="off"
-					enterKeyHint="done"
-					className={input}
-				/>
-				<button type="submit" disabled={parsed.name === ""} className={`${buttonPrimary} shrink-0`}>
-					Add
-				</button>
-			</form>
-			{suggestions.length > 0 ? (
-				<ul
-					aria-label="Suggestions"
-					className="mt-2 rounded-card border border-rule-soft bg-inset px-3 shadow-card"
-				>
-					{suggestions.map((s) => (
-						<li key={s.key}>
-							<button
-								type="button"
-								onClick={() => add(s.key)}
-								className="flex min-h-11 w-full items-center justify-between gap-3 border-rule-soft border-b text-left last:border-b-0"
-							>
-								<span>{s.name}</span>
-								<span className="font-mono text-muted text-xs">{s.aisle}</span>
-							</button>
-						</li>
-					))}
-				</ul>
-			) : null}
-			{extras.length > 0 ? (
+			<p className="mt-1 mb-3 text-muted text-sm">
+				Anything else to buy. They travel with the link.
+			</p>
+			<ExtraInput onAdd={addExtra} />
+			{rows.length > 0 ? (
 				<ul aria-label="Extras" className="mt-3">
-					{extras.map((extra, i) => {
-						const { name, quantity } = formatExtra(extra, DATA.dictionary);
+					{rows.map(({ item, when, remove }, i) => {
+						const { name, quantity } = formatExtra(item, DATA.dictionary);
 						return (
 							<li key={i} className="flex min-h-11 items-center gap-3 border-rule-soft border-b">
-								<span className="min-w-0 flex-1 truncate">{name}</span>
+								<span className="min-w-0 flex-1 truncate">
+									{name}
+									{when ? <span className="font-mono text-muted text-xs"> · {when}</span> : null}
+								</span>
 								<span className="shrink-0 font-mono text-muted text-sm">{quantity}</span>
 								<button
 									type="button"
 									aria-label={`Remove ${name}`}
-									onClick={() => removeExtra(i)}
+									onClick={remove}
 									className="-mr-2 flex size-11 shrink-0 items-center justify-center font-mono text-danger text-xl"
 								>
 									×

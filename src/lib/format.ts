@@ -234,12 +234,12 @@ export function formatExtra(
 
 /**
  * What a planned meal says beside its title: "serves 6", "changed"; for an
- * ingredient on a day, how much of it and "buy".
+ * extra on a day, how much of it, and "plan only" when it is not to be bought.
  */
 export function formatMealDetails(meal: MealEntry, dictionary: Dictionary): string[] {
 	if (isItem(meal)) {
 		const { quantity } = formatExtra(meal.item, dictionary);
-		return [...(quantity ? [quantity] : []), ...(meal.buy ? ["buy"] : [])];
+		return [...(quantity ? [quantity] : []), ...(meal.buy ? [] : ["plan only"])];
 	}
 	return [
 		...(meal.servings === undefined ? [] : [formatServes(meal.servings)]),

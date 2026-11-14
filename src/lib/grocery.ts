@@ -35,9 +35,6 @@ export type GroceryLine = {
 
 export type GroceryAisle = { name: string; lines: GroceryLine[] };
 
-/** What a grocery line is "for" when it comes from a non-recipe item on the plan. */
-export const PLAN_SOURCE = "plan";
-
 /** Line key for a hand-typed extra: stable per name, case-insensitive. */
 export function customKey(name: string): string {
 	return `custom:${normalizeName(name)}`;
@@ -92,25 +89,19 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 	};
 
 	/**
-	 * Hand-typed things, which have no dictionary entry: custom extras, non-recipe
-	 * items on the plan that are to be bought, and ingredients typed freely into a
-	 * meal. `source` is what the line is for; `extra` marks a grocery-page extra.
+	 * Hand-typed things, which have no dictionary entry: custom extras (on a day or
+	 * not) and ingredients typed freely into a meal. `source` is the recipe the
+	 * line is for; `extra` marks an extra.
 	 */
 	const typed: { name: string; quantity: string | null; source?: string; extra: boolean }[] = [];
-	/** Dictionary ingredients asked for without a recipe: the plan's extras, and ingredients on a day. */
-	const listed: { item: Extract<Extra, { kind: "catalog" }>; source?: string }[] = [];
+	/** Dictionary ingredients asked for without a recipe: the extras, on a day or not. */
+	const listed: Extract<Extra, { kind: "catalog" }>[] = [];
 	for (const meal of entriesIn(plan, from, to)) {
 		if (isItem(meal)) {
-			// An ingredient on a day, if it is to be bought.
+			// An extra on a day, if it is to be bought: like any other extra.
 			if (!meal.buy) continue;
-			if (meal.item.kind === "catalog") listed.push({ item: meal.item, source: PLAN_SOURCE });
-			else
-				typed.push({
-					name: meal.item.name,
-					quantity: meal.item.quantity,
-					source: PLAN_SOURCE,
-					extra: false,
-				});
+			if (meal.item.kind === "catalog") listed.push(meal.item);
+			else typed.push({ name: meal.item.name, quantity: meal.item.quantity, extra: true });
 			continue;
 		}
 		const recipe = data.recipeById.get(meal.recipe);
@@ -136,9 +127,9 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 
 	// Dictionary ingredients without a recipe are plain grocery items: never scaled.
 	for (const extra of plan.extras) {
-		if (extra.kind === "catalog") listed.push({ item: extra });
+		if (extra.kind === "catalog") listed.push(extra);
 	}
-	for (const { item, source } of listed) {
+	for (const item of listed) {
 		const entry = data.dictionary.entries.get(item.key);
 		const line = lineFor(item.key);
 		if (!entry || !line) continue;
@@ -148,8 +139,7 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 				? null
 				: toShopping(item.amount, unit, entry.unit, entry.count);
 		add(line, amount, false);
-		if (source === undefined) line.extra = true;
-		else if (!line.sources.includes(source)) line.sources.push(source);
+		line.extra = true;
 	}
 
 	// Hand-typed things join the line of the dictionary ingredient they name, if it

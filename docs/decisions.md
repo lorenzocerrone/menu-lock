@@ -150,29 +150,32 @@ agreement. Links without them are written exactly as before, so every older link
 reads the same; cooking-rs is gone, so nothing needs to read the new shapes but
 menu.lock.
 
-**Ingredients on a day, without a recipe** ("Salmon fillet, 2 fillets", "Leftover pizza").
+**Extras on a day** ("Salmon fillet, 2 fillets", "Leftover pizza").
 
-This replaced a first version, "notes" (free text with a buy switch), the same day: the
-user found it more straightforward that a day holds recipes and ingredients, and an
-ingredient is something the app already understands.
+Third version in a day. First "notes" (free text with a buy switch), then "ingredients
+on a day" offered inside the meal picker; the user did not find them there, and asked
+for an explicit "+ add an extra", treated like the grocery page's extras.
 
-- A day's entry is a recipe or `{ item, buy? }`, where `item` is the same thing as a
-  grocery extra: a dictionary ingredient with an optional amount and unit, or anything
-  typed, with a free-text quantity. On the wire the item is written like an extra:
+- A day's entry is a recipe or `{ item, buy? }`. `item` is an extra, exactly as on the
+  grocery page: a dictionary ingredient with an optional amount and unit, or anything
+  typed with a free-text quantity. On the wire the item is written like an extra:
   `{"item":{"name":"salmon","amount":2,"unit":"fillets"},"buy":true}`,
   `{"item":{"name":"Leftover pizza","quantity":null}}`.
-- The "add a meal" picker reads what is typed twice: as a recipe search, and as an
-  ingredient ("salmon 2 fillets" is a name and a quantity). Under the recipes it lists
-  the matching ingredients (fuzzy, as everywhere), and offers what was typed as it is:
-  "plan only" or "and buy it". A listed ingredient is added to buy; if its quantity does
-  not convert for it, it is kept as typed.
-- With `buy`, a listed ingredient adds to its grocery line (in its aisle, summed with
-  the recipes that use it, not scaled), and a typed one is a line in Other; both are
-  "for" the plan. Without `buy` it is only on the plan (leftovers).
-- Its sheet edits how much of it and has "On the grocery list".
-- On the plan it has a ring where a recipe has a dot, then its quantity, then "buy".
-- Extras on the grocery page stay: an extra is shopping only, with no day; an
-  ingredient on a day follows that day (the range, and dropping off when it passes).
+- Every day card has "+ add a meal" and "+ add an extra". The extra sheet has the same
+  one-line input as the grocery page (`ExtraInput`: "milk 1 l", fuzzy suggestions,
+  Enter adds what was typed) and an "On the grocery list" switch, on by default: extras
+  are things to buy. Switched off, the extra is on the plan only (leftovers). The meal
+  picker has a row, "Not a recipe? Add an extra", that leads to the same sheet, which is
+  also how an empty day gets one.
+- With `buy`, it is on the grocery list like any extra (a listed ingredient in its
+  aisle, summed with the recipes that use it and never scaled; a typed one in Other;
+  both marked "extra"), and it is in the grocery page's Extras list with its day, where
+  removing it takes it off the day.
+- Its sheet on the plan edits how much of it and has the same switch.
+- On the plan it has a ring where a recipe has a dot, then its quantity, and "plan
+  only" when it is not to be bought.
+- What makes it different from an extra without a day: it shows on that day, follows
+  the grocery range, and drops off when the day passes.
 
 **Changing a recipe for one planned meal** (the user picked: per meal, with all four
 kinds of change).

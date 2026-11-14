@@ -1,7 +1,7 @@
 /**
- * An ingredient on a day, in its sheet: how much of it (an amount and a unit
- * for one from the list, free text for one that was typed), and whether it is
- * on the grocery list.
+ * An extra on a day, in its sheet: how much of it (an amount and a unit for an
+ * ingredient from the list, free text for anything typed), and whether it is on
+ * the grocery list.
  */
 import { useState } from "react";
 import { DATA } from "../dataset";
