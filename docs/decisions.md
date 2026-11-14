@@ -118,6 +118,34 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Phase 5: PWA and cutover (2026-11-14)
+
+The app part:
+
+- **Installable and offline** with `vite-plugin-pwa`: a generated service worker
+  precaches everything (the app, the fonts, the 26 illustrations: 70 files, under 1 MB)
+  and updates itself (`registerType: "autoUpdate"`: a new version installs and reloads
+  the page, which loses nothing because the plan is in the address and in storage).
+- **No navigation fallback.** Routing is in the hash, so the only page is `index.html`,
+  and the worker never answers for addresses it doesn't own. That matters because the
+  pull-request previews live inside the live app's scope (`/menu-lock/pr-preview/…`).
+  **Preview builds get no service worker** (`VITE_PREVIEW` disables the plugin).
+- **Icons**: `public/icons/icon.svg` (a padlock whose body is a list, on paper) is the
+  source; `npm run icons` renders the 192, 512 and Apple touch PNGs, which are
+  committed. The 512 is also declared maskable: the mark sits inside the safe zone.
+- **Manifest**: name and short name `menu.lock`, standalone, background and theme
+  colour `#efe8d8` (`--paper`). `index.html` keeps a dark `theme-color` for dark mode.
+- **The cooking-rs import** (built in phase 2) now has its browser test: the plan in
+  `cooking-rs.state` appears on the first start, without cooking-rs's ticks or range,
+  and is never read again once menu.lock has stored its own state.
+- `npm audit` reports low and moderate findings in the build-time dependencies of
+  `workbox-build`; nothing of it ships in the app.
+
+The cutover (in the cooking-rs repo): see that repo's branch
+`claude/friendly-hopper-lmxc5w`. **Not merged: it goes live only when the user says so,
+and only after menu.lock itself is live** (PR #2 merged), or old links would redirect to
+the placeholder.
+
 ## Phase 4: motion and personality (2026-11-14)
 
 The brief kept motion to what serves the paper look, so this is a short list, each

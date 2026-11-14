@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <title>menu.lock</title>
-  <rect width="64" height="64" rx="12" fill="#efe8d8"/>
-  <path d="M22 28v-7a10 10 0 0 1 20 0v7" fill="none" stroke="#3b3327" stroke-width="4" stroke-linecap="round"/>
-  <rect x="15" y="28" width="34" height="24" rx="4" fill="#a85e30"/>
-  <path d="M24 36h16M24 42h16M24 48h9" stroke="#fbf6ea" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Full-bleed paper, so the system can mask it to any shape; the mark stays inside the safe zone. -->
+  <rect width="512" height="512" fill="#efe8d8"/>
+  <path d="M186 232v-52a70 70 0 0 1 140 0v52" fill="none" stroke="#3b3327" stroke-width="30" stroke-linecap="round"/>
+  <rect x="136" y="228" width="240" height="176" rx="22" fill="#9a5426"/>
+  <path d="M190 282h132M190 322h132M190 362h76" stroke="#fbf6ea" stroke-width="18" stroke-linecap="round"/>
 </svg>

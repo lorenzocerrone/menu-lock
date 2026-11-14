@@ -22,6 +22,7 @@ it at the end of each phase and whenever a decision is made.
   add it to `SCREENS` in `scripts/shots.ts`.
 - `npm run build`: production build into `dist/`.
 - `npm run schema`: regenerate `schema/*.json` after changing `src/lib/schema.ts`.
+- `npm run icons`: regenerate the icon PNGs after changing `public/icons/icon.svg`.
 
 `npm run check` also validates every file in `data/`. Its messages name the file and the
 ingredient line; fix the data, not the check.
@@ -45,7 +46,7 @@ src/ui/          reusable components: Shell, Sheet, Chip, Stepper, RecipeCard, R
 src/routes/      pages: recipes, recipe, planner, grocery; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), paper.css (textures), base.css
 tests/e2e/       Playwright flows (helpers.ts builds plan links from today's date)
-scripts/         shots.ts, gen-schema.ts, the one-off migration
+scripts/         shots.ts, gen-schema.ts, gen-icons.ts, the one-off migration
 ```
 
 To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recipe/`).
