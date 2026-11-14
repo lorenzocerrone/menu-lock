@@ -1,0 +1,72 @@
+{
+  "id": "pumpkin_sausage_risotto",
+  "title": "Pumpkin and Sausage Risotto",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Sweet pumpkin cooked down into the rice, with browned sausage and rosemary.",
+  "cuisine": "Italian",
+  "tags": ["risotto", "comfort"],
+  "prepTime": 15,
+  "cookTime": 30,
+  "ingredients": [
+    {
+      "ingredient": "arborio_rice",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "pumpkin",
+      "amount": 500,
+      "unit": "g",
+      "note": "peeled and diced"
+    },
+    {
+      "ingredient": "sausage",
+      "amount": 200,
+      "unit": "g",
+      "note": "skin removed, crumbled"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 0.5,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "vegetable_broth",
+      "amount": 1.2,
+      "unit": "l",
+      "note": "kept hot"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 40,
+      "unit": "g"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 60,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "rosemary",
+      "amount": 1,
+      "unit": "sprig",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Brown the sausage in a wide pan, then add the onion and soften it.",
+    "Add the pumpkin and rosemary and cook for 5 minutes, then the rice, toasting it for 2 minutes.",
+    "Pour in the wine, then the hot broth a ladle at a time, stirring, for 18 minutes, until the pumpkin breaks down.",
+    "Off the heat, stir in the butter and parmesan and rest for 2 minutes."
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "id": "beef_pizzaiola",
+  "title": "Beef alla Pizzaiola",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Thin beef slices simmered in tomato, garlic and oregano, like a pizza topping.",
+  "cuisine": "Italian",
+  "tags": ["main", "quick", "classic"],
+  "prepTime": 10,
+  "cookTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "beef_steak",
+      "amount": 600,
+      "unit": "g",
+      "note": "thin slices"
+    },
+    {
+      "ingredient": "peeled_tomatoes",
+      "amount": 1,
+      "unit": "can"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "oregano",
+      "amount": 1,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "capers",
+      "amount": 15,
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "ingredient": "basil",
+      "amount": 5,
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Warm the oil with the garlic, add the tomatoes, crushed, the oregano and salt. Simmer for 10 minutes.",
+    "Lay the beef in the sauce in one layer, add the capers, and cook for 3–5 minutes, turning once, until just done.",
+    "Serve with basil and bread for the sauce."
+  ]
+}

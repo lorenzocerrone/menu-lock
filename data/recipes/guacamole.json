@@ -1,0 +1,55 @@
+{
+  "id": "guacamole",
+  "title": "Guacamole",
+  "author": "Claude",
+  "servings": 6,
+  "description": "Chunky avocado dip with lime, tomato, red onion and cilantro.",
+  "cuisine": "Mexican",
+  "tags": ["party", "quick", "no-cook"],
+  "prepTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "avocado",
+      "amount": 3
+    },
+    {
+      "ingredient": "lime",
+      "amount": 1,
+      "note": "juiced"
+    },
+    {
+      "ingredient": "tomato",
+      "amount": 1,
+      "note": "finely diced"
+    },
+    {
+      "ingredient": "red_onion",
+      "amount": 0.5,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "cilantro",
+      "amount": 10,
+      "unit": "g",
+      "note": "chopped"
+    },
+    {
+      "ingredient": "chili_flakes",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "tortilla_chips",
+      "amount": 200,
+      "unit": "g",
+      "note": "to serve",
+      "optional": true
+    }
+  ],
+  "steps": [
+    "Mash the avocados with the lime juice and salt, leaving some chunks.",
+    "Stir in the tomato, onion, cilantro and chili. Serve at once with the chips."
+  ]
+}

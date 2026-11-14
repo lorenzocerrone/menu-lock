@@ -1,0 +1,51 @@
+{
+  "id": "tomato_bruschetta",
+  "title": "Tomato Bruschetta",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Grilled bread rubbed with garlic and piled with fresh tomato and basil.",
+  "cuisine": "Italian",
+  "tags": ["party", "quick"],
+  "prepTime": 10,
+  "cookTime": 5,
+  "ingredients": [
+    {
+      "ingredient": "rustic_bread",
+      "amount": 8,
+      "unit": "slices"
+    },
+    {
+      "ingredient": "tomato",
+      "amount": 4,
+      "note": "diced"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove",
+      "note": "halved"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 10,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "oregano",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Toss the tomatoes with half the oil, torn basil and salt.",
+    "Toast or grill the bread and rub it with the cut garlic.",
+    "Top with the tomatoes and drizzle with the rest of the oil."
+  ]
+}

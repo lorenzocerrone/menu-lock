@@ -7,53 +7,53 @@ test("1. recipe filters live in the address and survive a reload and a visit to 
 	page,
 }) => {
 	await open(page, "/");
-	await expect(page.getByText("25 of 25")).toBeVisible();
+	await expect(page.getByText("39 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Filters" }).click();
 	await page.getByRole("button", { name: /^vegetarian \d+$/ }).click();
 	await page.getByRole("button", { name: /^≤20 min \d+$/ }).click();
-	await page.getByRole("button", { name: "Show 10 recipes" }).click();
+	await page.getByRole("button", { name: "Show 12 recipes" }).click();
 
 	await expect(page).toHaveURL(/diet=veg/);
 	await expect(page).toHaveURL(/time=20/);
-	await expect(page.getByText("10 of 25")).toBeVisible();
+	await expect(page.getByText("12 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Filters · 2" })).toBeVisible();
 	await expect(page.getByRole("heading", { name: "Spaghetti Carbonara" })).toHaveCount(0);
 
 	await page.reload();
-	await expect(page.getByText("10 of 25")).toBeVisible();
+	await expect(page.getByText("12 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Remove filter vegetarian" })).toBeVisible();
 
-	await page.getByRole("link", { name: /Greek Salad/ }).click();
-	await expect(page.getByRole("heading", { name: "Greek Salad" })).toBeVisible();
+	await page.getByRole("link", { name: /Fennel and Orange Salad/ }).click();
+	await expect(page.getByRole("heading", { name: "Fennel and Orange Salad" })).toBeVisible();
 	await page.getByRole("button", { name: "‹ Back" }).click();
-	await expect(page.getByText("10 of 25")).toBeVisible();
+	await expect(page.getByText("12 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Remove filter vegetarian" }).click();
 	await expect(page).not.toHaveURL(/diet=/);
-	await page.getByLabel("Search recipes").fill("greek salad"); // 15 minutes, so within the ≤20 min filter
-	await expect(page.getByText("1 of 25")).toBeVisible();
-	await expect(page).toHaveURL(/q=greek/);
+	await page.getByLabel("Search recipes").fill("fennel"); // 15 minutes, so within the ≤20 min filter
+	await expect(page.getByText("1 of 39")).toBeVisible();
+	await expect(page).toHaveURL(/q=fennel/);
 });
 
 test("2. a recipe rescales with its servings and is added to the week", async ({ page }) => {
-	await open(page, "/recipe/lentil_dal");
-	await expect(page.getByRole("heading", { name: "Lentil Dal" })).toBeVisible();
+	await open(page, "/recipe/beef_stew_wine_olives");
+	await expect(page.getByRole("heading", { name: "Beef Stew with Wine and Olives" })).toBeVisible();
 	await expect(page.getByRole("navigation", { name: "Sections" })).toBeHidden();
 	const ingredients = page.getByRole("list", { name: "Ingredients" });
 	const garlic = ingredients.getByRole("listitem").filter({ hasText: "Garlic" });
 	const salt = ingredients.getByRole("listitem").filter({ hasText: /^Salt/ });
+	await expect(garlic).toContainText("2 cloves");
+	await expect(salt).toContainText("to taste");
+
+	await page.getByRole("button", { name: "More servings" }).click();
+	await page.getByRole("button", { name: "More servings" }).click();
 	await expect(garlic).toContainText("3 cloves");
 	await expect(salt).toContainText("to taste");
-
-	await page.getByRole("button", { name: "More servings" }).click();
-	await page.getByRole("button", { name: "More servings" }).click();
-	await expect(garlic).toContainText("4.5 cloves");
-	await expect(salt).toContainText("to taste");
 	await page.getByRole("button", { name: "Fewer servings" }).click();
-	await expect(garlic).toContainText("3.75 cloves");
+	await expect(garlic).toContainText("2.5 cloves");
 
-	const step = page.getByRole("button", { name: /Serve over rice/ });
+	const step = page.getByRole("button", { name: /Cover and simmer/ });
 	await step.click();
 	await expect(step).toHaveAttribute("aria-pressed", "true");
 
@@ -70,7 +70,7 @@ test("an unknown recipe has a friendly way back", async ({ page }) => {
 	await open(page, "/recipe/no_such_dish");
 	await expect(page.getByRole("heading", { name: "No such recipe" })).toBeVisible();
 	await page.getByRole("link", { name: "‹ All recipes" }).click();
-	await expect(page.getByText("25 of 25")).toBeVisible();
+	await expect(page.getByText("39 of 39")).toBeVisible();
 });
 
 test("3. the planner adds a meal, changes servings, moves, reorders and removes", async ({
@@ -97,16 +97,16 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 		.click();
 	await page
 		.getByRole("dialog")
-		.getByRole("button", { name: /Greek Salad/ })
+		.getByRole("button", { name: /Tzatziki/ })
 		.click();
-	await expect(today.getByRole("listitem")).toHaveText([/Spaghetti Carbonara/, /Greek Salad/]);
+	await expect(today.getByRole("listitem")).toHaveText([/Spaghetti Carbonara/, /Tzatziki/]);
 	await expect(page.getByText("2 meals · 14 days")).toBeVisible();
 
 	// Servings: shown on the meal only when they differ from the recipe's own.
 	await today.getByRole("button", { name: "Spaghetti Carbonara", exact: true }).click();
 	await page.getByRole("button", { name: "More servings" }).click();
 	await page.getByRole("button", { name: "Close" }).click();
-	await expect(today.getByRole("listitem").first()).toContainText("serves 3");
+	await expect(today.getByRole("listitem").first()).toContainText("serves 5");
 
 	// Reorder within the day.
 	await today.getByRole("button", { name: /^Spaghetti Carbonara/ }).click();
@@ -114,7 +114,7 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 	await page.getByRole("button", { name: /^Move down/ }).click();
 	await expect(page.getByRole("button", { name: /^Move down/ })).toBeDisabled();
 	await page.getByRole("button", { name: "Close" }).click();
-	await expect(today.getByRole("listitem")).toHaveText([/Greek Salad/, /Spaghetti Carbonara/]);
+	await expect(today.getByRole("listitem")).toHaveText([/Tzatziki/, /Spaghetti Carbonara/]);
 
 	// Move to another day: its own day is not offered.
 	await today.getByRole("button", { name: /^Spaghetti Carbonara/ }).click();
@@ -127,7 +127,7 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 	await expect(page.getByTestId("toast")).toHaveText("Moved to tomorrow");
 	const tomorrow = page.getByRole("region").nth(1);
 	await expect(tomorrow).toContainText("Tomorrow");
-	await expect(tomorrow.getByRole("listitem")).toHaveText([/Spaghetti Carbonara.*serves 3/]);
+	await expect(tomorrow.getByRole("listitem")).toHaveText([/Spaghetti Carbonara.*serves 5/]);
 
 	// View recipe, come back, remove.
 	await tomorrow.getByRole("button", { name: /^Spaghetti Carbonara/ }).click();
@@ -149,7 +149,7 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 		.click();
 	await page
 		.getByRole("dialog")
-		.getByRole("button", { name: /Lentil Dal/ })
+		.getByRole("button", { name: /Saffron Risotto/ })
 		.click();
 	await expect(page.getByText("2 meals · 14 days")).toBeVisible();
 });
@@ -169,7 +169,7 @@ test("the planner clears meals only or everything", async ({ page }) => {
 
 test("a meal is dragged to another day", async ({ page, isMobile }) => {
 	test.skip(isMobile, "dragging with a mouse");
-	await open(page, "/planner", { dates: { [iso(0)]: ["carbonara", "greek_salad"] } });
+	await open(page, "/planner", { dates: { [iso(0)]: ["carbonara", "tzatziki"] } });
 	const handle = page.getByRole("button", { name: "Move Spaghetti Carbonara" });
 	const target = page.getByRole("button", { name: /^Add a meal on/ }).nth(2); // the first empty day's row
 	const from = await handle.boundingBox();
@@ -181,7 +181,7 @@ test("a meal is dragged to another day", async ({ page, isMobile }) => {
 	await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 15 });
 	await page.mouse.up();
 	await expect(page.getByTestId("toast")).toContainText("Moved to");
-	await expect(page.getByRole("region").first().getByRole("listitem")).toHaveText([/Greek Salad/]);
+	await expect(page.getByRole("region").first().getByRole("listitem")).toHaveText([/Tzatziki/]);
 	await expect(page.getByRole("region").nth(1).getByRole("listitem")).toHaveText([
 		/Spaghetti Carbonara/,
 	]);
@@ -189,7 +189,7 @@ test("a meal is dragged to another day", async ({ page, isMobile }) => {
 
 test("a meal is reordered with the keyboard", async ({ page, isMobile }) => {
 	test.skip(isMobile, "needs a keyboard");
-	await open(page, "/planner", { dates: { [iso(0)]: ["carbonara", "greek_salad"] } });
+	await open(page, "/planner", { dates: { [iso(0)]: ["carbonara", "tzatziki"] } });
 	await page.getByRole("button", { name: "Move Spaghetti Carbonara" }).focus();
 	// dnd-kit measures between key presses, so give it a frame each time.
 	await page.keyboard.press("Space");
@@ -198,15 +198,15 @@ test("a meal is reordered with the keyboard", async ({ page, isMobile }) => {
 	await page.waitForTimeout(150);
 	await page.keyboard.press("Space");
 	await expect(page.getByRole("region").first().getByRole("listitem")).toHaveText([
-		/Greek Salad/,
+		/Tzatziki/,
 		/Spaghetti Carbonara/,
 	]);
 });
 
 test("4. the grocery list sums in shopping units", async ({ page }) => {
-	// Lentil Dal (serves 4): 1 onion, 3 cloves garlic, 1 tbsp olive oil, ½ can coconut milk, 300 g lentils…
+	// Beef Stew with Wine and Olives (serves 4): 1 onion, 2 cloves garlic, 3 tbsp olive oil, 250 ml red wine, 800 g beef…
 	await open(page, "/grocery", {
-		dates: { [iso(0)]: ["lentil_dal"] },
+		dates: { [iso(0)]: ["beef_stew_wine_olives"] },
 		extras: [
 			{ name: "onion", amount: 100, unit: "g" },
 			{ name: "olive_oil", amount: 1, unit: "tbsp" },
@@ -215,11 +215,11 @@ test("4. the grocery list sums in shopping units", async ({ page }) => {
 		],
 	});
 	await expect(row(page, "Onion")).toContainText("250 g"); // 1 onion (150 g) + 100 g
-	await expect(row(page, "Onion")).toContainText("Lentil Dal, extra");
-	await expect(row(page, "Garlic")).toContainText("12 g"); // 3 cloves
-	await expect(row(page, "Olive oil")).toContainText("30 ml"); // 1 tbsp + 1 tbsp
+	await expect(row(page, "Onion")).toContainText("Beef Stew with Wine and Olives, extra");
+	await expect(row(page, "Garlic")).toContainText("8 g"); // 2 cloves
+	await expect(row(page, "Olive oil")).toContainText("60 ml"); // 3 tbsp + 1 tbsp
 	await expect(row(page, "Chopped tomatoes")).toContainText("1 can"); // 400 g
-	await expect(row(page, "Coconut milk")).toContainText("200 ml"); // ½ can
+	await expect(row(page, "Red wine")).toContainText("250 ml");
 	await expect(row(page, "Salt")).toContainText("to taste");
 	await expect(row(page, "Toilet paper")).toContainText("1 pack");
 	await expect(page.getByRole("region", { name: "Other" })).toContainText("Toilet paper");
@@ -227,21 +227,23 @@ test("4. the grocery list sums in shopping units", async ({ page }) => {
 
 	// Twice the servings: twice the recipe's part, the extras unchanged.
 	await open(page, "/grocery", {
-		dates: { [iso(0)]: [{ recipe: "lentil_dal", servings: 8 }] },
+		dates: { [iso(0)]: [{ recipe: "beef_stew_wine_olives", servings: 8 }] },
 		extras: [{ name: "onion", amount: 100, unit: "g" }],
 	});
 	await page.reload();
 	await expect(row(page, "Onion")).toContainText("400 g");
-	await expect(row(page, "Lentils")).toContainText("600 g");
+	await expect(row(page, "Stewing beef")).toContainText("1.6 kg");
 });
 
 test("the grocery range limits the meals, and the tab shows what is left", async ({ page }) => {
-	await open(page, "/grocery", { dates: { [iso(0)]: ["pancakes"], [iso(5)]: ["lentil_dal"] } });
+	await open(page, "/grocery", {
+		dates: { [iso(0)]: ["tiramisu"], [iso(5)]: ["beef_stew_wine_olives"] },
+	});
 	await expect(page.getByText("resolved from 2 meals")).toBeVisible();
-	await expect(row(page, "Lentils")).toBeVisible();
+	await expect(row(page, "Stewing beef")).toBeVisible();
 	await page.getByRole("button", { name: "Today", exact: true }).click();
 	await expect(page.getByText("resolved from 1 meal")).toBeVisible();
-	await expect(row(page, "Lentils")).toHaveCount(0);
+	await expect(row(page, "Stewing beef")).toHaveCount(0);
 	const summary = await page.getByText(/^\d+ of \d+ left to buy · Today · 1 meal$/).textContent();
 	const left = summary?.split(" ")[0];
 	await expect(page.getByRole("link", { name: `Grocery ${left}` })).toBeVisible();
@@ -253,9 +255,9 @@ test("the grocery range limits the meals, and the tab shows what is left", async
 });
 
 test("5. a tick survives a reload, and drops when the plan needs more", async ({ page }) => {
-	await open(page, "/grocery", { dates: { [iso(0)]: ["lentil_dal"] } });
+	await open(page, "/grocery", { dates: { [iso(0)]: ["beef_stew_wine_olives"] } });
 	await row(page, "Onion").click();
-	await row(page, "Lentils").click();
+	await row(page, "Stewing beef").click();
 	await expect(row(page, "Onion")).toHaveAttribute("aria-pressed", "true");
 	// Ticked lines sink to the bottom of their aisle.
 	await expect(
@@ -264,9 +266,9 @@ test("5. a tick survives a reload, and drops when the plan needs more", async ({
 
 	await page.reload();
 	await expect(row(page, "Onion")).toHaveAttribute("aria-pressed", "true");
-	await expect(row(page, "Lentils")).toHaveAttribute("aria-pressed", "true");
+	await expect(row(page, "Stewing beef")).toHaveAttribute("aria-pressed", "true");
 
-	// More onion is needed now; the lentils are unchanged.
+	// More onion is needed now; the beef is unchanged.
 	await page.getByLabel("Add an extra").fill("onion 100 g");
 	await page
 		.getByRole("list", { name: "Suggestions" })
@@ -274,7 +276,7 @@ test("5. a tick survives a reload, and drops when the plan needs more", async ({
 		.click();
 	await expect(row(page, "Onion")).toContainText("250 g");
 	await expect(row(page, "Onion")).toHaveAttribute("aria-pressed", "false");
-	await expect(row(page, "Lentils")).toHaveAttribute("aria-pressed", "true");
+	await expect(row(page, "Stewing beef")).toHaveAttribute("aria-pressed", "true");
 });
 
 test("extras: a dictionary pick converts, anything else is kept as typed", async ({ page }) => {
@@ -360,19 +362,19 @@ test("the last plan comes back when the app is opened without one", async ({ pag
 
 test("7. a cooking-rs link opens correctly", async ({ page }) => {
 	// As serde_json wrote it: floats as 1.0, extras untagged, a past day still in it, an unknown recipe id.
-	const old = `{"dates":{"${iso(-2)}":["pancakes"],"${iso(1)}":["carbonara",{"recipe":"lentil_dal","servings":6},"from_the_future"]},"extras":[{"name":"milk","amount":1.0,"unit":"l"},{"name":"Bread","quantity":"1 loaf"}]}`;
+	const old = `{"dates":{"${iso(-2)}":["tiramisu"],"${iso(1)}":["carbonara",{"recipe":"beef_stew_wine_olives","servings":6},"from_the_future"]},"extras":[{"name":"milk","amount":1.0,"unit":"l"},{"name":"Bread","quantity":"1 loaf"}]}`;
 	await page.goto(`/#/?plan=${planParam(old)}`);
 	await page.getByRole("link", { name: "Plan" }).click();
 	await expect(page.getByText("3 meals · 14 days")).toBeVisible(); // the past day is gone
 	await expect(page.getByRole("region").nth(1).getByRole("listitem")).toHaveText([
 		/Spaghetti Carbonara/,
-		/Lentil Dal.*serves 6/,
+		/Beef Stew with Wine and Olives.*serves 6/,
 		/Unknown recipe \(from_the_future\)/,
 	]);
 	await page.getByRole("link", { name: /^Grocery/ }).click();
 	await expect(row(page, "Milk")).toContainText("1 l");
 	await expect(row(page, "Bread")).toContainText("1 loaf");
-	await expect(row(page, "Lentils")).toContainText("450 g"); // 300 g for 4, cooked for 6
+	await expect(row(page, "Stewing beef")).toContainText("1.2 kg"); // 800 g for 4, cooked for 6
 });
 
 test("garbage in the address is ignored", async ({ page }) => {
@@ -384,13 +386,13 @@ test("garbage in the address is ignored", async ({ page }) => {
 test("the grocery list is copied as text", async ({ page, context }) => {
 	await context.grantPermissions(["clipboard-read", "clipboard-write"]);
 	await open(page, "/grocery", {
-		dates: { [iso(0)]: ["greek_yogurt_bowl"] },
+		dates: { [iso(0)]: ["fennel_orange_salad"] },
 		extras: [{ name: "Soap", quantity: null }],
 	});
 	await page.getByRole("button", { name: "Copy list" }).click();
 	await expect(page.getByTestId("toast")).toHaveText("List copied");
 	const text = await page.evaluate(() => navigator.clipboard.readText());
-	expect(text).toMatch(/^Produce\n- Banana: \d/);
+	expect(text).toMatch(/^Produce\n- Fennel: \d/);
 	expect(text).toContain("\n\nOther\n- Soap");
 });
 
@@ -411,20 +413,20 @@ test("a recipe's illustration travels between its card and its page", async ({ p
 	const name = (locator: ReturnType<typeof page.locator>) =>
 		locator.evaluate((el) => getComputedStyle(el).viewTransitionName);
 
-	const card = page.getByRole("link", { name: /Lentil Dal/ });
-	expect(await name(card.locator("img"))).toBe("recipe-lentil_dal");
+	const card = page.getByRole("link", { name: /Spaghetti Carbonara/ });
+	expect(await name(card.locator("img"))).toBe("recipe-carbonara");
 	await card.click();
-	await expect(page.getByRole("heading", { name: "Lentil Dal" })).toBeVisible();
-	expect(await name(page.locator("article img"))).toBe("recipe-lentil_dal");
+	await expect(page.getByRole("heading", { name: "Spaghetti Carbonara" })).toBeVisible();
+	expect(await name(page.locator("article img"))).toBe("recipe-carbonara");
 	expect(await count()).toBe(1);
 
 	await page.getByRole("button", { name: "‹ Back" }).click();
-	await expect(page.getByText("25 of 25")).toBeVisible();
+	await expect(page.getByText("39 of 39")).toBeVisible();
 	expect(await count()).toBe(2);
 
 	// Changing the plan or the filters rewrites the address without a transition.
-	await page.getByLabel("Search recipes").fill("dal");
-	await expect(page.getByText("1 of 25")).toBeVisible();
+	await page.getByLabel("Search recipes").fill("carbonara");
+	await expect(page.getByText("1 of 39")).toBeVisible();
 	expect(await count()).toBe(2);
 });
 
@@ -449,7 +451,7 @@ test.describe("with reduced motion", () => {
 	test.use({ reducedMotion: "reduce" });
 
 	test("the app works the same", async ({ page }) => {
-		await open(page, "/grocery", { dates: { [iso(0)]: ["lentil_dal"] } });
+		await open(page, "/grocery", { dates: { [iso(0)]: ["beef_stew_wine_olives"] } });
 		await row(page, "Onion").click();
 		await expect(row(page, "Onion")).toHaveAttribute("aria-pressed", "true");
 		// A moment later, what still animates is a fade: nothing moves, scales or rotates.
@@ -462,11 +464,11 @@ test.describe("with reduced motion", () => {
 		);
 		expect(moving).toEqual([]);
 		await page.getByRole("link", { name: "Recipes" }).click();
-		await page.getByRole("link", { name: /Lentil Dal/ }).click();
+		await page.getByRole("link", { name: /Beef Stew with Wine and Olives/ }).click();
 		await page.getByRole("button", { name: "More servings" }).click();
-		await expect(page.getByRole("list", { name: "Ingredients" })).toContainText("3.75 cloves");
-		await page.getByRole("button", { name: /Serve over rice/ }).click();
+		await expect(page.getByRole("list", { name: "Ingredients" })).toContainText("2.5 cloves");
+		await page.getByRole("button", { name: /Cover and simmer/ }).click();
 		await page.getByRole("button", { name: "‹ Back" }).click();
-		await expect(page.getByText("25 of 25")).toBeVisible();
+		await expect(page.getByText("39 of 39")).toBeVisible();
 	});
 });

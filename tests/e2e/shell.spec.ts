@@ -6,7 +6,7 @@ test("the three tabs navigate with hash routes", async ({ page }) => {
 	await expect(page.getByRole("heading", { name: "menu.lock" })).toBeVisible();
 	await expect(page.getByRole("heading", { name: "Recipes" })).toBeVisible();
 	// The bundled data loaded and passed validation in the browser.
-	await expect(page.getByText("25 of 25")).toBeVisible();
+	await expect(page.getByText("39 of 39")).toBeVisible();
 
 	await page.getByRole("link", { name: "Plan" }).click();
 	await expect(page).toHaveURL(/#\/planner$/);
@@ -25,8 +25,8 @@ test("the plan travels with every route", async ({ page }) => {
 	await expect(page).toHaveURL(new RegExp(`#/grocery\\?plan=${param}$`));
 	await page.getByRole("link", { name: "Recipes" }).click();
 	await expect(page).toHaveURL(new RegExp(`#/\\?plan=${param}$`));
-	await page.getByRole("link", { name: /Lentil Dal/ }).click();
-	await expect(page).toHaveURL(new RegExp(`#/recipe/lentil_dal\\?plan=${param}$`));
+	await page.getByRole("link", { name: /Beef Stew with Wine and Olives/ }).click();
+	await expect(page).toHaveURL(new RegExp(`#/recipe/beef_stew_wine_olives\\?plan=${param}$`));
 });
 
 test("a deep link survives a reload", async ({ page }) => {

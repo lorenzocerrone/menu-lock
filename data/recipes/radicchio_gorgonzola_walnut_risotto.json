@@ -1,0 +1,71 @@
+{
+  "id": "radicchio_gorgonzola_walnut_risotto",
+  "title": "Radicchio, Gorgonzola and Walnut Risotto",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Radicchio risotto melted with gorgonzola and finished with toasted walnuts.",
+  "cuisine": "Italian",
+  "tags": ["risotto", "comfort"],
+  "prepTime": 10,
+  "cookTime": 25,
+  "ingredients": [
+    {
+      "ingredient": "arborio_rice",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "radicchio",
+      "amount": 1,
+      "unit": "head",
+      "note": "shredded"
+    },
+    {
+      "ingredient": "gorgonzola",
+      "amount": 120,
+      "unit": "g"
+    },
+    {
+      "ingredient": "walnuts",
+      "amount": 40,
+      "unit": "g",
+      "note": "roughly chopped"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 0.5,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "vegetable_broth",
+      "amount": 1.2,
+      "unit": "l",
+      "note": "kept hot"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 30,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Toast the walnuts in a dry pan and set aside.",
+    "Soften the onion in the butter, add the rice and toast for 2 minutes, then the wine.",
+    "Add the radicchio, then the hot broth a ladle at a time, stirring, for 16–18 minutes.",
+    "Off the heat, stir in the gorgonzola and parmesan. Rest for 2 minutes and serve with the walnuts and pepper."
+  ]
+}

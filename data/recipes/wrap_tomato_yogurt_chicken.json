@@ -1,0 +1,67 @@
+{
+  "id": "wrap_tomato_yogurt_chicken",
+  "title": "Cherry Tomato and Yogurt Wraps with Chicken",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Wraps with a garlicky yogurt sauce, cherry tomatoes and a protein: chicken here, or any you like.",
+  "tags": ["main", "quick"],
+  "prepTime": 10,
+  "cookTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "tortilla",
+      "amount": 4
+    },
+    {
+      "ingredient": "chicken_breast",
+      "amount": 400,
+      "unit": "g",
+      "note": "in strips"
+    },
+    {
+      "ingredient": "greek_yogurt",
+      "amount": 200,
+      "unit": "g"
+    },
+    {
+      "ingredient": "cherry_tomatoes",
+      "amount": 250,
+      "unit": "g",
+      "note": "quartered"
+    },
+    {
+      "ingredient": "lettuce",
+      "amount": 80,
+      "unit": "g"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 0.5,
+      "note": "juiced"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove",
+      "note": "grated"
+    },
+    {
+      "ingredient": "paprika",
+      "amount": 2,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Season the chicken with paprika and salt and cook it in the oil for 6–8 minutes.",
+    "Stir the yogurt with the garlic, lemon juice and a pinch of salt.",
+    "Spread the yogurt on warm tortillas, add lettuce, tomatoes and chicken, and roll up."
+  ]
+}

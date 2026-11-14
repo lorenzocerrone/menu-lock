@@ -1,0 +1,99 @@
+{
+  "id": "lasagna",
+  "title": "Lasagna",
+  "author": "Lorenzo",
+  "servings": 6,
+  "description": "Layers of egg pasta, slow meat ragù and béchamel, baked until bubbling.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "comfort", "make-ahead", "classic"],
+  "prepTime": 40,
+  "cookTime": 150,
+  "ingredients": [
+    {
+      "ingredient": "lasagna_sheets",
+      "amount": 250,
+      "unit": "g"
+    },
+    {
+      "ingredient": "ground_beef",
+      "amount": 300,
+      "unit": "g"
+    },
+    {
+      "ingredient": "ground_pork",
+      "amount": 200,
+      "unit": "g"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 1,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "carrot",
+      "amount": 1,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "celery",
+      "amount": 1,
+      "unit": "stalk",
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "tomato_passata",
+      "amount": 700,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "milk",
+      "amount": 1,
+      "unit": "l",
+      "note": "for the béchamel"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 80,
+      "unit": "g",
+      "note": "for the béchamel"
+    },
+    {
+      "ingredient": "flour",
+      "amount": 80,
+      "unit": "g",
+      "note": "for the béchamel"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 100,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "nutmeg"
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Soften the onion, carrot and celery in the oil. Add the meat and brown it well.",
+    "Add the wine and let it evaporate, then the passata. Simmer covered on low heat for 1½–2 hours, adding water if it dries out.",
+    "For the béchamel, melt the butter, stir in the flour, then whisk in the warm milk a little at a time. Cook until thick and season with salt and nutmeg.",
+    "In a baking dish, layer béchamel, sheets, ragù, béchamel and parmesan; repeat, finishing with ragù, béchamel and parmesan.",
+    "Bake at 180 °C for 35–40 minutes and rest for 10 minutes before cutting."
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "ricotta_lemon_cake",
+  "title": "Ricotta and Lemon Cake",
+  "author": "Claude",
+  "servings": 8,
+  "description": "A soft, moist cake with ricotta and lemon zest. Keeps for days.",
+  "cuisine": "Italian",
+  "tags": ["dessert", "make-ahead"],
+  "prepTime": 15,
+  "cookTime": 45,
+  "ingredients": [
+    {
+      "ingredient": "ricotta",
+      "amount": 500,
+      "unit": "g",
+      "note": "drained"
+    },
+    {
+      "ingredient": "sugar",
+      "amount": 150,
+      "unit": "g"
+    },
+    {
+      "ingredient": "egg",
+      "amount": 3
+    },
+    {
+      "ingredient": "flour",
+      "amount": 120,
+      "unit": "g"
+    },
+    {
+      "ingredient": "baking_powder",
+      "amount": 8,
+      "unit": "g"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 1,
+      "note": "zest and juice"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 10,
+      "unit": "g",
+      "note": "for the tin"
+    }
+  ],
+  "steps": [
+    "Heat the oven to 175 °C and butter a 22 cm tin.",
+    "Beat the eggs and sugar until pale, then mix in the ricotta, lemon zest and juice.",
+    "Fold in the flour and baking powder.",
+    "Bake for 40–45 minutes, until set and golden. Cool in the tin."
+  ]
+}

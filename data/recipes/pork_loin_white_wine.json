@@ -1,0 +1,62 @@
+{
+  "id": "pork_loin_white_wine",
+  "title": "Pork Loin in White Wine",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Slices of pork loin browned and simmered in white wine with garlic and rosemary.",
+  "cuisine": "Italian",
+  "tags": ["main"],
+  "prepTime": 10,
+  "cookTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "pork_loin",
+      "amount": 600,
+      "unit": "g",
+      "note": "in 8 slices"
+    },
+    {
+      "ingredient": "flour",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 200,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves",
+      "note": "lightly crushed"
+    },
+    {
+      "ingredient": "rosemary",
+      "amount": 2,
+      "unit": "sprigs"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 20,
+      "unit": "g"
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Flour the pork slices lightly.",
+    "Warm the oil with the garlic and rosemary, then brown the slices on both sides.",
+    "Pour in the wine, season, cover and simmer for 10 minutes, turning once.",
+    "Uncover, add the butter and reduce until the sauce coats the meat."
+  ]
+}

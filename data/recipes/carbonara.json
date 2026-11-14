@@ -1,25 +1,48 @@
 {
   "id": "carbonara",
   "title": "Spaghetti Carbonara",
-  "author": "Claude",
-  "servings": 2,
-  "description": "The Roman classic: silky egg-and-pecorino sauce, crisp guanciale, and plenty of black pepper. No cream.",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Egg yolks, pecorino, crisp guanciale and plenty of black pepper. No cream.",
   "cuisine": "Italian",
   "tags": ["pasta", "quick", "classic"],
   "prepTime": 10,
   "cookTime": 15,
   "image": "carbonara.svg",
   "ingredients": [
-    { "ingredient": "spaghetti", "amount": 200, "unit": "g" },
-    { "ingredient": "guanciale", "amount": 100, "unit": "g" },
-    { "ingredient": "egg", "amount": 4 },
-    { "ingredient": "pecorino", "amount": 50, "unit": "g" },
-    { "ingredient": "black_pepper" }
+    {
+      "ingredient": "spaghetti",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "guanciale",
+      "amount": 150,
+      "unit": "g",
+      "note": "cut into strips"
+    },
+    {
+      "ingredient": "egg",
+      "amount": 5,
+      "note": "4 yolks and 1 whole"
+    },
+    {
+      "ingredient": "pecorino",
+      "amount": 80,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "black_pepper"
+    },
+    {
+      "ingredient": "salt"
+    }
   ],
   "steps": [
     "Boil the spaghetti in salted water.",
-    "Crisp the guanciale in a pan.",
-    "Whisk egg yolks with grated pecorino and pepper.",
-    "Toss drained pasta with guanciale, then the egg mixture off the heat."
+    "Crisp the guanciale in a dry pan; take it off the heat.",
+    "Whisk the yolks and the whole egg with the pecorino and lots of pepper into a thick cream.",
+    "Toss the drained pasta in the pan with the guanciale, then, off the heat, stir in the egg cream with a splash of pasta water until glossy."
   ]
 }

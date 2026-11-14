@@ -1,0 +1,49 @@
+{
+  "id": "tiramisu",
+  "title": "Tiramisù",
+  "author": "Lorenzo",
+  "servings": 6,
+  "description": "Coffee-soaked ladyfingers layered with mascarpone cream and cocoa.",
+  "cuisine": "Italian",
+  "tags": ["dessert", "make-ahead", "classic"],
+  "prepTime": 30,
+  "ingredients": [
+    {
+      "ingredient": "ladyfingers",
+      "amount": 300,
+      "unit": "g"
+    },
+    {
+      "ingredient": "mascarpone",
+      "amount": 500,
+      "unit": "g"
+    },
+    {
+      "ingredient": "egg",
+      "amount": 4,
+      "note": "separated"
+    },
+    {
+      "ingredient": "sugar",
+      "amount": 100,
+      "unit": "g"
+    },
+    {
+      "ingredient": "espresso",
+      "amount": 300,
+      "unit": "ml",
+      "note": "cooled"
+    },
+    {
+      "ingredient": "cocoa_powder",
+      "amount": 15,
+      "unit": "g"
+    }
+  ],
+  "steps": [
+    "Whisk the yolks with the sugar until pale, then fold in the mascarpone.",
+    "Whip the whites to stiff peaks and fold them gently into the mascarpone cream.",
+    "Dip the ladyfingers quickly in the coffee and lay them in a dish; cover with cream. Repeat.",
+    "Chill for at least 4 hours and dust with cocoa before serving."
+  ]
+}

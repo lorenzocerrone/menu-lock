@@ -1,0 +1,64 @@
+{
+  "id": "lemon_chicken_scaloppine",
+  "title": "Lemon Chicken Scaloppine",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Thin chicken cutlets in a quick butter and lemon pan sauce.",
+  "cuisine": "Italian",
+  "tags": ["main", "quick"],
+  "prepTime": 10,
+  "cookTime": 15,
+  "ingredients": [
+    {
+      "ingredient": "chicken_breast",
+      "amount": 500,
+      "unit": "g",
+      "note": "sliced thin and pounded"
+    },
+    {
+      "ingredient": "flour",
+      "amount": 40,
+      "unit": "g"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 1,
+      "note": "juiced"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 40,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 50,
+      "unit": "ml",
+      "optional": true
+    },
+    {
+      "ingredient": "parsley",
+      "amount": 5,
+      "unit": "g",
+      "note": "chopped",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Season the chicken and dust it in flour, shaking off the excess.",
+    "Brown it in the oil and half the butter, 2 minutes a side, and set aside.",
+    "Pour in the wine and lemon juice, scrape the pan, then add the rest of the butter.",
+    "Return the chicken and turn it in the sauce for a minute until it thickens. Finish with parsley."
+  ]
+}

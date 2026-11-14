@@ -1,0 +1,47 @@
+{
+  "id": "grilled_zucchini_mint",
+  "title": "Grilled Zucchini with Mint",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Charred zucchini ribbons dressed with olive oil, garlic and fresh mint.",
+  "cuisine": "Italian",
+  "tags": ["side", "quick"],
+  "prepTime": 10,
+  "cookTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "zucchini",
+      "amount": 3,
+      "note": "sliced lengthways"
+    },
+    {
+      "ingredient": "mint",
+      "amount": 5,
+      "unit": "g"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove",
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 0.5,
+      "note": "juiced",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Grill the zucchini slices in a hot griddle pan until marked on both sides.",
+    "Lay them on a plate and dress with the oil, garlic, mint, salt and lemon. Rest for 10 minutes before serving."
+  ]
+}

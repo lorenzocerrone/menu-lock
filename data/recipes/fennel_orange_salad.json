@@ -1,0 +1,48 @@
+{
+  "id": "fennel_orange_salad",
+  "title": "Fennel and Orange Salad",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Crisp shaved fennel with orange, black olives and red onion.",
+  "cuisine": "Italian",
+  "tags": ["salad", "quick", "no-cook"],
+  "prepTime": 15,
+  "ingredients": [
+    {
+      "ingredient": "fennel",
+      "amount": 2,
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "orange",
+      "amount": 2,
+      "note": "peeled and sliced"
+    },
+    {
+      "ingredient": "olives",
+      "amount": 50,
+      "unit": "g",
+      "note": "pitted"
+    },
+    {
+      "ingredient": "red_onion",
+      "amount": 0.5,
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Arrange the fennel and orange on a plate, scatter with the olives and onion.",
+    "Dress with the oil, salt and pepper just before serving."
+  ]
+}

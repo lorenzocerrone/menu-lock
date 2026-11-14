@@ -1,0 +1,73 @@
+{
+  "id": "pasta_pesto",
+  "title": "Pasta with Pesto",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Fresh Genoese pesto with basil, pine nuts and two cheeses, tossed with trofie.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "quick"],
+  "prepTime": 15,
+  "cookTime": 12,
+  "ingredients": [
+    {
+      "ingredient": "short_pasta",
+      "amount": 320,
+      "unit": "g",
+      "note": "trofie"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 50,
+      "unit": "g",
+      "note": "leaves only"
+    },
+    {
+      "ingredient": "pine_nuts",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 50,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "pecorino",
+      "amount": 20,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "green_beans",
+      "amount": 150,
+      "unit": "g",
+      "note": "trimmed",
+      "optional": true
+    },
+    {
+      "ingredient": "potato",
+      "amount": 1,
+      "note": "peeled and diced",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Blend or pound the basil, pine nuts, garlic and a pinch of salt, then the cheeses, then the oil, until creamy.",
+    "Boil the pasta in salted water, with the potato and green beans if using.",
+    "Loosen the pesto with a little pasta water and toss it with the drained pasta off the heat."
+  ]
+}

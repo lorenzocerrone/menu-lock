@@ -1,0 +1,59 @@
+{
+  "id": "saffron_risotto",
+  "title": "Saffron Risotto",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Risotto alla milanese: golden with saffron, rich with butter and parmesan.",
+  "cuisine": "Italian",
+  "tags": ["risotto", "classic"],
+  "prepTime": 5,
+  "cookTime": 25,
+  "ingredients": [
+    {
+      "ingredient": "arborio_rice",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "saffron",
+      "amount": 2,
+      "unit": "sachets"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 0.5,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "vegetable_broth",
+      "amount": 1.2,
+      "unit": "l",
+      "note": "kept hot"
+    },
+    {
+      "ingredient": "butter",
+      "amount": 60,
+      "unit": "g"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 70,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Dissolve the saffron in a ladle of the hot broth.",
+    "Soften the onion in half the butter, add the rice and toast for 2 minutes, then the wine.",
+    "Add the hot broth a ladle at a time, stirring; halfway through, add the saffron broth.",
+    "After 16–18 minutes, take it off the heat and stir in the rest of the butter and the parmesan. Rest for 2 minutes."
+  ]
+}

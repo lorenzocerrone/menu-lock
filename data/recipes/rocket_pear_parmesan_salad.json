@@ -1,0 +1,50 @@
+{
+  "id": "rocket_pear_parmesan_salad",
+  "title": "Rocket, Pear and Parmesan Salad",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Peppery rocket with sweet pear, shaved parmesan and walnuts.",
+  "cuisine": "Italian",
+  "tags": ["salad", "quick", "no-cook"],
+  "prepTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "rocket",
+      "amount": 100,
+      "unit": "g"
+    },
+    {
+      "ingredient": "pear",
+      "amount": 2,
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 40,
+      "unit": "g",
+      "note": "shaved"
+    },
+    {
+      "ingredient": "walnuts",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "balsamic_vinegar",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Toss the rocket and pear with the oil, vinegar and a pinch of salt.",
+    "Top with the parmesan and walnuts."
+  ]
+}

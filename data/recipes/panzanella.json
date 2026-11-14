@@ -1,0 +1,56 @@
+{
+  "id": "panzanella",
+  "title": "Panzanella",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Tuscan bread salad: stale bread soaking up ripe tomatoes, cucumber and basil.",
+  "cuisine": "Italian",
+  "tags": ["salad", "no-cook"],
+  "prepTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "rustic_bread",
+      "amount": 300,
+      "unit": "g",
+      "note": "stale, torn"
+    },
+    {
+      "ingredient": "tomato",
+      "amount": 4,
+      "note": "in chunks"
+    },
+    {
+      "ingredient": "cucumber",
+      "amount": 1,
+      "note": "sliced"
+    },
+    {
+      "ingredient": "red_onion",
+      "amount": 1,
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 10,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 5,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "red_wine_vinegar",
+      "amount": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Soak the onion in cold water for 10 minutes to soften it; drain.",
+    "Toss the tomatoes with salt and let them release their juice.",
+    "Add the bread, cucumber, onion, basil, oil and vinegar, toss well and rest for 15 minutes before serving."
+  ]
+}
