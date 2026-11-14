@@ -5,7 +5,8 @@ import type { Recipe } from "../lib/data";
 import { formatAddedTo, formatLineAmount, formatStepNumber, formatTiming } from "../lib/format";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
-import { imageCrop, imageUrl } from "../ui/recipeImage";
+import { Roll } from "../ui/Roll";
+import { imageCrop, imageTransition, imageUrl } from "../ui/recipeImage";
 import { Sheet } from "../ui/Sheet";
 import { Stepper } from "../ui/Stepper";
 import { buttonPaper, buttonPrimary } from "../ui/styles";
@@ -18,11 +19,19 @@ function BackButton() {
 	const canGoBack = useCanGoBack();
 	// Going back keeps the list's search and filters; a recipe opened from a link has no "back".
 	return canGoBack ? (
-		<button type="button" onClick={() => router.history.back()} className={buttonPaper}>
+		<button
+			type="button"
+			onClick={() => {
+				// The illustration travels back to its card.
+				router.shouldViewTransition = true;
+				router.history.back();
+			}}
+			className={buttonPaper}
+		>
 			‹ Back
 		</button>
 	) : (
-		<Link to="/" className={buttonPaper}>
+		<Link to="/" viewTransition className={buttonPaper}>
 			‹ Recipes
 		</Link>
 	);
@@ -45,10 +54,14 @@ function Steps({ steps }: { steps: readonly string[] }) {
 						type="button"
 						aria-pressed={done.has(i)}
 						onClick={() => flip(i)}
-						className={`flex w-full gap-3 rounded-card border border-rule-soft bg-inset p-3 text-left shadow-card ${done.has(i) ? "text-faint line-through" : ""}`}
+						className={`flex w-full gap-3 rounded-card border border-rule-soft bg-inset p-3 text-left shadow-card ${done.has(i) ? "text-faint" : ""}`}
 					>
 						<span className="font-bold font-mono text-sienna">{formatStepNumber(i)}</span>
-						<span>{step}</span>
+						<span>
+							<span className="strike" data-on={done.has(i)}>
+								{step}
+							</span>
+						</span>
 					</button>
 				</li>
 			))}
@@ -68,7 +81,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 		<article className="pt-3 pb-24">
 			<BackButton />
 			<div className="mt-4 border border-rule-soft bg-inset p-2 pb-4 shadow-lift">
-				<img src={imageUrl(recipe)} alt="" className={imageCrop} />
+				<img src={imageUrl(recipe)} alt="" className={imageCrop} style={imageTransition(recipe)} />
 				<div className="px-2">
 					<h2 className="mt-3 font-bold text-2xl leading-tight">{recipe.title}</h2>
 					{recipe.description ? <p className="mt-2 text-muted">{recipe.description}</p> : null}
@@ -104,7 +117,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 							</span>
 							<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
 							<span className="shrink-0 font-mono text-sm">
-								{formatLineAmount(line, servings, recipe.servings)}
+								<Roll>{formatLineAmount(line, servings, recipe.servings)}</Roll>
 							</span>
 						</li>
 					))}

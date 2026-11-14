@@ -393,3 +393,80 @@ test("the grocery list is copied as text", async ({ page, context }) => {
 	expect(text).toMatch(/^Produce\n- Banana: \d/);
 	expect(text).toContain("\n\nOther\n- Soap");
 });
+
+test("a recipe's illustration travels between its card and its page", async ({ page }) => {
+	await open(page, "/");
+	// Count the view transitions the router starts.
+	await page.evaluate(() => {
+		const w = window as unknown as { transitions: number };
+		w.transitions = 0;
+		const start = document.startViewTransition.bind(document);
+		document.startViewTransition = ((...args: Parameters<typeof start>) => {
+			w.transitions++;
+			return start(...args);
+		}) as typeof document.startViewTransition;
+	});
+	const count = () =>
+		page.evaluate(() => (window as unknown as { transitions: number }).transitions);
+	const name = (locator: ReturnType<typeof page.locator>) =>
+		locator.evaluate((el) => getComputedStyle(el).viewTransitionName);
+
+	const card = page.getByRole("link", { name: /Lentil Dal/ });
+	expect(await name(card.locator("img"))).toBe("recipe-lentil_dal");
+	await card.click();
+	await expect(page.getByRole("heading", { name: "Lentil Dal" })).toBeVisible();
+	expect(await name(page.locator("article img"))).toBe("recipe-lentil_dal");
+	expect(await count()).toBe(1);
+
+	await page.getByRole("button", { name: "‹ Back" }).click();
+	await expect(page.getByText("25 of 25")).toBeVisible();
+	expect(await count()).toBe(2);
+
+	// Changing the plan or the filters rewrites the address without a transition.
+	await page.getByLabel("Search recipes").fill("dal");
+	await expect(page.getByText("1 of 25")).toBeVisible();
+	expect(await count()).toBe(2);
+});
+
+test("everything bought gets a stamp", async ({ page }) => {
+	await open(page, "/grocery", {
+		extras: [
+			{ name: "Soap", quantity: null },
+			{ name: "milk", amount: 1, unit: "l" },
+		],
+	});
+	await expect(page.getByText("ALL BOUGHT")).toHaveCount(0);
+	await row(page, "Soap").click();
+	await expect(page.getByText("1 / 2")).toBeVisible();
+	await row(page, "Milk").click();
+	await expect(page.getByText("ALL BOUGHT")).toBeVisible();
+	await expect(page.getByRole("link", { name: "Grocery", exact: true })).toBeVisible(); // no badge left
+	await row(page, "Milk").click();
+	await expect(page.getByText("ALL BOUGHT")).toHaveCount(0);
+});
+
+test.describe("with reduced motion", () => {
+	test.use({ reducedMotion: "reduce" });
+
+	test("the app works the same", async ({ page }) => {
+		await open(page, "/grocery", { dates: { [iso(0)]: ["lentil_dal"] } });
+		await row(page, "Onion").click();
+		await expect(row(page, "Onion")).toHaveAttribute("aria-pressed", "true");
+		// A moment later, what still animates is a fade: nothing moves, scales or rotates.
+		await page.waitForTimeout(60);
+		const moving = await page.evaluate(() =>
+			document
+				.getAnimations()
+				.flatMap((a) => (a.effect as KeyframeEffect).getKeyframes().flatMap((k) => Object.keys(k)))
+				.filter((property) => ["transform", "translate", "scale", "rotate"].includes(property)),
+		);
+		expect(moving).toEqual([]);
+		await page.getByRole("link", { name: "Recipes" }).click();
+		await page.getByRole("link", { name: /Lentil Dal/ }).click();
+		await page.getByRole("button", { name: "More servings" }).click();
+		await expect(page.getByRole("list", { name: "Ingredients" })).toContainText("3.75 cloves");
+		await page.getByRole("button", { name: /Serve over rice/ }).click();
+		await page.getByRole("button", { name: "‹ Back" }).click();
+		await expect(page.getByText("25 of 25")).toBeVisible();
+	});
+});

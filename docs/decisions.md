@@ -118,6 +118,42 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Phase 4: motion and personality (2026-11-14)
+
+The brief kept motion to what serves the paper look, so this is a short list, each
+piece small:
+
+- **A recipe's illustration travels** between its card and its page, and back, and the
+  tabs cross-fade: the browser's View Transitions, started by the router on the links
+  that ask for it (`viewTransition` on the tab links and the recipe card;
+  `router.shouldViewTransition = true` before going back). The tab strip is its own
+  transition group, so it stays put. Rewriting the address after a plan or filter
+  change never starts one. Browsers without View Transitions just switch pages.
+- **A done thing is struck through by a line that draws itself** (`.strike` in
+  `paper.css`): a ticked grocery line, a finished step. On wrapped text it draws across
+  every line.
+- **Numbers roll** to their new value (`Roll`): recipe amounts when the servings change,
+  the Grocery tab's count, the receipt's "LEFT TO BUY".
+- **Everything bought gets a stamp**: "ALL BOUGHT" lands on the receipt's barcode, with
+  a longer buzz on phones that vibrate.
+- **Meals arrive and leave** a day with a short slide; a meal being dragged is lifted
+  (tilted, slightly larger, a deeper shadow) and a drop is felt.
+- Left out on purpose: a token flying to the Plan tab (the tabs are hidden on the
+  recipe page), a collapsing recipe header, days sliding as dates roll, per-aisle
+  progress bars. None of them earned its complexity.
+
+Checked:
+
+- **Reduced motion**: Motion keeps only fades (`MotionConfig reducedMotion="user"`),
+  CSS transitions are cut to nothing, and view transitions are switched off. A browser
+  test runs a flow that way and asserts nothing is moving.
+- **A slow phone** (Chromium with the CPU slowed 4×): ticking ten lines of a 43-line
+  list first cost a long frame on almost every tick. A tick now re-renders only its own
+  row (the list is memoised apart from the ticks, rows are `memo`), which left 2 long
+  frames (about 100 ms at 4×) over ten ticks. Dragging a meal: frames of 60–80 ms at 4×.
+  Filtering 25 cards and opening a recipe: 60–100 ms at 4×. Measured by hand, not in CI,
+  where timing tests are flaky.
+
 ## Phase 2: data and logic (2026-11-14)
 
 The data was migrated with `scripts/migrate-from-cooking-rs.ts`: 71 dictionary entries,

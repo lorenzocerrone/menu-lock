@@ -66,3 +66,37 @@
 	background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--rule-soft) 0);
 	background-size: 100% var(--line);
 }
+
+/* A line drawn through something that is done (a ticked grocery line, a finished
+   step). On an inline element it draws across every wrapped line. */
+.strike {
+	background: linear-gradient(currentColor, currentColor) no-repeat 0 56% / 0% 1.5px;
+	transition: background-size 0.28s ease-out;
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+.strike[data-on="true"] {
+	background-size: 100% 1.5px;
+}
+
+/* Moving between pages (the router starts a view transition on the links that
+   ask for one). Pages cross-fade quickly; a recipe's illustration and title
+   travel between its card and its page; the tab strip stays put. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.16s;
+}
+::view-transition-group(*) {
+	animation-duration: 0.28s;
+	animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.vt-tabs {
+	view-transition-name: tabs;
+}
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none;
+	}
+}

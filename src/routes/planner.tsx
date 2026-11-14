@@ -17,6 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Link } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "motion/react";
 import { type ReactNode, useState } from "react";
 import { DATA } from "../dataset";
 import { type IsoDate, planDays, WEEKDAY_SHORT, weekday, ymd } from "../lib/dates";
@@ -79,7 +80,7 @@ function Meal({ place, entry, onOpen }: { place: Place; entry: MealEntry; onOpen
 		isDragging,
 	} = useSortable({ id: mealId(place) });
 	return (
-		<li
+		<div
 			ref={setNodeRef}
 			style={{ transform: CSS.Translate.toString(transform), transition }}
 			className={`flex h-line items-center ${isDragging ? "opacity-30" : ""}`}
@@ -101,7 +102,7 @@ function Meal({ place, entry, onOpen }: { place: Place; entry: MealEntry; onOpen
 			>
 				⋮⋮
 			</button>
-		</li>
+		</div>
 	);
 }
 
@@ -168,14 +169,20 @@ function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
 					strategy={verticalListSortingStrategy}
 				>
 					<ul>
-						{meals.map((entry, index) => (
-							<Meal
-								key={index}
-								place={{ date, index }}
-								entry={entry}
-								onOpen={() => onOpen(index)}
-							/>
-						))}
+						<AnimatePresence initial={false} mode="popLayout">
+							{meals.map((entry, index) => (
+								// Meals have no identity of their own: the nth carbonara of the day is the key.
+								<motion.li
+									key={`${entry.recipe}#${meals.slice(0, index).filter((m) => m.recipe === entry.recipe).length}`}
+									initial={{ opacity: 0, x: -12 }}
+									animate={{ opacity: 1, x: 0 }}
+									exit={{ opacity: 0, x: 12 }}
+									transition={{ duration: 0.18, ease: "easeOut" }}
+								>
+									<Meal place={{ date, index }} entry={entry} onOpen={() => onOpen(index)} />
+								</motion.li>
+							))}
+						</AnimatePresence>
 					</ul>
 				</SortableContext>
 				<button
@@ -298,6 +305,7 @@ export function PlannerPage() {
 
 	const drop = ({ active, over }: DragEndEvent) => {
 		setDragging(null);
+		navigator.vibrate?.(10);
 		const from = placeOf(String(active.id));
 		if (!from || !over) return;
 		const target = String(over.id);
@@ -361,7 +369,7 @@ export function PlannerPage() {
 				</ol>
 				<DragOverlay>
 					{draggedEntry ? (
-						<div className="flex h-line items-center gap-2.5 rounded-card border border-rule-soft bg-inset px-3 shadow-lift">
+						<div className="flex h-line -rotate-1 scale-[1.03] items-center gap-2.5 rounded-card border border-rule-soft bg-inset px-3 shadow-lift">
 							<MealLine entry={draggedEntry} />
 						</div>
 					) : null}

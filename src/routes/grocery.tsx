@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { motion } from "motion/react";
-import { type FormEvent, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { type FormEvent, memo, useState } from "react";
 import { DATA } from "../dataset";
 import { parseExtra, suggest, toExtra } from "../lib/extras";
 import {
@@ -13,12 +13,22 @@ import {
 	formatSummary,
 	formatText,
 } from "../lib/format";
-import { arrange, isChecked, RANGE_PRESETS, rangeEnd, sameRange } from "../lib/grocery";
+import {
+	arrange,
+	type GroceryLine,
+	isChecked,
+	progress,
+	RANGE_PRESETS,
+	rangeEnd,
+	sameRange,
+} from "../lib/grocery";
 import { entriesIn } from "../lib/plan";
-import { useApp, useGrocery } from "../state/app";
+import { store, useApp, useGrocery } from "../state/app";
+import { groceryList } from "../state/store";
 import { Chip } from "../ui/Chip";
-import { spring } from "../ui/motion";
+import { spring, stampSpring } from "../ui/motion";
 import { PageTitle } from "../ui/PageTitle";
+import { Roll } from "../ui/Roll";
 import { Stamp } from "../ui/Stamp";
 import { buttonPaper, buttonPrimary, input } from "../ui/styles";
 import { copyText } from "../ui/toast";
@@ -104,12 +114,43 @@ function Extras() {
 	);
 }
 
+/** One line of the receipt: tap anywhere on it to stamp it. Re-renders only when its own tick changes. */
+const Row = memo(function Row({ line, on }: { line: GroceryLine; on: boolean }) {
+	return (
+		<motion.li layout transition={spring}>
+			<button
+				type="button"
+				aria-pressed={on}
+				onClick={() => {
+					store.getState().toggleTick(line);
+					// A tap you can feel; a longer one when it was the last line to buy.
+					const { grocery } = store.getState();
+					const done = !on && progress(groceryList(store.getState(), DATA), grocery).left === 0;
+					navigator.vibrate?.(done ? [10, 50, 25] : 8);
+				}}
+				className={`flex min-h-11 w-full items-center gap-2.5 py-1 text-left ${on ? "text-faint" : ""}`}
+			>
+				<Stamp on={on} />
+				<span className="min-w-0 flex-1">
+					<span className="flex items-baseline">
+						<span className="strike min-w-0 truncate font-sans text-base" data-on={on}>
+							{line.name}
+						</span>
+						<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
+						<span className="shrink-0">{formatLineQuantity(line)}</span>
+					</span>
+					<span className="block truncate text-[0.65rem] text-muted">{formatSources(line)}</span>
+				</span>
+			</button>
+		</motion.li>
+	);
+});
+
 /** Everything the plan needs, as a till receipt to tick off in the shop. */
 export function GroceryPage() {
 	const plan = useApp((s) => s.plan);
 	const grocery = useApp((s) => s.grocery);
 	const today = useApp((s) => s.today);
-	const toggleTick = useApp((s) => s.toggleTick);
 	const setRange = useApp((s) => s.setRange);
 	const { aisles, left, total } = useGrocery();
 
@@ -151,46 +192,32 @@ export function GroceryPage() {
 								{aisle.name}
 							</h3>
 							<ul>
-								{aisle.lines.map((line) => {
-									const on = isChecked(grocery, line.key);
-									return (
-										<motion.li key={line.key} layout transition={spring}>
-											<button
-												type="button"
-												aria-pressed={on}
-												onClick={() => {
-													toggleTick(line);
-													navigator.vibrate?.(8);
-												}}
-												className={`flex min-h-11 w-full items-center gap-2.5 py-1 text-left ${on ? "text-faint" : ""}`}
-											>
-												<Stamp on={on} />
-												<span className="min-w-0 flex-1">
-													<span className="flex items-baseline">
-														<span
-															className={`min-w-0 truncate font-sans text-base ${on ? "line-through" : ""}`}
-														>
-															{line.name}
-														</span>
-														<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
-														<span className="shrink-0">{formatLineQuantity(line)}</span>
-													</span>
-													<span className="block truncate text-[0.65rem] text-muted">
-														{formatSources(line)}
-													</span>
-												</span>
-											</button>
-										</motion.li>
-									);
-								})}
+								{aisle.lines.map((line) => (
+									<Row key={line.key} line={line} on={isChecked(grocery, line.key)} />
+								))}
 							</ul>
 						</section>
 					))}
 					<p className="mt-4 flex justify-between border-rule border-t border-dashed pt-3 font-bold">
 						<span>LEFT TO BUY</span>
-						<span>{formatLeft(left, total)}</span>
+						<Roll>{formatLeft(left, total)}</Roll>
 					</p>
-					<div className="receipt-barcode mt-4" />
+					<div className="relative">
+						<div className="receipt-barcode mt-4" />
+						<AnimatePresence>
+							{left === 0 ? (
+								<motion.p
+									initial={{ scale: 2.2, opacity: 0, rotate: -20 }}
+									animate={{ scale: 1, opacity: 1, rotate: -7 }}
+									exit={{ scale: 0.8, opacity: 0 }}
+									transition={stampSpring}
+									className="absolute inset-0 m-auto h-fit w-fit border-2 border-sienna bg-inset px-3 py-1 font-bold text-base text-sienna tracking-[0.25em]"
+								>
+									ALL BOUGHT
+								</motion.p>
+							) : null}
+						</AnimatePresence>
+					</div>
 					<p className="mt-2 text-center text-[0.65rem] text-muted">
 						thank you for cooking at home
 					</p>

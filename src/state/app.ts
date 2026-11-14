@@ -53,8 +53,12 @@ export function useGrocery(): { aisles: GroceryAisle[]; left: number; total: num
 	const plan = useApp((s) => s.plan);
 	const grocery = useApp((s) => s.grocery);
 	const today = useApp((s) => s.today);
-	return useMemo(() => {
-		const aisles = groceryList({ plan, grocery, today }, DATA);
-		return { aisles, ...progress(aisles, grocery) };
-	}, [plan, grocery, today]);
+	// A tick changes `grocery` but not the list: the lines stay the same objects,
+	// so only the ticked row re-renders.
+	const range = grocery.range;
+	const aisles = useMemo(
+		() => groceryList({ plan, grocery: { checked: [], range }, today }, DATA),
+		[plan, range, today],
+	);
+	return useMemo(() => ({ aisles, ...progress(aisles, grocery) }), [aisles, grocery]);
 }
