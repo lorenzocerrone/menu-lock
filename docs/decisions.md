@@ -26,6 +26,29 @@ list, hand-drawn sienna underlines), **with a sprinkle of lockfile / terminal to
 not picked as a direction of its own; keep it to what serves these. Build the lab
 directions as variations inside this brief, on the real recipes.
 
+### The lab (`#/lab`)
+
+Three directions, each with the three screens on the real recipes and a fixture plan,
+in `src/lab/`. `d` and `s` in the URL pick the direction and the screen
+(`#/lab?d=receipt&s=grocery`).
+
+- **A · Notebook**: ruled paper with a sienna margin line, dates in the margin,
+  hand-drawn underlines; the tick and the strike-through draw themselves.
+- **B · Receipt**: paper objects. Recipes are taped index cards, planned days are
+  ticket stubs, the grocery list is a till receipt with torn ends, dotted leaders and a
+  stamp for each tick.
+- **C · Lockfile**: the terminal motif turned up, to calibrate how much is too much. The
+  plan is a file with a line-number gutter; the grocery list is `[x]` boxes.
+
+In all three, ticking a grocery line sinks it to the bottom of its aisle, and the
+recipe chips filter the cards with a layout animation. The planner is look only.
+
+The lab is in development builds, pull-request previews and builds made with
+`VITE_LAB=1` (the browser tests and `npm run shots` use that); never on the live site.
+The old illustrations have their title baked in, so the lab crops them to the icon.
+**At the end of phase 1, delete `src/lab/`, `src/routes/lab.tsx`, the `/lab` route,
+`tests/e2e/lab.spec.ts`, the lab entries in `scripts/shots.ts` and `VITE_LAB`.**
+
 ## Phase 2: data and logic (2026-11-14)
 
 The data was migrated with `scripts/migrate-from-cooking-rs.ts`: 71 dictionary entries,

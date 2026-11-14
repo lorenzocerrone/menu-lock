@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { z } from "zod";
 import { GroceryPage } from "./routes/grocery";
+import { LabRoute } from "./routes/lab";
 import { PlannerPage } from "./routes/planner";
 import { RecipesPage } from "./routes/recipes";
 import { Shell } from "./ui/Shell";
@@ -20,30 +21,50 @@ const rootSearch = z.object({
 });
 
 const rootRoute = createRootRoute({
-	component: Shell,
 	validateSearch: rootSearch,
 	search: { middlewares: [retainSearchParams(["plan"])] },
 });
 
-const recipesRoute = createRoute({
+/** The app frame (wordmark and tabs) around the three pages. */
+const shellRoute = createRoute({
 	getParentRoute: () => rootRoute,
+	id: "shell",
+	component: Shell,
+});
+
+const recipesRoute = createRoute({
+	getParentRoute: () => shellRoute,
 	path: "/",
 	component: RecipesPage,
 });
 
 const plannerRoute = createRoute({
-	getParentRoute: () => rootRoute,
+	getParentRoute: () => shellRoute,
 	path: "/planner",
 	component: PlannerPage,
 });
 
 const groceryRoute = createRoute({
-	getParentRoute: () => rootRoute,
+	getParentRoute: () => shellRoute,
 	path: "/grocery",
 	component: GroceryPage,
 });
 
-const routeTree = rootRoute.addChildren([recipesRoute, plannerRoute, groceryRoute]);
+/** Phase 1 design lab: `d` is the direction, `s` the screen. Remove with src/lab/. */
+const labRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	path: "/lab",
+	component: LabRoute,
+	validateSearch: z.object({
+		d: z.enum(["notebook", "receipt", "lockfile"]).catch("notebook"),
+		s: z.enum(["recipes", "planner", "grocery"]).catch("recipes"),
+	}),
+});
+
+const routeTree = rootRoute.addChildren([
+	shellRoute.addChildren([recipesRoute, plannerRoute, groceryRoute]),
+	labRoute,
+]);
 
 export const router = createRouter({
 	routeTree,

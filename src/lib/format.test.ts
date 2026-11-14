@@ -10,6 +10,7 @@ import {
 	formatLineQuantity,
 	formatQuantity,
 	formatRange,
+	formatServes,
 	formatSources,
 	formatSummary,
 	formatText,
@@ -142,6 +143,7 @@ describe("format", () => {
 	});
 
 	it("writes recipe times", () => {
+		expect(formatServes(4)).toBe("serves 4");
 		expect(formatTotalTime({ totalTime: 25 })).toBe("25 min");
 		expect(formatTotalTime({ totalTime: null })).toBeNull();
 		expect(formatTiming({ prepTime: 10, cookTime: 15 })).toBe("10 min prep + 15 min cook");

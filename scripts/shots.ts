@@ -14,7 +14,14 @@ const SCREENS = [
 	{ name: "recipes", hash: "#/" },
 	{ name: "planner", hash: "#/planner" },
 	{ name: "grocery", hash: "#/grocery" },
-] as const;
+	// Phase 1 design lab (needs a build with VITE_LAB=1; `npm run shots` sets it).
+	...(["notebook", "receipt", "lockfile"] as const).flatMap((d) =>
+		(["recipes", "planner", "grocery"] as const).map((s) => ({
+			name: `lab-${d}-${s}`,
+			hash: `#/lab?d=${d}&s=${s}`,
+		})),
+	),
+];
 
 const VIEWPORTS = [
 	{ name: "phone", width: 390, height: 844 },
@@ -45,7 +52,17 @@ try {
 			const page = await context.newPage();
 			for (const screen of SCREENS) {
 				await page.goto(origin + screen.hash);
-				await page.evaluate(() => document.fonts.ready);
+				await page.evaluate(async () => {
+					await document.fonts.ready;
+					// Full-page shots: load the images below the fold too.
+					for (const img of document.images) img.loading = "eager";
+					await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
+				});
+				// A tab bar fixed to the viewport would land mid-page in a full-page shot.
+				await page.addStyleTag({
+					content: 'nav[aria-label="Sections"] { position: static !important; }',
+				});
+				await page.waitForTimeout(400); // let entrance animations settle
 				const path = `${OUT}/${screen.name}.${viewport.name}.${colorScheme}.png`;
 				await page.screenshot({ path, fullPage: true });
 				console.log(path);

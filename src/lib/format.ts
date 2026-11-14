@@ -99,6 +99,11 @@ export function formatSummary(left: number, total: number, range: string, meals:
 	return `${left} of ${total} left to buy · ${range} · ${meals} ${meals === 1 ? "meal" : "meals"}`;
 }
 
+/** How many a recipe or a planned meal is for: "serves 4". */
+export function formatServes(servings: number): string {
+	return `serves ${servings}`;
+}
+
 /** Total time as a short label ("40 min"), if any time is set. */
 export function formatTotalTime(recipe: Pick<Recipe, "totalTime">): string | null {
 	return recipe.totalTime === null ? null : `${recipe.totalTime} min`;
