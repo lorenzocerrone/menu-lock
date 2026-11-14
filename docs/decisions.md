@@ -40,6 +40,12 @@ in `src/lab/`. `d` and `s` in the URL pick the direction and the screen
 - **C · Lockfile**: the terminal motif turned up, to calibrate how much is too much. The
   plan is a file with a line-number gutter; the grocery list is `[x]` boxes.
 
+**The user's pick (2026-11-14): B wins on all fronts.** The one change: the plan keeps
+B's clarity (a card per planned day, the date on the left) and takes notebook touches
+from A: a sienna margin line after the date, meals on ruled lines with a sienna bullet,
+hand-drawn underlines under "Today", "Tomorrow" and "next week". Empty days are a plain
+ruled row. This revised plan is what B's Plan tab in the lab now shows.
+
 In all three, ticking a grocery line sinks it to the bottom of its aisle, and the
 recipe chips filter the cards with a layout animation. The planner is look only.
 

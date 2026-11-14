@@ -5,9 +5,15 @@
  */
 import { AnimatePresence, motion } from "motion/react";
 import { WEEKDAY_SHORT, weekday, ymd } from "../lib/dates";
-import { formatDate, formatLineQuantity, formatServes, formatSources } from "../lib/format";
+import {
+	formatDate,
+	formatDay,
+	formatLineQuantity,
+	formatServes,
+	formatSources,
+} from "../lib/format";
 import { imageUrl, type LabModel, SCREENS } from "./model";
-import { type DirectionProps, metaParts, spring } from "./parts";
+import { type DirectionProps, metaParts, spring, Underline } from "./parts";
 
 function Title({ children, caption }: { children: string; caption: string }) {
 	return (
@@ -92,35 +98,47 @@ function Planner({ model }: { model: LabModel }) {
 				{model.days.map((d) => {
 					const isToday = d.date === model.today;
 					const card = isToday || d.meals.length > 0;
+					const label = formatDay(d.date, model.today);
 					return (
 						<li key={d.date}>
 							{d.startsWeek ? (
-								<p className="mt-5 mb-3 flex items-center gap-3 font-mono text-[0.65rem] text-muted uppercase tracking-[0.2em]">
-									<span className="h-px flex-1 border-rule border-t border-dashed" />
+								<p className="mt-6 mb-3 w-fit font-mono text-[0.65rem] text-sienna uppercase tracking-[0.2em]">
 									next week
-									<span className="h-px flex-1 border-rule border-t border-dashed" />
+									<Underline className="block h-1.5 w-full" />
 								</p>
 							) : null}
 							{card ? (
-								<div className="flex rounded-card border border-rule-soft bg-inset shadow-[0_2px_0_var(--rule-soft)]">
+								// A page torn from the notebook: the date in the margin, meals on the ruled lines.
+								<div className="flex overflow-hidden rounded-card border border-rule-soft bg-inset shadow-[0_2px_0_var(--rule-soft)]">
 									<div
-										className={`lab-stub flex w-16 shrink-0 flex-col items-center justify-center rounded-l-card py-3 ${isToday ? "bg-sienna text-on-sienna" : ""}`}
+										className={`lab-plan-margin flex w-16 shrink-0 flex-col items-center justify-center py-3 ${isToday ? "bg-sienna text-on-sienna" : ""}`}
 									>
 										<span className="font-mono text-[0.65rem] uppercase tracking-widest">
-											{isToday ? "Today" : WEEKDAY_SHORT[weekday(d.date)]}
+											{WEEKDAY_SHORT[weekday(d.date)]}
 										</span>
 										<span className="font-bold font-mono text-2xl leading-none">
 											{ymd(d.date)[2]}
 										</span>
 									</div>
-									<div className="min-w-0 flex-1 px-3 py-2.5">
+									<div className="lab-plan-lines min-w-0 flex-1 px-3">
+										{label !== formatDate(d.date) ? (
+											<p className="flex h-[var(--line)] items-center">
+												<span className="font-bold">
+													{label}
+													<Underline className="-mt-1 block h-1.5 w-full text-sienna" />
+												</span>
+											</p>
+										) : null}
 										{d.meals.length === 0 ? (
-											<p className="py-1.5 text-faint">Nothing pinned yet</p>
+											<p className="flex h-[var(--line)] items-center text-faint">
+												Nothing pinned yet
+											</p>
 										) : (
 											d.meals.map(({ entry, recipe }, i) => (
 												// biome-ignore lint/suspicious/noArrayIndexKey: a day may hold the same recipe twice
-												<p key={i} className="flex items-baseline justify-between gap-3 py-1">
-													<span className="truncate font-medium">
+												<p key={i} className="flex h-[var(--line)] items-center gap-2.5">
+													<span className="size-1.5 shrink-0 rounded-full bg-sienna" />
+													<span className="min-w-0 flex-1 truncate font-medium">
 														{recipe?.title ?? entry.recipe}
 													</span>
 													{entry.servings ? (
@@ -131,13 +149,18 @@ function Planner({ model }: { model: LabModel }) {
 												</p>
 											))
 										)}
-										<p className="mt-1 font-mono text-sienna text-xs">+ add a meal</p>
+										<p className="flex h-[var(--line)] items-center font-mono text-sienna text-xs">
+											+ add a meal
+										</p>
 									</div>
 								</div>
 							) : (
-								<div className="flex min-h-11 items-center justify-between rounded-card border border-rule border-dashed px-3 font-mono text-muted text-xs">
-									<span>{formatDate(d.date)}</span>
-									<span className="text-sienna">+</span>
+								<div className="flex min-h-11 items-center border-rule-soft border-b font-mono text-muted text-xs">
+									<span className="w-16 shrink-0 text-center">
+										{WEEKDAY_SHORT[weekday(d.date)]} {ymd(d.date)[2]}
+									</span>
+									<span className="flex-1 pl-3 text-faint">—</span>
+									<span className="px-3 text-base text-sienna">+</span>
 								</div>
 							)}
 						</li>
