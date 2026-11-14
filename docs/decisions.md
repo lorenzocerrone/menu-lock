@@ -6,18 +6,72 @@ is now the one to edit).
 
 ## Status
 
-| Phase                     | State                              |
-| ------------------------- | ---------------------------------- |
-| 0. Bootstrap              | Done, except the user action below |
-| 1. Design direction       | **Next**                           |
-| 2. Data and logic         | Not started                        |
-| 3. Screens at parity      | Not started                        |
-| 4. Motion and personality | Not started                        |
-| 5. PWA and cutover        | Not started                        |
+| Phase                     | State                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| 0. Bootstrap              | Done. Live at `lorenzocerrone.github.io/menu-lock/`                              |
+| 1. Design direction       | **Next** (brief below)                                                           |
+| 2. Data and logic         | Done (done before phase 1: it needs no decisions and gives the design real data) |
+| 3. Screens at parity      | Not started                                                                      |
+| 4. Motion and personality | Not started                                                                      |
+| 5. PWA and cutover        | Not started                                                                      |
 
-**Waiting on the user (phase 0 exit):** merge the bootstrap into `main`, then
-Settings → Pages → Deploy from a branch → `gh-pages`, `/ (root)`. The branch appears after
-the first deploy from `main`.
+Also done: the `add-recipe` skill (plan §9), in `.claude/skills/add-recipe/`.
+
+## Phase 1 brief (from the user, 2026-11-14)
+
+A mix of two directions from plan §7: **paper and receipt texture is the dominant
+part** (grain, ruled or dotted backgrounds, a perforated receipt edge on the grocery
+list, hand-drawn sienna underlines), **with a sprinkle of lockfile / terminal touches**
+(a file-like header on the planner, mono gutters, dry copy in empty states). Motion was
+not picked as a direction of its own; keep it to what serves these. Build the lab
+directions as variations inside this brief, on the real recipes.
+
+## Phase 2: data and logic (2026-11-14)
+
+The data was migrated with `scripts/migrate-from-cooking-rs.ts`: 71 dictionary entries,
+25 recipes, 25 illustrations. Nothing needed fixing by hand: every name matched, every
+amount converts, and the `vegetarian` tag agreed with the ingredients on all 25 recipes.
+As a cross-check, a plan holding all 25 recipes gives the same 71 summed amounts in
+menu.lock as the same arithmetic on the old files. Authors are unchanged ("Claude").
+
+Where things live: `src/lib/` (one module per concern, tests beside it),
+`src/dataset.ts` (the bundled data, resolved once), `src/state/storage.ts` (localStorage).
+
+Choices made while porting:
+
+- **Wire format.** Reads every dated link cooking-rs wrote, and writes the same bytes
+  back for the brief's example (tested). One unavoidable difference: Rust wrote float
+  amounts as `1.0`, JavaScript writes `1`; both read both. The old weekday shape
+  (`{"days": …}`) reads as "no plan", so the stored plan is used instead.
+- **Catalog extras in links.** The `name` is looked up by key, display name or alias. Not
+  found: a custom extra with the amount and unit as its text. Found but the amount does
+  not convert for that ingredient: a custom extra under the dictionary's name, so nothing
+  is mis-measured. The `note`, `optional` and `aisle` fields old extras could carry are
+  ignored (the app never wrote them).
+- **Name lookup** also tries the name with "es" added ("chopped tomato" finds Chopped
+  tomatoes), on top of the old rules. Two entries that differ only by singular/plural
+  are a validation error.
+- **Grocery line** is one amount in one unit (`amount`, `unit`), plus `customQuantities`
+  for hand-typed extras that joined it. `sources` are recipe **titles**; `extra` says an
+  extra contributed. Sorting is by code point, as in cooking-rs, not by locale.
+- **Ticks** are stored as `{ key, amount, custom }`: the amount (3 decimals) and the
+  custom quantity texts at tick time. A tick goes when the line needs a larger amount, an
+  amount it didn't have, or a custom text it didn't have.
+- **Plan operations** return a new plan, or the same object when nothing changes.
+  `moveMeal` takes an optional position and `reorderMeal` moves within a day: both are
+  for drag and drop in phase 3 (cooking-rs only had swap and move-to-end).
+- **Filters in the URL** are an object of search params (`q`, `diet`, `by`, `cuisine`,
+  `tag`, `time`) for the router to serialise. A comma inside a value is written `%2C`.
+- **Stored state** falls back part by part: an unreadable plan becomes empty and the
+  grocery state is kept, and the other way round. A newer `version` is refused whole.
+- **The cooking-rs import** (plan §5.7, listed under phase 5) is already implemented and
+  unit-tested in `src/state/storage.ts`; phase 5 only has to cover it in a browser test.
+- **JSON Schemas** in `schema/` are generated from the Zod schemas (`npm run schema`); a
+  test fails when they are stale. `.vscode/settings.json` wires them to the data files.
+- **House style of the data files** is kept by the formatter for recipes (one ingredient
+  per line). `data/ingredients.json` is excluded from formatting: one entry per line,
+  longer than the line width, grouped by aisle.
+- **Biome also formats Markdown** in this version, including this file and the skill.
 
 ## Phase 0: bootstrap (2026-11-14)
 

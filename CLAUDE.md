@@ -21,6 +21,10 @@ it at the end of each phase and whenever a decision is made.
   light + dark). **Run after any visual change and look at the images.** New screen:
   add it to `SCREENS` in `scripts/shots.ts`.
 - `npm run build`: production build into `dist/`.
+- `npm run schema`: regenerate `schema/*.json` after changing `src/lib/schema.ts`.
+
+`npm run check` also validates every file in `data/`. Its messages name the file and the
+ingredient line; fix the data, not the check.
 
 In cloud sessions Chromium is pre-installed: never run `playwright install`.
 `@playwright/test` is pinned to the version that matches it.
@@ -28,21 +32,29 @@ In cloud sessions Chromium is pre-installed: never run `playwright install`.
 ## Layout
 
 ```
-data/            ingredients.json, recipes/<id>.json        (phase 2)
-public/          images/<id>.svg, icons/
+data/            ingredients.json (the dictionary), recipes/<id>.json
+public/          images/<id>.svg (+ placeholder.svg), icons/
+schema/          JSON Schemas for the data files (generated)
 src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforces it)
-src/state/       Zustand store, localStorage boundary, URL sync
+                 schema, data, units, dates, plan, planCodec, grocery, filters,
+                 extras, format, stored; fixtures.ts is for tests only
+src/dataset.ts   the bundled data, validated and resolved once (DATA)
+src/state/       localStorage boundary; the Zustand store and URL sync (phase 3)
 src/ui/          reusable components
 src/routes/      pages; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), base.css
 tests/e2e/       Playwright flows
-scripts/         shots.ts, one-off migration
+scripts/         shots.ts, gen-schema.ts, the one-off migration
 ```
+
+To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recipe/`).
 
 ## Rules
 
 - **Logic lives in `src/lib` and stays pure.** "Today" and anything from the browser is a
-  parameter. Every function there has Vitest tests next to it (`x.test.ts`).
+  parameter. Every function there has Vitest tests next to it (`x.test.ts`). The UI
+  formats nothing itself: every user-facing number, date and quantity comes from
+  `src/lib/format.ts`.
 - **The plan wire format is byte-compatible with cooking-rs links** (plan §5.4). Never
   change it without the user.
 - **Recipe ids and ingredient keys never change** once published: they are in share links.
