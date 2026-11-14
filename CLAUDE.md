@@ -85,6 +85,10 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
 - No new features beyond the parity checklist unless the user asks. The non-goals in
   plan §1 are deliberate.
 - Commits: small, `feat(scope): …` / `fix(scope): …` / `docs: …`.
+- Every pull request body starts with its preview site:
+  `**Preview:** https://lorenzocerrone.github.io/menu-lock/pr-preview/pr-<number>/`. The
+  number is known only once the PR exists, so open it, then edit the body to add the link
+  (the user asked for this, 2026-11-14).
 
 The old repo is the reference implementation: each Rust module in its `src/` ends with
 unit tests that are the spec for the logic being ported. Where it and the plan disagree,
