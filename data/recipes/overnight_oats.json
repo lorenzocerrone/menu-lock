@@ -1,0 +1,23 @@
+{
+  "id": "overnight_oats",
+  "title": "Overnight Oats",
+  "author": "Claude",
+  "servings": 1,
+  "description": "Rolled oats soaked overnight in milk, sweetened with honey and topped with banana. Zero morning effort.",
+  "cuisine": "American",
+  "tags": ["breakfast", "no-cook", "make-ahead"],
+  "prepTime": 5,
+  "cookTime": 0,
+  "image": "overnight_oats.svg",
+  "ingredients": [
+    { "ingredient": "oats", "amount": 60, "unit": "g" },
+    { "ingredient": "milk", "amount": 150, "unit": "ml" },
+    { "ingredient": "honey", "amount": 15, "unit": "g" },
+    { "ingredient": "banana", "amount": 1 }
+  ],
+  "steps": [
+    "Stir the oats, milk, and honey together in a jar.",
+    "Cover and refrigerate overnight.",
+    "In the morning, top with sliced banana and serve."
+  ]
+}

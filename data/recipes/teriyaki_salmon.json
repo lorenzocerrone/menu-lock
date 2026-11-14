@@ -1,0 +1,29 @@
+{
+  "id": "teriyaki_salmon",
+  "title": "Teriyaki Salmon",
+  "author": "Claude",
+  "servings": 2,
+  "description": "Pan-fried salmon glazed in a quick soy, honey and ginger sauce, with rice and broccoli.",
+  "cuisine": "Japanese",
+  "tags": ["dinner", "quick"],
+  "prepTime": 5,
+  "cookTime": 20,
+  "image": "teriyaki_salmon.svg",
+  "ingredients": [
+    { "ingredient": "salmon", "amount": 2, "unit": "fillets" },
+    { "ingredient": "soy_sauce", "amount": 3, "unit": "tbsp" },
+    { "ingredient": "honey", "amount": 20, "unit": "g" },
+    { "ingredient": "ginger", "amount": 1, "unit": "thumb", "note": "grated" },
+    { "ingredient": "garlic", "amount": 1, "unit": "clove", "note": "crushed" },
+    { "ingredient": "rice", "amount": 150, "unit": "g" },
+    { "ingredient": "broccoli", "amount": 200, "unit": "g", "note": "in florets" },
+    { "ingredient": "sesame_oil", "amount": 1, "unit": "tsp" },
+    { "ingredient": "scallion", "amount": 2, "unit": "pcs", "note": "sliced", "optional": true }
+  ],
+  "steps": [
+    "Start the rice. Stir together the soy sauce, honey, ginger, garlic and 2 tbsp water.",
+    "Steam or boil the broccoli for 4 minutes.",
+    "Fry the salmon skin-side down in a little sesame oil for 4 minutes, turn, and cook for 2 more.",
+    "Pour in the sauce and let it bubble until glossy, spooning it over the salmon. Serve with the rice and broccoli, topped with scallions."
+  ]
+}

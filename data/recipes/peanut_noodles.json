@@ -1,0 +1,36 @@
+{
+  "id": "peanut_noodles",
+  "title": "Peanut Noodles",
+  "author": "Claude",
+  "servings": 2,
+  "description": "Noodles tossed in a peanut, soy and lime sauce with crunchy cucumber and scallions.",
+  "cuisine": "Chinese",
+  "tags": ["dinner", "quick"],
+  "prepTime": 10,
+  "cookTime": 10,
+  "image": "peanut_noodles.svg",
+  "ingredients": [
+    { "ingredient": "egg_noodles", "amount": 200, "unit": "g" },
+    { "ingredient": "peanut_butter", "amount": 40, "unit": "g" },
+    { "ingredient": "soy_sauce", "amount": 2, "unit": "tbsp" },
+    { "ingredient": "sesame_oil", "amount": 1, "unit": "tbsp" },
+    { "ingredient": "honey", "amount": 15, "unit": "g" },
+    { "ingredient": "lime", "amount": 1, "note": "juiced" },
+    { "ingredient": "garlic", "amount": 1, "unit": "clove", "note": "crushed" },
+    { "ingredient": "cucumber", "amount": 0.5, "unit": "pcs", "note": "in matchsticks" },
+    { "ingredient": "scallion", "amount": 2, "unit": "pcs", "note": "sliced" },
+    {
+      "ingredient": "tofu",
+      "amount": 200,
+      "unit": "g",
+      "note": "cubed and fried",
+      "optional": true
+    },
+    { "ingredient": "chili_flakes", "optional": true }
+  ],
+  "steps": [
+    "Cook the noodles, then rinse them under cold water.",
+    "Whisk the peanut butter, soy sauce, sesame oil, honey, lime juice and garlic with 2–3 tbsp hot water until smooth.",
+    "Toss the noodles in the sauce and top with cucumber, scallions, tofu and chili flakes."
+  ]
+}
