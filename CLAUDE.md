@@ -58,10 +58,12 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
   parameter. Every function there has Vitest tests next to it (`x.test.ts`). The UI
   formats nothing itself: every user-facing number, date and quantity comes from
   `src/lib/format.ts`.
-- **The plan wire format is byte-compatible with cooking-rs links** (plan §5.4), plus
-  two additions the user asked for (non-recipe items, per-meal ingredient changes: see
-  `docs/decisions.md`). Never change it without the user; old links must keep reading.
-- **Recipe ids and ingredient keys never change** once published: they are in share links.
+- **The app has no users yet** (the user, 2026-11-14): links, the plan wire format, the
+  stored state and the data schema may change freely, without migrations or legacy
+  readers. Keep changes simple rather than backwards compatible, and record them in
+  `docs/decisions.md`. This ends when the user says people rely on the app.
+- Recipe ids and ingredient keys are in share links and in plans; rename one only with
+  a reason, and update every recipe and test that uses it.
 - **Closed-world ingredients**: every recipe line references a dictionary key and
   converts into that ingredient's shopping unit, or validation fails.
 - Routing is in the hash; `plan` is retained on every route by the root route's search

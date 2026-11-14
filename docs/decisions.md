@@ -118,6 +118,15 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Standing decision: no users yet, so no compatibility burden (2026-11-14)
+
+The user: "App has no users so no need to worry about breaking links or changing
+schemas/legacy." Until they say otherwise, the wire format, the stored state and the
+data schema can change without migrations, and features ship to the live site without
+a staged rollout. The compatibility that already exists (reading cooking-rs links, the
+one-time import of its stored plan) stays because it is built and tested, not because
+it must: it can be removed when it gets in the way.
+
 ## After the rewrite: two additions the user asked for (2026-11-14)
 
 Both go beyond the parity checklist and both add to the wire format, with the user's
