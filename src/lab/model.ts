@@ -1,9 +1,6 @@
 /**
- * The design lab's shared state: the real recipes, a fixture plan from today,
- * and a tickable grocery list. Everything the three directions render comes
- * from here, so they differ only in how they look and move.
- *
- * Phase 1 scaffolding: delete src/lab/ once a direction is chosen.
+ * The lab's state: the real recipes, a fixture plan from today, and a
+ * tickable grocery list. It stands in for the store until phase 3.
  */
 import { useMemo, useState } from "react";
 import { DATA } from "../dataset";

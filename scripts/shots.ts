@@ -14,13 +14,11 @@ const SCREENS = [
 	{ name: "recipes", hash: "#/" },
 	{ name: "planner", hash: "#/planner" },
 	{ name: "grocery", hash: "#/grocery" },
-	// Phase 1 design lab (needs a build with VITE_LAB=1; `npm run shots` sets it).
-	...(["notebook", "receipt", "lockfile"] as const).flatMap((d) =>
-		(["recipes", "planner", "grocery"] as const).map((s) => ({
-			name: `lab-${d}-${s}`,
-			hash: `#/lab?d=${d}&s=${s}`,
-		})),
-	),
+	// The reference screens of the chosen design (needs VITE_LAB=1; `npm run shots` sets it).
+	...(["recipes", "planner", "grocery"] as const).map((s) => ({
+		name: `lab-${s}`,
+		hash: `#/lab?s=${s}`,
+	})),
 ];
 
 const VIEWPORTS = [

@@ -40,9 +40,10 @@ src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforce
                  extras, format, stored; fixtures.ts is for tests only
 src/dataset.ts   the bundled data, validated and resolved once (DATA)
 src/state/       localStorage boundary; the Zustand store and URL sync (phase 3)
-src/ui/          reusable components
+src/ui/          reusable components: Shell, PageTitle, Stamp, Underline, motion.ts
 src/routes/      pages; the route table is src/router.tsx
-src/styles/      tokens.css (every colour and font), base.css
+src/lab/         the chosen design as reference screens (#/lab); phase 3 ports and deletes it
+src/styles/      tokens.css (every colour and font), paper.css (textures), base.css
 tests/e2e/       Playwright flows
 scripts/         shots.ts, gen-schema.ts, the one-off migration
 ```
@@ -63,7 +64,12 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
 - Routing is in the hash; `plan` is retained on every route by the root route's search
   middleware. Use `<Link to="…">`, never hand-built hrefs.
 - Colours and fonts come from `src/styles/tokens.css` (Tailwind utilities `bg-paper`,
-  `text-ink`, `font-mono`, breakpoint `wide:` = 720px). No hard-coded colours.
+  `text-ink`, `font-mono`, `shadow-card`, `h-line`, breakpoint `wide:` = 720px). No
+  hard-coded colours.
+- **Follow the design rules** in `docs/decisions.md` (phase 1): paper objects on a
+  grainy page, Grotesk for names and Mono for everything else, sienna as the only
+  accent, the receipt, the notebook plan. Look at `#/lab` (`npm run dev`) before
+  building a screen.
 - Keep the dependency list as it is. Ask before adding a library.
 - No new features beyond the parity checklist unless the user asks. The non-goals in
   plan §1 are deliberate.

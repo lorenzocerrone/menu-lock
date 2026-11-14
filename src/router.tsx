@@ -50,20 +50,18 @@ const groceryRoute = createRoute({
 	component: GroceryPage,
 });
 
-/** Phase 1 design lab: `d` is the direction, `s` the screen. Remove with src/lab/. */
+/** The reference screens of the chosen design; `s` is the screen. Remove with src/lab/. */
 const labRoute = createRoute({
-	getParentRoute: () => rootRoute,
+	getParentRoute: () => shellRoute,
 	path: "/lab",
 	component: LabRoute,
 	validateSearch: z.object({
-		d: z.enum(["notebook", "receipt", "lockfile"]).catch("notebook"),
 		s: z.enum(["recipes", "planner", "grocery"]).catch("recipes"),
 	}),
 });
 
 const routeTree = rootRoute.addChildren([
-	shellRoute.addChildren([recipesRoute, plannerRoute, groceryRoute]),
-	labRoute,
+	shellRoute.addChildren([recipesRoute, plannerRoute, groceryRoute, labRoute]),
 ]);
 
 export const router = createRouter({

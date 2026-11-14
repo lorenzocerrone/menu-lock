@@ -1,5 +1,6 @@
 /* Design tokens: the parchment / ink / sienna paper style carried over from
-   cooking-rs. Phase 1 evolves these; every colour in the app comes from here. */
+   cooking-rs, as settled in phase 1 (docs/decisions.md, "Design rules").
+   Every colour in the app comes from here. */
 
 :root {
 	--paper: #efe8d8;
@@ -33,6 +34,15 @@
 	}
 }
 
+/* Derived from the tokens above, so they follow light and dark by themselves. */
+:root {
+	--rule-mid: color-mix(in srgb, var(--ink) 24%, transparent);
+	--sienna-line: color-mix(in srgb, var(--sienna) 55%, transparent);
+	--tape: color-mix(in srgb, var(--sienna) 30%, var(--panel));
+	/* The height of one ruled line. */
+	--line: 2.25rem;
+}
+
 /* Tailwind utilities for the tokens: bg-paper, text-ink, border-rule, font-mono… */
 @theme inline {
 	--color-paper: var(--paper);
@@ -46,6 +56,11 @@
 	--color-danger: var(--danger);
 	--color-rule: var(--rule);
 	--color-rule-soft: var(--rule-soft);
+	--color-rule-mid: var(--rule-mid);
+	/* A paper card resting on the page, and one that floats above it. */
+	--shadow-card: 0 2px 0 var(--rule-soft);
+	--shadow-lift: 0 2px 0 var(--rule-soft), 0 10px 20px -10px var(--rule);
+	--spacing-line: var(--line);
 	--font-sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
 	--font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, monospace;
 	--radius-card: 6px;

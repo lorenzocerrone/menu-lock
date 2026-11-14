@@ -17,43 +17,69 @@ is now the one to edit).
 
 Also done: the `add-recipe` skill (plan §9), in `.claude/skills/add-recipe/`.
 
-## Phase 1 brief (from the user, 2026-11-14)
+## Phase 1: design direction (2026-11-14)
 
-A mix of two directions from plan §7: **paper and receipt texture is the dominant
-part** (grain, ruled or dotted backgrounds, a perforated receipt edge on the grocery
-list, hand-drawn sienna underlines), **with a sprinkle of lockfile / terminal touches**
-(a file-like header on the planner, mono gutters, dry copy in empty states). Motion was
-not picked as a direction of its own; keep it to what serves these. Build the lab
-directions as variations inside this brief, on the real recipes.
+The brief was: paper and receipt texture dominant, with a sprinkle of lockfile /
+terminal touches. Three directions were built as real screens in a lab (A Notebook,
+B Receipt, C Lockfile). **The user picked B on all fronts**, with one change: the plan
+keeps B's clarity and takes notebook touches from A. A and C are deleted.
 
-### The lab (`#/lab`)
+### Design rules
 
-Three directions, each with the three screens on the real recipes and a fixture plan,
-in `src/lab/`. `d` and `s` in the URL pick the direction and the screen
-(`#/lab?d=receipt&s=grocery`).
+- **Everything is a paper object on a grainy page.** The page is `bg-paper` with
+  `.paper-grain`. Things on it are `bg-inset` cards with a hairline `border-rule-soft`,
+  6px corners (`rounded-card`) and a hard 2px bottom edge (`shadow-card`); things that
+  float above the page (the tab strip, a recipe card) use `shadow-lift`. No blurry
+  shadows elsewhere.
+- **Two voices.** Space Grotesk says what things are (titles, recipe and ingredient
+  names). Space Mono says everything else: numbers, quantities, dates, captions, chips,
+  tabs, actions.
+- **Sienna is the only accent**: the current tab, today, bullets, "+ add" actions, a
+  selected chip, the tick. Never for body text.
+- **Recipes are taped index cards**: `.tape` at the top, tilted about ±0.8°, title in
+  bold, a mono meta line. Filter chips are dashed outlines, solid sienna when on, with
+  their count; an option that gives 0 is dimmed.
+- **The grocery list is a till receipt** (`.receipt`): torn ends, "MENU.LOCK / resolved
+  from N meals" at the top, aisles as spaced mono caps between dashed rules, a dotted
+  leader from the name to the quantity, "LEFT TO BUY n / m", a barcode and a sign-off.
+  A tick is a `Stamp`: the box gets a sienna check stamped in, the name is struck
+  through and dimmed, and the row sinks to the bottom of its aisle.
+- **The plan is a notebook page per planned day.** The date sits left of a sienna
+  margin line (`.plan-margin`): mono weekday over a big day number; today's block is
+  solid sienna. Meals are on ruled lines (`.plan-lines`, each row `h-line`) with a
+  sienna bullet; custom servings on the right in mono; "+ add a meal" is the last line.
+  Days without meals are a single ruled row with the date and a "+".
+- **The hand-drawn `Underline` belongs to the plan only**: under "Today", "Tomorrow"
+  and "next week". Using it elsewhere dilutes it.
+- **Dashes mean "cut here"**: dashed rules separate sections of the receipt and outline
+  chips. Solid hairlines are ruled paper.
+- **The lockfile is seasoning, not structure**: the wordmark, mono captions ("8 meals ·
+  14 days"), the receipt header, and dry copy in empty states (`menu.lock: nothing
+  pinned yet`, `0 to buy. Suspicious.`). No line numbers, prompts or `[x]` boxes.
+- **Motion**: one `spring` (src/ui/motion.ts) for anything that moves to a new place;
+  transform and opacity only; the stamp has its own harder spring. `MotionConfig
+  reducedMotion="user"` wraps the app, so every animation honours the system setting.
+- **Tabs**: a paper strip with a sienna pill that slides to the current tab; floating
+  at the bottom on phones, at the top from 720px.
+- **Illustrations**: the 25 old SVGs have their title and cuisine drawn in, so they are
+  cropped to the icon (`aspect-[8/3] object-top`). Redrawing them is the later
+  illustration session of plan §10.
 
-- **A · Notebook**: ruled paper with a sienna margin line, dates in the margin,
-  hand-drawn underlines; the tick and the strike-through draw themselves.
-- **B · Receipt**: paper objects. Recipes are taped index cards, planned days are
-  ticket stubs, the grocery list is a till receipt with torn ends, dotted leaders and a
-  stamp for each tick.
-- **C · Lockfile**: the terminal motif turned up, to calibrate how much is too much. The
-  plan is a file with a line-number gutter; the grocery list is `[x]` boxes.
+Where it lives: `src/styles/tokens.css` (colours, fonts, `--line`, the two shadows),
+`src/styles/paper.css` (grain, receipt, tape, plan lines), `src/ui/` (`Shell`,
+`PageTitle`, `Stamp`, `Underline`, `motion.ts`).
 
-**The user's pick (2026-11-14): B wins on all fronts.** The one change: the plan keeps
-B's clarity (a card per planned day, the date on the left) and takes notebook touches
-from A: a sienna margin line after the date, meals on ruled lines with a sienna bullet,
-hand-drawn underlines under "Today", "Tomorrow" and "next week". Empty days are a plain
-ruled row. This revised plan is what B's Plan tab in the lab now shows.
+### The reference screens (`#/lab`)
 
-In all three, ticking a grocery line sinks it to the bottom of its aisle, and the
-recipe chips filter the cards with a layout animation. The planner is look only.
+`src/lab/Screens.tsx` holds the chosen design's three screens (recipes, plan, grocery)
+on the real recipes and a fixture plan, with working search, chips and ticks; the plan
+is look only. They are the starting point for phase 3: port each into its route, wire
+it to the store, then delete the lab.
 
 The lab is in development builds, pull-request previews and builds made with
 `VITE_LAB=1` (the browser tests and `npm run shots` use that); never on the live site.
-The old illustrations have their title baked in, so the lab crops them to the icon.
-**At the end of phase 1, delete `src/lab/`, `src/routes/lab.tsx`, the `/lab` route,
-`tests/e2e/lab.spec.ts`, the lab entries in `scripts/shots.ts` and `VITE_LAB`.**
+**When phase 3 has replaced them, delete `src/lab/`, `src/routes/lab.tsx`, the `/lab`
+route, `tests/e2e/lab.spec.ts`, the lab entries in `scripts/shots.ts` and `VITE_LAB`.**
 
 ## Phase 2: data and logic (2026-11-14)
 
@@ -124,8 +150,8 @@ Zustand 5, Zod 4, Biome 2, Vitest 5, Playwright 1.63.
   imported in `src/main.tsx`.
 - **vite-plugin-pwa is not installed yet**: it arrives with phase 5, so no service
   worker can cache a half-built app in the meantime.
-- **Tokens are the cooking-rs palette unchanged** (`src/styles/tokens.css`); the shell
-  and its three placeholder pages are scaffolding for phase 1, not a design.
+- **Tokens are the cooking-rs palette unchanged** (`src/styles/tokens.css`). (Phase 1
+  kept the palette and added the paper textures and the shell on top of it.)
 - The icon in `public/icons/icon.svg` is a placeholder; real icons come with phase 5.
 
 ## Carried over from the plan

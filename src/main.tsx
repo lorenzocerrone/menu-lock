@@ -6,6 +6,7 @@ import "@fontsource/space-mono/latin-700.css";
 import "./styles/base.css";
 
 import { RouterProvider } from "@tanstack/react-router";
+import { MotionConfig } from "motion/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { router } from "./router";
@@ -15,6 +16,9 @@ if (!root) throw new Error("index.html has no #root element");
 
 createRoot(root).render(
 	<StrictMode>
-		<RouterProvider router={router} />
+		{/* Every animation honours the system's reduced-motion setting. */}
+		<MotionConfig reducedMotion="user">
+			<RouterProvider router={router} />
+		</MotionConfig>
 	</StrictMode>,
 );

@@ -1,20 +1,12 @@
-/* Design lab (phase 1): textures and frames for the three directions. Every
-   colour is derived from the tokens, so light and dark both follow. Delete
-   with src/lab/ once a direction is chosen. */
-
-.lab {
-	--rule-mid: color-mix(in srgb, var(--ink) 24%, transparent);
-	--sienna-tint: color-mix(in srgb, var(--sienna) 14%, transparent);
-	--sienna-line: color-mix(in srgb, var(--sienna) 55%, transparent);
-	--line: 2.25rem;
-}
+/* Paper: the textures and paper objects of the design (docs/decisions.md,
+   "Design rules"). Every colour is derived from the tokens. */
 
 /* Paper grain, laid over a surface. */
-.lab-grain {
+.paper-grain {
 	position: relative;
 	isolation: isolate;
 }
-.lab-grain::after {
+.paper-grain::after {
 	content: "";
 	position: absolute;
 	inset: 0;
@@ -24,33 +16,14 @@
 	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .55 -.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme: dark) {
-	.lab-grain::after {
+	.paper-grain::after {
 		opacity: 0.35;
 		mix-blend-mode: soft-light;
 	}
 }
 
-/* A — Notebook: ruled lines and a sienna margin line. */
-.lab-ruled {
-	background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--rule-soft) 0);
-	background-size: 100% var(--line);
-	background-position: 0 0.5rem;
-}
-.lab-margin {
-	position: relative;
-}
-.lab-margin::before {
-	content: "";
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 4.25rem;
-	width: 1px;
-	background: var(--sienna-line);
-}
-
-/* B — Receipt: a strip of paper with torn zigzag ends. */
-.lab-receipt {
+/* The grocery list: a till receipt with torn zigzag ends. */
+.receipt {
 	--z: 6px;
 	padding-block: calc(var(--z) + 1.25rem);
 	background: var(--inset);
@@ -61,7 +34,7 @@
 		51% repeat-x;
 	filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--ink) 14%, transparent));
 }
-.lab-barcode {
+.receipt-barcode {
 	height: 2.25rem;
 	background-image: repeating-linear-gradient(
 		to right,
@@ -74,25 +47,22 @@
 	);
 	opacity: 0.75;
 }
-.lab-tape {
+
+/* A strip of tape holding a recipe card. */
+.tape {
 	position: absolute;
 	width: 3.25rem;
 	height: 1.1rem;
-	background: color-mix(in srgb, var(--sienna) 30%, var(--panel));
+	background: var(--tape);
 	opacity: 0.8;
 }
-/* The plan in B: a notebook page per day. A sienna margin line after the date,
-   and ruled lines under the meals. */
-.lab-plan-margin {
+
+/* A day of the plan: a notebook page. A sienna margin line after the date,
+   and ruled lines under the meals (each row is one --line tall). */
+.plan-margin {
 	border-right: 1.5px solid var(--sienna-line);
 }
-.lab-plan-lines {
+.plan-lines {
 	background-image: linear-gradient(to bottom, transparent calc(100% - 1px), var(--rule-soft) 0);
 	background-size: 100% var(--line);
-}
-
-/* C — Lockfile: dotted grid paper. */
-.lab-grid {
-	background-image: radial-gradient(circle, var(--rule-mid) 1px, transparent 1.3px);
-	background-size: 18px 18px;
 }
