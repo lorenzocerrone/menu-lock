@@ -150,17 +150,29 @@ agreement. Links without them are written exactly as before, so every older link
 reads the same; cooking-rs is gone, so nothing needs to read the new shapes but
 menu.lock.
 
-**Things on the plan that are not recipes** ("Frozen pizza", "Leftovers").
+**Ingredients on a day, without a recipe** ("Salmon fillet, 2 fillets", "Leftover pizza").
 
-- A day's meal is now a recipe or a note: `{ note, buy? }`. On the wire:
-  `{"note":"Frozen pizza","buy":true}`.
-- In the "add a meal" picker, typing something offers, under the recipes, to add what
-  was typed as it is: "plan only" or "and buy it". The user chose to decide each time.
-- One with `buy` is a grocery line in Other, once however often it is planned, with
-  "plan" as what it is for. It joins a custom extra of the same name, or the line of a
-  dictionary ingredient of that name if that is on the list. Its sheet has "Also on the
-  grocery list" to switch that.
-- On the plan it has a ring where a recipe has a dot, and says "to buy" when it is.
+This replaced a first version, "notes" (free text with a buy switch), the same day: the
+user found it more straightforward that a day holds recipes and ingredients, and an
+ingredient is something the app already understands.
+
+- A day's entry is a recipe or `{ item, buy? }`, where `item` is the same thing as a
+  grocery extra: a dictionary ingredient with an optional amount and unit, or anything
+  typed, with a free-text quantity. On the wire the item is written like an extra:
+  `{"item":{"name":"salmon","amount":2,"unit":"fillets"},"buy":true}`,
+  `{"item":{"name":"Leftover pizza","quantity":null}}`.
+- The "add a meal" picker reads what is typed twice: as a recipe search, and as an
+  ingredient ("salmon 2 fillets" is a name and a quantity). Under the recipes it lists
+  the matching ingredients (fuzzy, as everywhere), and offers what was typed as it is:
+  "plan only" or "and buy it". A listed ingredient is added to buy; if its quantity does
+  not convert for it, it is kept as typed.
+- With `buy`, a listed ingredient adds to its grocery line (in its aisle, summed with
+  the recipes that use it, not scaled), and a typed one is a line in Other; both are
+  "for" the plan. Without `buy` it is only on the plan (leftovers).
+- Its sheet edits how much of it and has "On the grocery list".
+- On the plan it has a ring where a recipe has a dot, then its quantity, then "buy".
+- Extras on the grocery page stay: an extra is shopping only, with no day; an
+  ingredient on a day follows that day (the range, and dropping off when it passes).
 
 **Changing a recipe for one planned meal** (the user picked: per meal, with all four
 kinds of change).

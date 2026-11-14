@@ -254,17 +254,29 @@ describe("format", () => {
 	});
 
 	it("describes a planned meal and its changed lines", () => {
-		expect(formatMealDetails({ recipe: "dal" })).toEqual([]);
-		expect(formatMealDetails({ recipe: "dal", servings: 6 })).toEqual(["serves 6"]);
-		expect(formatMealDetails({ recipe: "dal", changes: [{ kind: "skip", key: "salt" }] })).toEqual([
+		const { dictionary } = fixtureData([recipeFile("r", 1, [{ ingredient: "salt" }])]);
+		const details = (meal: Parameters<typeof formatMealDetails>[0]) =>
+			formatMealDetails(meal, dictionary);
+		expect(details({ recipe: "dal" })).toEqual([]);
+		expect(details({ recipe: "dal", servings: 6 })).toEqual(["serves 6"]);
+		expect(details({ recipe: "dal", changes: [{ kind: "skip", key: "salt" }] })).toEqual([
 			"changed",
 		]);
 		expect(
-			formatMealDetails({ recipe: "dal", servings: 6, changes: [{ kind: "skip", key: "salt" }] }),
+			details({ recipe: "dal", servings: 6, changes: [{ kind: "skip", key: "salt" }] }),
 		).toEqual(["serves 6", "changed"]);
-		expect(formatMealDetails({ recipe: "dal", changes: [] })).toEqual([]);
-		expect(formatMealDetails({ note: "Frozen pizza" })).toEqual([]);
-		expect(formatMealDetails({ note: "Frozen pizza", buy: true })).toEqual(["to buy"]);
+		expect(details({ recipe: "dal", changes: [] })).toEqual([]);
+		// An ingredient on a day: how much, and whether it is to be bought.
+		expect(details({ item: { kind: "custom", name: "Leftover pizza", quantity: null } })).toEqual(
+			[],
+		);
+		expect(
+			details({ item: { kind: "custom", name: "Frozen pizza", quantity: "2 boxes" }, buy: true }),
+		).toEqual(["2 boxes", "buy"]);
+		expect(
+			details({ item: { kind: "catalog", key: "salmon", amount: 2, unit: "fillets" }, buy: true }),
+		).toEqual(["2 fillets", "buy"]);
+		expect(details({ item: { kind: "catalog", key: "milk" } })).toEqual([]);
 
 		const base = {
 			key: "onion",

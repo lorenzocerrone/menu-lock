@@ -1,41 +1,76 @@
 import { expect, test } from "@playwright/test";
 import { iso, open, row } from "./helpers";
 
-test("something that is not a recipe goes on a day, to buy or not", async ({ page }) => {
+test("an ingredient goes on a day without a recipe: from the list, or as typed", async ({
+	page,
+}) => {
 	await open(page, "/planner");
 	const today = page.getByRole("region").first();
 	const dialog = page.getByRole("dialog");
+	const search = dialog.getByLabel("Search recipes");
+	const ingredients = dialog.getByRole("region", { name: "Ingredients" });
 
+	// From the list, with an amount, typo forgiven: it is to be bought.
 	await today.getByRole("button", { name: /Add a meal/ }).click();
-	await expect(dialog.getByText("Not a recipe? Type it")).toBeVisible();
-	await dialog.getByLabel("Search recipes").fill("frozen pizza");
+	await expect(dialog.getByText("Not a recipe? Type an ingredient")).toBeVisible();
+	await search.fill("samon 2 fillets");
 	await expect(dialog.getByText("0 recipes resolved.")).toBeVisible();
-	await dialog.getByRole("button", { name: "Add “Frozen pizza” and buy it" }).click();
+	await ingredients.getByRole("button", { name: /^Salmon fillet 2 fillets/ }).click();
 	await expect(page.getByTestId("toast")).toHaveText("Added to today");
 
+	// Typed, not in the list: on the plan only, or also to buy.
 	await today.getByRole("button", { name: /Add a meal/ }).click();
-	await dialog.getByLabel("Search recipes").fill("leftovers");
-	await dialog.getByRole("button", { name: "Add “Leftovers” plan only" }).click();
-	await expect(today.getByRole("listitem")).toHaveText([/Frozen pizza.*to buy/, /^Leftovers/]);
-	await expect(page.getByText("2 meals · 14 days")).toBeVisible();
+	await search.fill("leftover pizza");
+	await ingredients.getByRole("button", { name: "Add “Leftover pizza” plan only" }).click();
+	await today.getByRole("button", { name: /Add a meal/ }).click();
+	await search.fill("frozen pizza 2 boxes");
+	await ingredients.getByRole("button", { name: "Add “Frozen pizza” and buy it" }).click();
+	await expect(today.getByRole("listitem")).toHaveText([
+		/Salmon fillet.*2 fillets · buy/,
+		/^Leftover pizza/,
+		/Frozen pizza.*2 boxes · buy/,
+	]);
+	await expect(page.getByText("3 meals · 14 days")).toBeVisible();
 
-	// Only the one to buy is on the grocery list, under Other.
-	await page.getByRole("link", { name: /^Grocery/ }).click();
-	await expect(page.getByRole("region", { name: "Other" })).toContainText("Frozen pizza");
-	await expect(row(page, "Frozen pizza")).toContainText("plan");
-	await expect(page.getByText("Leftovers")).toHaveCount(0);
-
-	// It travels with the link, and can be taken off the grocery list from its sheet.
-	await page.reload();
-	await expect(row(page, "Frozen pizza")).toBeVisible();
-	await page.getByRole("link", { name: "Plan" }).click();
-	await today.getByRole("button", { name: /^Frozen pizza/ }).click();
-	await expect(dialog.getByRole("list", { name: "Ingredients of this meal" })).toHaveCount(0);
-	await dialog.getByRole("button", { name: /Also on the grocery list/ }).click();
+	// A name that is in the list is offered from the list only; a recipe search still finds recipes.
+	await today.getByRole("button", { name: /Add a meal/ }).click();
+	await search.fill("eggs");
+	await expect(ingredients.getByRole("button", { name: /^Egg Dairy/ })).toBeVisible();
+	await expect(ingredients.getByRole("button", { name: /Add “/ })).toHaveCount(0);
+	await search.fill("pizza");
+	await expect(dialog.getByRole("button", { name: /Margherita Pizza/ })).toBeVisible();
+	await expect(ingredients.getByRole("button", { name: /^Pizza dough/ })).toBeVisible();
 	await dialog.getByRole("button", { name: "Close" }).click();
-	await expect(today.getByRole("listitem").first()).not.toContainText("to buy");
+
+	// The grocery list: the salmon in its aisle, the frozen pizza under Other, no leftovers.
 	await page.getByRole("link", { name: /^Grocery/ }).click();
-	await expect(page.getByText("0 to buy. Suspicious.")).toBeVisible();
+	await expect(page.getByRole("region", { name: "Fish" })).toContainText("Salmon fillet");
+	await expect(row(page, "Salmon fillet")).toContainText("250 g");
+	await expect(row(page, "Salmon fillet")).toContainText("plan");
+	await expect(row(page, "Frozen pizza")).toContainText("2 boxes");
+	await expect(page.getByText("Leftover pizza")).toHaveCount(0);
+
+	// In its sheet: how much, and whether it is on the grocery list. It travels with the link.
+	await page.reload();
+	await page.getByRole("link", { name: "Plan" }).click();
+	await today.getByRole("button", { name: /^Salmon fillet/ }).click();
+	await expect(dialog.getByRole("list", { name: "Ingredients of this meal" })).toHaveCount(0);
+	await expect(dialog.getByLabel("Unit")).toHaveValue("fillet");
+	await expect(dialog.getByLabel("Amount")).toHaveValue("2");
+	await dialog.getByLabel("Amount").fill("4");
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await dialog.getByRole("button", { name: "Close" }).click();
+	await expect(today.getByRole("listitem").first()).toContainText("4 fillet");
+	await today.getByRole("button", { name: /^Frozen pizza/ }).click();
+	await dialog.getByRole("button", { name: /On the grocery list/ }).click();
+	await dialog.getByLabel("Quantity").fill("1 box");
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await dialog.getByRole("button", { name: "Close" }).click();
+	await expect(today.getByRole("listitem").nth(2)).toHaveText(/Frozen pizza.*1 box/);
+	await expect(today.getByRole("listitem").nth(2)).not.toContainText("buy");
+	await page.getByRole("link", { name: /^Grocery/ }).click();
+	await expect(row(page, "Salmon fillet")).toContainText("500 g");
+	await expect(page.getByText("Frozen pizza")).toHaveCount(0);
 });
 
 test("a planned meal changes its ingredients, and the grocery list follows", async ({ page }) => {

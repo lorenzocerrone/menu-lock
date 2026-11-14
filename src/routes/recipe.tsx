@@ -12,7 +12,7 @@ import {
 	formatStepNumber,
 	formatTiming,
 } from "../lib/format";
-import { day, isNote, type RecipeMeal } from "../lib/plan";
+import { day, isItem, type RecipeMeal } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
 import { Roll } from "../ui/Roll";
@@ -205,7 +205,7 @@ export function RecipePage() {
 		const [date = "", index = ""] = (ref ?? "").split(".");
 		const meal = day(plan, date)[Number(index)];
 		// A stale reference (the meal moved or was removed) just shows the recipe itself.
-		return ref && meal && !isNote(meal) && meal.recipe === of.id ? { date, meal } : null;
+		return ref && meal && !isItem(meal) && meal.recipe === of.id ? { date, meal } : null;
 	};
 	if (!recipe) {
 		return (

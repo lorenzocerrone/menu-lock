@@ -100,15 +100,19 @@ describe("store", () => {
 		expect(s().plan).toEqual(EMPTY_PLAN);
 	});
 
-	it("plans things that are not recipes, and changes a meal's ingredients", () => {
+	it("plans ingredients without a recipe, and changes a meal's ingredients", () => {
 		const store = make();
 		const s = () => store.getState();
-		s().addNote(d(0), "Frozen pizza", true);
+		const pizza = { kind: "custom", name: "Frozen pizza", quantity: null } as const;
+		s().addItem(d(0), pizza, true);
 		expect(allLines(groceryList(s(), data)).map((l) => l.key)).toEqual(["custom:frozen pizza"]);
-		s().setNoteBuy(d(0), 0, false);
+		s().setItem(d(0), 0, { buy: false });
 		expect(allLines(groceryList(s(), data))).toEqual([]);
 		s().setServings(d(0), 0, 3); // not a recipe: nothing happens
-		expect(s().plan.dates[d(0)]).toEqual([{ note: "Frozen pizza" }]);
+		expect(s().plan.dates[d(0)]).toEqual([{ item: pizza }]);
+		s().setItem(d(0), 0, { item: { ...pizza, quantity: "2 boxes" } });
+		expect(s().plan.dates[d(0)]).toEqual([{ item: { ...pizza, quantity: "2 boxes" } }]);
+		s().setItem(d(0), 0, { item: pizza });
 
 		s().addMeal(d(0), "dal");
 		s().toggleTick(line(store, "onion"));
@@ -123,7 +127,7 @@ describe("store", () => {
 		expect(allLines(groceryList(s(), data)).map((l) => l.key)).toEqual(["salt"]);
 		s().resetChange(d(0), 1, "onion");
 		expect(s().plan.dates[d(0)]?.[1]).toEqual({ recipe: "dal" });
-		s().changeMeal(d(0), 0, { kind: "skip", key: "onion" }); // a note has no ingredients
-		expect(s().plan.dates[d(0)]?.[0]).toEqual({ note: "Frozen pizza" });
+		s().changeMeal(d(0), 0, { kind: "skip", key: "onion" }); // an ingredient has no recipe to change
+		expect(s().plan.dates[d(0)]?.[0]).toEqual({ item: pizza });
 	});
 });

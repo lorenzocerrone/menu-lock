@@ -31,14 +31,18 @@ export type MealChange =
 /** A planned recipe. `servings` absent means the recipe's own; `changes` absent means none. */
 export type RecipeMeal = { recipe: string; servings?: number; changes?: MealChange[] };
 
-/** Something on a day that is not a recipe ("Frozen pizza"). `buy`: it is also on the grocery list. */
-export type NoteMeal = { note: string; buy?: true };
+/**
+ * An ingredient on a day, without a recipe: one from the dictionary ("Salmon
+ * fillet, 2 fillets") or anything typed ("Leftover pizza"). `buy`: it is also
+ * on the grocery list.
+ */
+export type ItemMeal = { item: Extra; buy?: true };
 
 /** One thing planned on a day. */
-export type MealEntry = RecipeMeal | NoteMeal;
+export type MealEntry = RecipeMeal | ItemMeal;
 
-export function isNote(meal: MealEntry): meal is NoteMeal {
-	return "note" in meal;
+export function isItem(meal: MealEntry): meal is ItemMeal {
+	return "item" in meal;
 }
 
 /** A grocery item added by hand, outside any recipe. */
@@ -101,22 +105,26 @@ export function addMeal(plan: Plan, date: IsoDate, recipe: string): Plan {
 	return withDay(plan, date, [...day(plan, date), { recipe }]);
 }
 
-/** Append something that is not a recipe to a day. */
-export function addNote(plan: Plan, date: IsoDate, note: string, buy: boolean): Plan {
-	const text = note.trim();
-	if (text === "") return plan;
-	return withDay(plan, date, [
-		...day(plan, date),
-		buy ? { note: text, buy: true } : { note: text },
-	]);
+/** Append an ingredient (not a recipe) to a day. */
+export function addItem(plan: Plan, date: IsoDate, item: Extra, buy: boolean): Plan {
+	if (item.kind === "custom" && item.name.trim() === "") return plan;
+	return withDay(plan, date, [...day(plan, date), buy ? { item, buy: true } : { item }]);
 }
 
-/** Whether a non-recipe item is also on the grocery list. */
-export function setNoteBuy(plan: Plan, date: IsoDate, index: number, buy: boolean): Plan {
+/** Replace a day's ingredient (its amount or quantity changed), or whether it is on the grocery list. */
+export function setItem(
+	plan: Plan,
+	date: IsoDate,
+	index: number,
+	change: { item?: Extra; buy?: boolean },
+): Plan {
 	const meals = day(plan, date);
 	const meal = meals[index];
-	if (!meal || !isNote(meal) || (meal.buy ?? false) === buy) return plan;
-	const next: NoteMeal = buy ? { note: meal.note, buy: true } : { note: meal.note };
+	if (!meal || !isItem(meal)) return plan;
+	const item = change.item ?? meal.item;
+	const buy = change.buy ?? meal.buy ?? false;
+	if (item === meal.item && buy === (meal.buy ?? false)) return plan;
+	const next: ItemMeal = buy ? { item, buy: true } : { item };
 	return withDay(
 		plan,
 		date,
@@ -128,7 +136,7 @@ export function setNoteBuy(plan: Plan, date: IsoDate, index: number, buy: boolea
 export function setChanges(plan: Plan, date: IsoDate, index: number, changes: MealChange[]): Plan {
 	const meals = day(plan, date);
 	const meal = meals[index];
-	if (!meal || isNote(meal)) return plan;
+	if (!meal || isItem(meal)) return plan;
 	const next: RecipeMeal = { recipe: meal.recipe };
 	if (meal.servings !== undefined) next.servings = meal.servings;
 	if (changes.length > 0) next.changes = changes;
@@ -194,7 +202,7 @@ export function setServings(
 ): Plan {
 	const meals = day(plan, date);
 	const meal = meals[index];
-	if (!meal || isNote(meal)) return plan;
+	if (!meal || isItem(meal)) return plan;
 	const wanted = servings === undefined || servings === recipeServings ? undefined : servings;
 	if (wanted === meal.servings) return plan;
 	const next: RecipeMeal = { recipe: meal.recipe };

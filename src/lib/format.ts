@@ -7,7 +7,7 @@ import type { PlannedLine } from "./changes";
 import type { Dictionary, Recipe, RecipeLine } from "./data";
 import { daysUntil, type IsoDate, MONTH_SHORT, WEEKDAY_SHORT, weekday, ymd } from "./dates";
 import type { GroceryAisle, GroceryLine } from "./grocery";
-import { type Extra, isNote, type MealEntry } from "./plan";
+import { type Extra, isItem, type MealEntry } from "./plan";
 import type { CountSpec } from "./schema";
 import { labelFor, type Unit } from "./units";
 
@@ -232,9 +232,15 @@ export function formatExtra(
 	return { name, quantity: [trimDecimals(extra.amount, 2), extra.unit].filter(Boolean).join(" ") };
 }
 
-/** What a planned meal says beside its title: "serves 6", "changed", or "to buy" for a non-recipe item. */
-export function formatMealDetails(meal: MealEntry): string[] {
-	if (isNote(meal)) return meal.buy ? ["to buy"] : [];
+/**
+ * What a planned meal says beside its title: "serves 6", "changed"; for an
+ * ingredient on a day, how much of it and "buy".
+ */
+export function formatMealDetails(meal: MealEntry, dictionary: Dictionary): string[] {
+	if (isItem(meal)) {
+		const { quantity } = formatExtra(meal.item, dictionary);
+		return [...(quantity ? [quantity] : []), ...(meal.buy ? ["buy"] : [])];
+	}
 	return [
 		...(meal.servings === undefined ? [] : [formatServes(meal.servings)]),
 		...(meal.changes?.length ? ["changed"] : []),

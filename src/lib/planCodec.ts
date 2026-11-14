@@ -7,7 +7,8 @@
  *    "extras":[{"name":"milk","amount":1,"unit":"l"},{"name":"Toilet paper","quantity":"1 pack"}]}
  *
  * Two things menu.lock added, which cooking-rs never wrote: a meal that is not
- * a recipe, `{"note":"Frozen pizza","buy":true}`, and a planned recipe's
+ * a recipe but an ingredient, `{"item":{"name":"Leftover pizza","quantity":null},"buy":true}`
+ * (the item is written like an extra), and a planned recipe's
  * ingredient changes, `{"recipe":"lentil_dal","changes":[{"swap":"scallion","for":"onion"}]}`
  * (or, for something typed freely, `{"swap":"scallion","name":"Shallots","quantity":"2"}`).
  */
@@ -18,7 +19,7 @@ import { type IsoDate, isIsoDate } from "./dates";
 import {
 	type Extra,
 	isEmpty,
-	isNote,
+	isItem,
 	type MealChange,
 	type MealEntry,
 	type Plan,
@@ -42,7 +43,7 @@ type WireChange =
 type WireMeal =
 	| string
 	| { recipe: string; servings?: number; changes?: WireChange[] }
-	| { note: string; buy?: true };
+	| { item: WireExtra; buy?: true };
 /** Untagged: a custom extra always carries `quantity`, a catalog extra never does. */
 type WireExtra =
 	| { name: string; amount?: number; unit?: string }
@@ -57,7 +58,7 @@ const wireMeal = z.union([
 		servings: z.number().int().min(1).nullish(),
 		changes: z.array(z.unknown()).nullish(),
 	}),
-	z.looseObject({ note: z.string(), buy: z.boolean().nullish() }),
+	z.looseObject({ item: z.unknown(), buy: z.boolean().nullish() }),
 ]);
 
 const wireChange = z.looseObject({
@@ -106,8 +107,17 @@ function writeChange(change: MealChange): WireChange {
 	}
 }
 
+function writeExtra(extra: Extra): WireExtra {
+	if (extra.kind === "custom") return { name: extra.name, quantity: extra.quantity };
+	const out: { name: string; amount?: number; unit?: string } = { name: extra.key };
+	if (extra.amount !== undefined) out.amount = extra.amount;
+	if (extra.unit !== undefined) out.unit = extra.unit;
+	return out;
+}
+
 function writeMeal(meal: MealEntry): WireMeal {
-	if (isNote(meal)) return meal.buy ? { note: meal.note, buy: true } : { note: meal.note };
+	if (isItem(meal))
+		return meal.buy ? { item: writeExtra(meal.item), buy: true } : { item: writeExtra(meal.item) };
 	// The cooking-rs shapes, byte for byte, whenever nothing new is used.
 	if (meal.servings === undefined && !meal.changes?.length) return meal.recipe;
 	const out: { recipe: string; servings?: number; changes?: WireChange[] } = {
@@ -127,13 +137,7 @@ export function toWire(plan: Plan): WirePlan {
 		for (const date of dates) wire.dates[date] = (plan.dates[date] ?? []).map(writeMeal);
 	}
 	if (plan.extras.length > 0) {
-		wire.extras = plan.extras.map((extra): WireExtra => {
-			if (extra.kind === "custom") return { name: extra.name, quantity: extra.quantity };
-			const out: { name: string; amount?: number; unit?: string } = { name: extra.key };
-			if (extra.amount !== undefined) out.amount = extra.amount;
-			if (extra.unit !== undefined) out.unit = extra.unit;
-			return out;
-		});
+		wire.extras = plan.extras.map(writeExtra);
 	}
 	return wire;
 }
@@ -164,10 +168,11 @@ function readChange(raw: unknown, dictionary: Dictionary): MealChange | null {
 
 function readMeal(meal: z.infer<typeof wireMeal>, dictionary: Dictionary): MealEntry | null {
 	if (typeof meal === "string") return { recipe: meal };
-	if ("note" in meal && typeof meal.note === "string") {
-		const note = meal.note.trim();
-		if (note === "") return null;
-		return meal.buy ? { note, buy: true } : { note };
+	if ("item" in meal) {
+		const parsed = wireExtra.safeParse(meal.item);
+		const item = parsed.success ? readExtra(parsed.data, dictionary) : null;
+		if (!item) return null;
+		return meal.buy ? { item, buy: true } : { item };
 	}
 	if (!("recipe" in meal) || typeof meal.recipe !== "string") return null;
 	const out: RecipeMeal = { recipe: meal.recipe };

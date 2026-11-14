@@ -25,20 +25,21 @@ import {
 	formatAddedTo,
 	formatDate,
 	formatDay,
+	formatExtra,
 	formatMealDetails,
 	formatMovedTo,
 	formatPlanCaption,
 	formatTotalTime,
 	formatUnknownRecipe,
 } from "../lib/format";
-import { day, isEmpty, isNote, lastDate, type MealEntry, mealCount } from "../lib/plan";
+import { day, isEmpty, isItem, lastDate, type MealEntry, mealCount } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
+import { ItemEditor } from "../ui/ItemEditor";
 import { MealChanges } from "../ui/MealChanges";
 import { PageTitle } from "../ui/PageTitle";
 import { RecipePicker } from "../ui/RecipePicker";
 import { Sheet } from "../ui/Sheet";
-import { Stamp } from "../ui/Stamp";
 import { Stepper } from "../ui/Stepper";
 import { buttonDanger, buttonPaper, rowButton } from "../ui/styles";
 import { copyText, toast } from "../ui/toast";
@@ -54,21 +55,21 @@ function placeOf(id: string): Place | null {
 }
 
 const mealTitle = (entry: MealEntry) =>
-	isNote(entry)
-		? entry.note
+	isItem(entry)
+		? formatExtra(entry.item, DATA.dictionary).name
 		: (DATA.recipeById.get(entry.recipe)?.title ?? formatUnknownRecipe(entry.recipe));
 
 function MealLine({ entry, children }: { entry: MealEntry; children?: ReactNode }) {
 	return (
 		<>
-			{/* A recipe is a filled dot; something that is not a recipe is a ring. */}
+			{/* A recipe is a filled dot; an ingredient on its own is a ring. */}
 			<span
-				className={`size-1.5 shrink-0 rounded-full ${isNote(entry) ? "ring-[1.5px] ring-sienna" : "bg-sienna"}`}
+				className={`size-1.5 shrink-0 rounded-full ${isItem(entry) ? "ring-[1.5px] ring-sienna" : "bg-sienna"}`}
 			/>
 			<span className="min-w-0 flex-1 truncate font-medium">{mealTitle(entry)}</span>
-			{formatMealDetails(entry).length > 0 ? (
-				<span className="shrink-0 font-mono text-muted text-xs">
-					{formatMealDetails(entry).join(" · ")}
+			{formatMealDetails(entry, DATA.dictionary).length > 0 ? (
+				<span className="max-w-[55%] shrink-0 truncate font-mono text-muted text-xs">
+					{formatMealDetails(entry, DATA.dictionary).join(" · ")}
 				</span>
 			) : null}
 			{children}
@@ -218,13 +219,13 @@ function MealSheet({
 }) {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { setServings, reorderMeal, moveMeal, removeMeal, setNoteBuy, changeMeal, resetChange } =
+	const { setServings, reorderMeal, moveMeal, removeMeal, setItem, changeMeal, resetChange } =
 		useApp((s) => s);
 	const [moving, setMoving] = useState(false);
 	const meals = day(plan, place.date);
 	const entry = meals[place.index];
 	if (!entry) return null;
-	const recipe = isNote(entry) ? undefined : DATA.recipeById.get(entry.recipe);
+	const recipe = isItem(entry) ? undefined : DATA.recipeById.get(entry.recipe);
 	const step = (by: number) => {
 		reorderMeal(place.date, place.index, place.index + by);
 		onPlace({ date: place.date, index: place.index + by });
@@ -294,7 +295,7 @@ function MealSheet({
 	const when = formatDay(place.date, today);
 
 	// A recipe: what it is, for how many, and its ingredients (each one tappable to change it).
-	if (recipe && !isNote(entry)) {
+	if (recipe && !isItem(entry)) {
 		return (
 			<Sheet open onClose={onClose} title={recipe.title}>
 				<MealChanges
@@ -324,20 +325,17 @@ function MealSheet({
 		);
 	}
 
-	// Something that is not a recipe, or a recipe this build doesn't know.
+	// An ingredient on its own, or a recipe this build doesn't know.
 	return (
 		<Sheet open onClose={onClose} title={mealTitle(entry)}>
 			<p className="font-mono text-muted text-xs">{when}</p>
-			{isNote(entry) ? (
-				<button
-					type="button"
-					aria-pressed={entry.buy ?? false}
-					onClick={() => setNoteBuy(place.date, place.index, !entry.buy)}
-					className={`${rowButton} mt-2`}
-				>
-					Also on the grocery list
-					<Stamp on={entry.buy ?? false} />
-				</button>
+			{isItem(entry) ? (
+				<ItemEditor
+					// A fresh form when the item changes (it was saved, or another one was opened).
+					key={`${place.date}.${place.index}.${JSON.stringify(entry.item)}`}
+					meal={entry}
+					onChange={(change) => setItem(place.date, place.index, change)}
+				/>
 			) : null}
 			{actions}
 		</Sheet>
@@ -348,7 +346,7 @@ function MealSheet({
 export function PlannerPage() {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { addMeal, addNote, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
+	const { addMeal, addItem, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
 	const [adding, setAdding] = useState<IsoDate | null>(null);
 	const [open, setOpen] = useState<Place | null>(null);
 	const [clearing, setClearing] = useState(false);
@@ -440,9 +438,9 @@ export function PlannerPage() {
 			>
 				<RecipePicker
 					recipes={DATA.recipes}
-					onNote={(text, buy) => {
+					onItem={(item, buy) => {
 						if (!adding) return;
-						addNote(adding, text, buy);
+						addItem(adding, item, buy);
 						toast(formatAddedTo(adding, today));
 						setAdding(null);
 					}}

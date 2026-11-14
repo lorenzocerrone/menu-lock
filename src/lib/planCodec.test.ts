@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
-import { addExtra, addMeal, addNote, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
+import { addExtra, addItem, addMeal, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
 import { decodePlan, encodePlan, fromWire, toWire } from "./planCodec";
 
 /** A Sunday. */
@@ -116,22 +116,35 @@ describe("plan wire format", () => {
 });
 
 describe("what menu.lock added to the wire", () => {
-	it("writes things that are not recipes as {note, buy}", () => {
-		let plan = addNote(EMPTY_PLAN, d(0), "Frozen pizza", true);
-		plan = addNote(plan, d(0), "Leftovers", false);
+	it("writes an ingredient on a day as {item, buy}, the item like an extra", () => {
+		let plan = addItem(
+			EMPTY_PLAN,
+			d(0),
+			{ kind: "custom", name: "Leftover pizza", quantity: null },
+			false,
+		);
+		plan = addItem(
+			plan,
+			d(0),
+			{ kind: "catalog", key: "salmon", amount: 2, unit: "fillets" },
+			true,
+		);
+		plan = addItem(plan, d(0), { kind: "custom", name: "Frozen pizza", quantity: "2 boxes" }, true);
 		plan = addMeal(plan, d(0), "dal");
 		const json = JSON.stringify(toWire(plan));
 		expect(json).toBe(
-			'{"dates":{"2026-10-25":[{"note":"Frozen pizza","buy":true},{"note":"Leftovers"},"dal"]}}',
+			'{"dates":{"2026-10-25":[{"item":{"name":"Leftover pizza","quantity":null}},' +
+				'{"item":{"name":"salmon","amount":2,"unit":"fillets"},"buy":true},' +
+				'{"item":{"name":"Frozen pizza","quantity":"2 boxes"},"buy":true},"dal"]}}',
 		);
 		expect(read(json)).toEqual(plan);
-		// An empty note is dropped, and a day left empty with it.
+		// One that can't be read is dropped, and a day left empty with it.
 		expect(
 			read(
-				'{"dates":{"2026-10-25":[{"note":"  "}],"2026-10-26":[{"note":" Pizza ","buy":false}]}}',
+				'{"dates":{"2026-10-25":[{"item":{"name":"  ","quantity":null}},{"item":7}],"2026-10-26":[{"item":{"name":"eggs","amount":6},"buy":false}]}}',
 			),
 		).toEqual({
-			dates: { "2026-10-26": [{ note: "Pizza" }] },
+			dates: { "2026-10-26": [{ item: { kind: "catalog", key: "egg", amount: 6 } }] },
 			extras: [],
 		});
 	});
