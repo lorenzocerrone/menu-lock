@@ -3,9 +3,10 @@
  * its extras, summed per dictionary ingredient in its shopping unit and grouped
  * by aisle; and this device's ticks and day range.
  */
+import { applyChanges } from "./changes";
 import { type Data, lookup, normalizeName } from "./data";
 import { addDays, type IsoDate } from "./dates";
-import { entriesIn, lastDate, type Plan } from "./plan";
+import { type Extra, entriesIn, isItem, lastDate, type Plan } from "./plan";
 import { AISLES, type CountSpec, OTHER_AISLE, type ShoppingUnit } from "./schema";
 import { resolveUnit, toShopping } from "./units";
 
@@ -87,11 +88,36 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		else line.amount = (line.amount ?? 0) + amount;
 	};
 
+	/**
+	 * Hand-typed things, which have no dictionary entry: custom extras (on a day or
+	 * not) and ingredients typed freely into a meal. `source` is the recipe the
+	 * line is for; `extra` marks an extra.
+	 */
+	const typed: { name: string; quantity: string | null; source?: string; extra: boolean }[] = [];
+	/** Dictionary ingredients asked for without a recipe: the extras, on a day or not. */
+	const listed: Extract<Extra, { kind: "catalog" }>[] = [];
 	for (const meal of entriesIn(plan, from, to)) {
+		if (isItem(meal)) {
+			// An extra on a day, if it is to be bought: like any other extra.
+			if (!meal.buy) continue;
+			if (meal.item.kind === "catalog") listed.push(meal.item);
+			else typed.push({ name: meal.item.name, quantity: meal.item.quantity, extra: true });
+			continue;
+		}
 		const recipe = data.recipeById.get(meal.recipe);
 		if (!recipe) continue;
 		const servings = meal.servings ?? recipe.servings;
-		for (const item of recipe.lines) {
+		// The meal's own version of the recipe, if it changed any ingredient.
+		for (const item of applyChanges(recipe, meal.changes, data.dictionary).lines) {
+			if (item.free) {
+				typed.push({
+					name: item.name,
+					quantity: item.free.quantity,
+					source: recipe.title,
+					extra: false,
+				});
+				continue;
+			}
 			const line = lineFor(item.key);
 			if (!line) continue;
 			add(line, item.perServing === null ? null : item.perServing * servings, item.optional);
@@ -99,25 +125,30 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		}
 	}
 
-	// Catalog extras are plain grocery items: never scaled, no recipe source.
+	// Dictionary ingredients without a recipe are plain grocery items: never scaled.
 	for (const extra of plan.extras) {
-		if (extra.kind !== "catalog") continue;
-		const entry = data.dictionary.entries.get(extra.key);
-		const line = lineFor(extra.key);
+		if (extra.kind === "catalog") listed.push(extra);
+	}
+	for (const item of listed) {
+		const entry = data.dictionary.entries.get(item.key);
+		const line = lineFor(item.key);
 		if (!entry || !line) continue;
-		const unit = resolveUnit(extra.unit, entry.count);
+		const unit = resolveUnit(item.unit, entry.count);
 		const amount =
-			extra.amount === undefined || unit === null
+			item.amount === undefined || unit === null
 				? null
-				: toShopping(extra.amount, unit, entry.unit, entry.count);
+				: toShopping(item.amount, unit, entry.unit, entry.count);
 		add(line, amount, false);
 		line.extra = true;
 	}
 
-	// Custom extras join the line of the dictionary ingredient they name, if it
+	// Hand-typed things join the line of the dictionary ingredient they name, if it
 	// is on the list; otherwise they get their own line in "Other", by name.
 	for (const extra of plan.extras) {
-		if (extra.kind !== "custom") continue;
+		if (extra.kind === "custom")
+			typed.push({ name: extra.name, quantity: extra.quantity, extra: true });
+	}
+	for (const extra of typed) {
 		const name = extra.name.trim();
 		if (name === "") continue;
 		const known = lookup(data.dictionary, name);
@@ -134,14 +165,16 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 					toTaste: false,
 					optional: false,
 					sources: [],
-					extra: true,
+					extra: false,
 					customQuantities: [],
 				},
 			};
 			lines.set(key, slot);
 		}
 		slot.line.optional = false;
-		slot.line.extra = true;
+		if (extra.extra) slot.line.extra = true;
+		if (extra.source && !slot.line.sources.includes(extra.source))
+			slot.line.sources.push(extra.source);
 		const quantity = extra.quantity?.trim();
 		if (quantity) slot.line.customQuantities.push(quantity);
 	}

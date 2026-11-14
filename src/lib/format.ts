@@ -2,10 +2,12 @@
  * Every user-facing number, date and quantity string. Pure: the UI calls into
  * here, so what something says is decided (and tested) in one place.
  */
+
+import type { PlannedLine } from "./changes";
 import type { Dictionary, Recipe, RecipeLine } from "./data";
 import { daysUntil, type IsoDate, MONTH_SHORT, WEEKDAY_SHORT, weekday, ymd } from "./dates";
 import type { GroceryAisle, GroceryLine } from "./grocery";
-import type { Extra } from "./plan";
+import { type Extra, isItem, type MealEntry } from "./plan";
 import type { CountSpec } from "./schema";
 import { labelFor, type Unit } from "./units";
 
@@ -228,4 +230,50 @@ export function formatExtra(
 	const name = dictionary.entries.get(extra.key)?.name ?? extra.key;
 	if (extra.amount === undefined) return { name, quantity: "" };
 	return { name, quantity: [trimDecimals(extra.amount, 2), extra.unit].filter(Boolean).join(" ") };
+}
+
+/**
+ * What a planned meal says beside its title: "serves 6", "changed"; for an
+ * extra on a day, how much of it, and "plan only" when it is not to be bought.
+ */
+export function formatMealDetails(meal: MealEntry, dictionary: Dictionary): string[] {
+	if (isItem(meal)) {
+		const { quantity } = formatExtra(meal.item, dictionary);
+		return [...(quantity ? [quantity] : []), ...(meal.buy ? [] : ["plan only"])];
+	}
+	return [
+		...(meal.servings === undefined ? [] : [formatServes(meal.servings)]),
+		...(meal.changes?.length ? ["changed"] : []),
+	];
+}
+
+/**
+ * The amount column of a planned meal's line: like a recipe line, except that a
+ * freely typed ingredient shows its quantity as written (and nothing when it has none).
+ */
+export function formatPlannedAmount(
+	line: PlannedLine,
+	servings: number,
+	recipeServings: number,
+): string {
+	if (line.free) return line.free.quantity ?? "";
+	return formatLineAmount(line, servings, recipeServings);
+}
+
+/** What was changed about a planned meal's ingredient line: "instead of Scallion", "added", "changed". */
+export function formatLineChange(line: PlannedLine): string | null {
+	if (line.change === "swap") return `instead of ${line.instead?.name ?? "another"}`;
+	if (line.change === "add") return "added";
+	if (line.change === "set") return "changed";
+	return null;
+}
+
+/** A recipe opened from a planned meal: "As planned for tomorrow". */
+export function formatPlannedFor(date: IsoDate, today: IsoDate): string {
+	return `As planned for ${formatDayInline(date, today)}`;
+}
+
+/** An amount as typed into a field: at most two decimals, no unit. Empty for "to taste". */
+export function formatAmountInput(amount: number | null): string {
+	return amount === null ? "" : trimDecimals(amount, 2);
 }

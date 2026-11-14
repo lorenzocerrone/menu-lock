@@ -4,15 +4,20 @@ import { activeCount, EMPTY_QUERY, filterRecipes, type RecipeQuery } from "../li
 import { formatFiltersButton, formatRecipeMeta } from "../lib/format";
 import { RecipeFilters } from "./RecipeFilters";
 import { imageUrl } from "./recipeImage";
-import { buttonPaper, input } from "./styles";
+import { buttonPaper, input, rowButton } from "./styles";
 
-type Props = { recipes: readonly Recipe[]; onPick: (recipe: Recipe) => void };
+type Props = {
+	recipes: readonly Recipe[];
+	onPick: (recipe: Recipe) => void;
+	/** Offer the way out for what is not a recipe: add an extra instead. */
+	onExtra?: () => void;
+};
 
 /**
  * Choose a recipe: search, the same filters as the recipe list (opened in
  * place, not as a sheet on a sheet), and the matching recipes to tap.
  */
-export function RecipePicker({ recipes, onPick }: Props) {
+export function RecipePicker({ recipes, onPick, onExtra }: Props) {
 	const [query, setQuery] = useState<RecipeQuery>(EMPTY_QUERY);
 	const [filters, setFilters] = useState(false);
 	const found = filterRecipes(recipes, query);
@@ -41,10 +46,16 @@ export function RecipePicker({ recipes, onPick }: Props) {
 					<RecipeFilters recipes={recipes} query={query} onChange={setQuery} />
 				</div>
 			) : null}
+			{onExtra ? (
+				<button type="button" onClick={onExtra} className={`${rowButton} mt-2`}>
+					<span>Not a recipe? Add an extra</span>
+					<span className="font-mono text-muted">›</span>
+				</button>
+			) : null}
 			{found.length === 0 ? (
 				<p className="mt-4 font-mono text-muted text-sm">0 recipes resolved. Too picky?</p>
 			) : (
-				<ul className="mt-3">
+				<ul className="mt-1">
 					{found.map((recipe) => (
 						<li key={recipe.id}>
 							<button

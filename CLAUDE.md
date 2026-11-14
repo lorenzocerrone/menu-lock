@@ -37,12 +37,14 @@ data/            ingredients.json (the dictionary), recipes/<id>.json
 public/          images/<id>.svg (+ placeholder.svg), icons/
 schema/          JSON Schemas for the data files (generated)
 src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforces it)
-                 schema, data, units, dates, plan, planCodec, grocery, filters,
+                 schema, data, units, dates, plan, planCodec, changes, grocery, filters,
                  extras, format, stored; fixtures.ts is for tests only
 src/dataset.ts   the bundled data, validated and resolved once (DATA)
 src/state/       the store (store.ts), its one instance and hooks (app.ts), URL sync, storage
 src/ui/          reusable components: Shell, Sheet, Chip, Stepper, RecipeCard, RecipeFilters,
-                 RecipePicker, DayPicker, PageTitle, Stamp, Roll, Underline, Toasts; styles.ts, motion.ts
+                 RecipePicker, DayPicker, MealChanges, ExtraInput, ItemEditor, PageTitle, Stamp,
+                 Roll, Underline, Toasts;
+                 styles.ts, motion.ts
 src/routes/      pages: recipes, recipe, planner, grocery; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), paper.css (textures), base.css
 tests/e2e/       Playwright flows (helpers.ts builds plan links from today's date)
@@ -57,11 +59,16 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
   parameter. Every function there has Vitest tests next to it (`x.test.ts`). The UI
   formats nothing itself: every user-facing number, date and quantity comes from
   `src/lib/format.ts`.
-- **The plan wire format is byte-compatible with cooking-rs links** (plan §5.4). Never
-  change it without the user.
-- **Recipe ids and ingredient keys never change** once published: they are in share links.
-- **Closed-world ingredients**: every recipe line references a dictionary key and
-  converts into that ingredient's shopping unit, or validation fails.
+- **The app has no users yet** (the user, 2026-11-14): links, the plan wire format, the
+  stored state and the data schema may change freely, without migrations or legacy
+  readers. Keep changes simple rather than backwards compatible, and record them in
+  `docs/decisions.md`. This ends when the user says people rely on the app.
+- Recipe ids and ingredient keys are in share links and in plans; rename one only with
+  a reason, and update every recipe and test that uses it.
+- **Closed-world ingredients in recipe files**: every recipe line references a
+  dictionary key and converts into that ingredient's shopping unit, or validation
+  fails. Only a planned meal's changes and the grocery extras may name something that
+  is not in the dictionary, kept as typed.
 - Routing is in the hash; `plan` is retained on every route by the root route's search
   middleware. Use `<Link to="…">`, never hand-built hrefs.
 - Colours and fonts come from `src/styles/tokens.css` (Tailwind utilities `bg-paper`,

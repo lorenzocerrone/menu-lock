@@ -46,6 +46,14 @@ const recipeRoute = createRoute({
 	getParentRoute: () => shellRoute,
 	path: "/recipe/$id",
 	component: RecipePage,
+	// `meal` ("2026-11-16.0": a day and a position) opens the recipe as that planned meal has it.
+	validateSearch: z.object({
+		meal: z
+			.string()
+			.regex(/^\d{4}-\d{2}-\d{2}\.\d+$/)
+			.optional()
+			.catch(undefined),
+	}),
 });
 
 const plannerRoute = createRoute({

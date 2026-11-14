@@ -1,8 +1,18 @@
 import { getRouteApi, Link, useCanGoBack, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { DATA } from "../dataset";
+import { applyChanges } from "../lib/changes";
 import type { Recipe } from "../lib/data";
-import { formatAddedTo, formatLineAmount, formatStepNumber, formatTiming } from "../lib/format";
+import type { IsoDate } from "../lib/dates";
+import {
+	formatAddedTo,
+	formatLineChange,
+	formatPlannedAmount,
+	formatPlannedFor,
+	formatStepNumber,
+	formatTiming,
+} from "../lib/format";
+import { day, isItem, type RecipeMeal } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
 import { Roll } from "../ui/Roll";
@@ -69,11 +79,16 @@ function Steps({ steps }: { steps: readonly string[] }) {
 	);
 }
 
-function RecipeView({ recipe }: { recipe: Recipe }) {
+/** The planned meal a recipe was opened from, so it shows that meal's servings and changes. */
+type Planned = { date: IsoDate; meal: RecipeMeal };
+
+function RecipeView({ recipe, planned }: { recipe: Recipe; planned: Planned | null }) {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
 	const addMeal = useApp((s) => s.addMeal);
-	const [servings, setServings] = useState(recipe.servings);
+	const [servings, setServings] = useState(planned?.meal.servings ?? recipe.servings);
+	const { lines, skipped } = applyChanges(recipe, planned?.meal.changes, DATA.dictionary);
+	const changed = (planned?.meal.changes?.length ?? 0) > 0;
 	const [picking, setPicking] = useState(false);
 	const facts = [recipe.cuisine, formatTiming(recipe)].filter(Boolean);
 
@@ -94,6 +109,13 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 				</div>
 			</div>
 
+			{planned ? (
+				<p className="mt-4 font-mono text-sienna text-xs">
+					{formatPlannedFor(planned.date, today)}
+					{changed ? " · with this meal’s changes" : ""}
+				</p>
+			) : null}
+
 			<section className="mt-6">
 				<div className="flex items-center justify-between gap-3">
 					<h3 className="font-bold text-xl">Ingredients</h3>
@@ -103,7 +125,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 					aria-label="Ingredients"
 					className="mt-3 rounded-card border border-rule-soft bg-inset px-3 shadow-card"
 				>
-					{recipe.lines.map((line, i) => (
+					{lines.map((line, i) => (
 						<li
 							key={i}
 							className="flex min-h-line items-baseline border-rule-soft border-b py-2 last:border-b-0"
@@ -114,10 +136,26 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 								{line.optional ? (
 									<span className="font-mono text-muted text-xs"> (optional)</span>
 								) : null}
+								{formatLineChange(line) ? (
+									<span className="block font-mono text-sienna text-xs">
+										{formatLineChange(line)}
+									</span>
+								) : null}
 							</span>
 							<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
 							<span className="shrink-0 font-mono text-sm">
-								<Roll>{formatLineAmount(line, servings, recipe.servings)}</Roll>
+								<Roll>{formatPlannedAmount(line, servings, recipe.servings)}</Roll>
+							</span>
+						</li>
+					))}
+					{skipped.map((line, i) => (
+						<li
+							key={`skipped-${i}`}
+							className="flex min-h-line items-baseline border-rule-soft border-b py-2 last:border-b-0"
+						>
+							<span className="min-w-0 flex-1">
+								<span className="text-faint line-through">{line.name}</span>
+								<span className="block font-mono text-sienna text-xs">left out</span>
 							</span>
 						</li>
 					))}
@@ -160,7 +198,15 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 /** A recipe to cook from: scale it, tick off the steps, add it to the week. */
 export function RecipePage() {
 	const { id } = route.useParams();
+	const { meal: ref } = route.useSearch();
+	const plan = useApp((s) => s.plan);
 	const recipe = DATA.recipeById.get(id);
+	const planned = (of: Recipe): Planned | null => {
+		const [date = "", index = ""] = (ref ?? "").split(".");
+		const meal = day(plan, date)[Number(index)];
+		// A stale reference (the meal moved or was removed) just shows the recipe itself.
+		return ref && meal && !isItem(meal) && meal.recipe === of.id ? { date, meal } : null;
+	};
 	if (!recipe) {
 		return (
 			<div className="pt-3">
@@ -174,6 +220,6 @@ export function RecipePage() {
 			</div>
 		);
 	}
-	// Keyed, so servings and done steps reset when another recipe is opened.
-	return <RecipeView key={recipe.id} recipe={recipe} />;
+	// Keyed, so servings and done steps reset when another recipe (or meal) is opened.
+	return <RecipeView key={`${recipe.id}@${ref ?? ""}`} recipe={recipe} planned={planned(recipe)} />;
 }

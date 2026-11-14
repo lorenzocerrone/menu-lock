@@ -3,6 +3,7 @@ import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
 import {
 	formatAddedTo,
+	formatAmountInput,
 	formatCount,
 	formatDate,
 	formatDay,
@@ -12,10 +13,14 @@ import {
 	formatGroceryAmount,
 	formatLeft,
 	formatLineAmount,
+	formatLineChange,
 	formatLineQuantity,
+	formatMealDetails,
 	formatMovedTo,
 	formatOption,
 	formatPlanCaption,
+	formatPlannedAmount,
+	formatPlannedFor,
 	formatQuantity,
 	formatRange,
 	formatRecipeMeta,
@@ -246,5 +251,63 @@ describe("format", () => {
 			name: "Candles",
 			quantity: "",
 		});
+	});
+
+	it("describes a planned meal and its changed lines", () => {
+		const { dictionary } = fixtureData([recipeFile("r", 1, [{ ingredient: "salt" }])]);
+		const details = (meal: Parameters<typeof formatMealDetails>[0]) =>
+			formatMealDetails(meal, dictionary);
+		expect(details({ recipe: "dal" })).toEqual([]);
+		expect(details({ recipe: "dal", servings: 6 })).toEqual(["serves 6"]);
+		expect(details({ recipe: "dal", changes: [{ kind: "skip", key: "salt" }] })).toEqual([
+			"changed",
+		]);
+		expect(
+			details({ recipe: "dal", servings: 6, changes: [{ kind: "skip", key: "salt" }] }),
+		).toEqual(["serves 6", "changed"]);
+		expect(details({ recipe: "dal", changes: [] })).toEqual([]);
+		// An extra on a day: how much, and "plan only" when it is not to be bought.
+		expect(details({ item: { kind: "custom", name: "Leftover pizza", quantity: null } })).toEqual([
+			"plan only",
+		]);
+		expect(
+			details({ item: { kind: "custom", name: "Frozen pizza", quantity: "2 boxes" }, buy: true }),
+		).toEqual(["2 boxes"]);
+		expect(
+			details({ item: { kind: "catalog", key: "salmon", amount: 2, unit: "fillets" }, buy: true }),
+		).toEqual(["2 fillets"]);
+		expect(details({ item: { kind: "catalog", key: "milk" } })).toEqual(["plan only"]);
+		expect(details({ item: { kind: "catalog", key: "milk" }, buy: true })).toEqual([]);
+
+		const base = {
+			key: "onion",
+			name: "Onion",
+			amount: 1,
+			unit: "pcs",
+			optional: false,
+			perServing: 75,
+		} as const;
+		expect(formatLineChange(base)).toBeNull();
+		expect(formatLineChange({ ...base, change: "set" })).toBe("changed");
+		expect(formatLineChange({ ...base, change: "add" })).toBe("added");
+		expect(
+			formatLineChange({ ...base, change: "swap", instead: { key: "scallion", name: "Scallion" } }),
+		).toBe("instead of Scallion");
+		expect(formatPlannedAmount(base, 4, 2)).toBe("2");
+		const typed = {
+			...base,
+			key: "custom:shallots",
+			name: "Shallots",
+			amount: null,
+			unit: null,
+			perServing: null,
+		};
+		expect(formatPlannedAmount({ ...typed, free: { quantity: "1 bunch" } }, 4, 2)).toBe("1 bunch");
+		expect(formatPlannedAmount({ ...typed, free: { quantity: null } }, 4, 2)).toBe("");
+		expect(formatPlannedFor("2026-10-26", "2026-10-25")).toBe("As planned for tomorrow");
+		expect(formatPlannedFor("2026-10-28", "2026-10-25")).toBe("As planned for Wed 28 Oct");
+		expect(formatAmountInput(1.5)).toBe("1.5");
+		expect(formatAmountInput(0.333)).toBe("0.33");
+		expect(formatAmountInput(null)).toBe("");
 	});
 });

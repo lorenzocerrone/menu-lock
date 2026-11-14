@@ -25,17 +25,24 @@ import {
 	formatAddedTo,
 	formatDate,
 	formatDay,
+	formatDayInline,
+	formatExtra,
+	formatMealDetails,
 	formatMovedTo,
 	formatPlanCaption,
-	formatServes,
+	formatTotalTime,
 	formatUnknownRecipe,
 } from "../lib/format";
-import { day, isEmpty, lastDate, type MealEntry, mealCount } from "../lib/plan";
+import { day, isEmpty, isItem, lastDate, type MealEntry, mealCount } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
+import { ExtraInput } from "../ui/ExtraInput";
+import { ItemEditor } from "../ui/ItemEditor";
+import { MealChanges } from "../ui/MealChanges";
 import { PageTitle } from "../ui/PageTitle";
 import { RecipePicker } from "../ui/RecipePicker";
 import { Sheet } from "../ui/Sheet";
+import { Stamp } from "../ui/Stamp";
 import { Stepper } from "../ui/Stepper";
 import { buttonDanger, buttonPaper, rowButton } from "../ui/styles";
 import { copyText, toast } from "../ui/toast";
@@ -51,16 +58,21 @@ function placeOf(id: string): Place | null {
 }
 
 const mealTitle = (entry: MealEntry) =>
-	DATA.recipeById.get(entry.recipe)?.title ?? formatUnknownRecipe(entry.recipe);
+	isItem(entry)
+		? formatExtra(entry.item, DATA.dictionary).name
+		: (DATA.recipeById.get(entry.recipe)?.title ?? formatUnknownRecipe(entry.recipe));
 
 function MealLine({ entry, children }: { entry: MealEntry; children?: ReactNode }) {
 	return (
 		<>
-			<span className="size-1.5 shrink-0 rounded-full bg-sienna" />
+			{/* A recipe is a filled dot; an extra is a ring. */}
+			<span
+				className={`size-1.5 shrink-0 rounded-full ${isItem(entry) ? "ring-[1.5px] ring-sienna" : "bg-sienna"}`}
+			/>
 			<span className="min-w-0 flex-1 truncate font-medium">{mealTitle(entry)}</span>
-			{entry.servings ? (
-				<span className="shrink-0 font-mono text-muted text-xs">
-					{formatServes(entry.servings)}
+			{formatMealDetails(entry, DATA.dictionary).length > 0 ? (
+				<span className="max-w-[55%] shrink-0 truncate font-mono text-muted text-xs">
+					{formatMealDetails(entry, DATA.dictionary).join(" · ")}
 				</span>
 			) : null}
 			{children}
@@ -111,11 +123,12 @@ type DayProps = {
 	today: IsoDate;
 	meals: readonly MealEntry[];
 	onAdd: () => void;
+	onExtra: () => void;
 	onOpen: (index: number) => void;
 };
 
 /** One day: a notebook page when it is today or has meals, else a single ruled row. */
-function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
+function Day({ date, today, meals, onAdd, onExtra, onOpen }: DayProps) {
 	const { setNodeRef, isOver } = useDroppable({ id: dayId(date) });
 	const isToday = date === today;
 	const label = formatDay(date, today);
@@ -173,7 +186,7 @@ function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
 							{meals.map((entry, index) => (
 								// Meals have no identity of their own: the nth carbonara of the day is the key.
 								<motion.li
-									key={`${entry.recipe}#${meals.slice(0, index).filter((m) => m.recipe === entry.recipe).length}`}
+									key={`${mealTitle(entry)}#${meals.slice(0, index).filter((m) => mealTitle(m) === mealTitle(entry)).length}`}
 									initial={{ opacity: 0, x: -12 }}
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: 12 }}
@@ -185,14 +198,24 @@ function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
 						</AnimatePresence>
 					</ul>
 				</SortableContext>
-				<button
-					type="button"
-					onClick={onAdd}
-					aria-label={`Add a meal on ${formatDate(date)}`}
-					className="flex h-line w-full items-center font-mono text-sienna text-xs"
-				>
-					+ add a meal
-				</button>
+				<div className="flex h-line items-center gap-5 font-mono text-sienna text-xs">
+					<button
+						type="button"
+						onClick={onAdd}
+						aria-label={`Add a meal on ${formatDate(date)}`}
+						className="flex h-full items-center"
+					>
+						+ add a meal
+					</button>
+					<button
+						type="button"
+						onClick={onExtra}
+						aria-label={`Add an extra on ${formatDate(date)}`}
+						className="flex h-full items-center"
+					>
+						+ add an extra
+					</button>
+				</div>
 			</div>
 		</section>
 	);
@@ -210,12 +233,13 @@ function MealSheet({
 }) {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { setServings, reorderMeal, moveMeal, removeMeal } = useApp((s) => s);
+	const { setServings, reorderMeal, moveMeal, removeMeal, setItem, changeMeal, resetChange } =
+		useApp((s) => s);
 	const [moving, setMoving] = useState(false);
 	const meals = day(plan, place.date);
 	const entry = meals[place.index];
 	if (!entry) return null;
-	const recipe = DATA.recipeById.get(entry.recipe);
+	const recipe = isItem(entry) ? undefined : DATA.recipeById.get(entry.recipe);
 	const step = (by: number) => {
 		reorderMeal(place.date, place.index, place.index + by);
 		onPlace({ date: place.date, index: place.index + by });
@@ -236,18 +260,20 @@ function MealSheet({
 			</Sheet>
 		);
 	}
-	return (
-		<Sheet open onClose={onClose} title={mealTitle(entry)}>
-			<p className="font-mono text-muted text-xs">{formatDay(place.date, today)}</p>
+
+	/** What can be done with the meal as a whole: under everything there is to read. */
+	const actions = (
+		<div className="mt-5 border-rule-soft border-t">
 			{recipe ? (
-				<div className="flex min-h-14 items-center justify-between gap-3 border-rule-soft border-b">
-					<span>Servings</span>
-					<Stepper
-						value={entry.servings ?? recipe.servings}
-						onChange={(n) => setServings(place.date, place.index, n)}
-						label="Servings"
-					/>
-				</div>
+				<Link
+					to="/recipe/$id"
+					params={{ id: recipe.id }}
+					// The recipe as this meal has it: its servings and its changes.
+					search={(prev) => ({ ...prev, meal: `${place.date}.${place.index}` })}
+					className={rowButton}
+				>
+					View recipe and steps <span className="font-mono text-muted">›</span>
+				</Link>
 			) : null}
 			<button
 				type="button"
@@ -268,11 +294,6 @@ function MealSheet({
 			<button type="button" onClick={() => setMoving(true)} className={rowButton}>
 				Move to… <span className="font-mono text-muted">›</span>
 			</button>
-			{recipe ? (
-				<Link to="/recipe/$id" params={{ id: recipe.id }} className={rowButton}>
-					View recipe <span className="font-mono text-muted">›</span>
-				</Link>
-			) : null}
 			<button
 				type="button"
 				onClick={() => {
@@ -283,6 +304,54 @@ function MealSheet({
 			>
 				Remove
 			</button>
+		</div>
+	);
+	const when = formatDay(place.date, today);
+
+	// A recipe: what it is, for how many, and its ingredients (each one tappable to change it).
+	if (recipe && !isItem(entry)) {
+		return (
+			<Sheet open onClose={onClose} title={recipe.title}>
+				<MealChanges
+					recipe={recipe}
+					meal={entry}
+					onChange={(change) => changeMeal(place.date, place.index, change)}
+					onReset={(key) => resetChange(place.date, place.index, key)}
+					header={
+						<>
+							<p className="font-mono text-muted text-xs">
+								{[when, formatTotalTime(recipe), recipe.cuisine].filter(Boolean).join(" · ")}
+							</p>
+							{recipe.description ? <p className="mt-2">{recipe.description}</p> : null}
+							<div className="mt-3 flex min-h-14 items-center justify-between gap-3 border-rule-soft border-y">
+								<span>Servings</span>
+								<Stepper
+									value={entry.servings ?? recipe.servings}
+									onChange={(n) => setServings(place.date, place.index, n)}
+									label="Servings"
+								/>
+							</div>
+						</>
+					}
+					footer={actions}
+				/>
+			</Sheet>
+		);
+	}
+
+	// An extra, or a recipe this build doesn't know.
+	return (
+		<Sheet open onClose={onClose} title={mealTitle(entry)}>
+			<p className="font-mono text-muted text-xs">{when}</p>
+			{isItem(entry) ? (
+				<ItemEditor
+					// A fresh form when the item changes (it was saved, or another one was opened).
+					key={`${place.date}.${place.index}.${JSON.stringify(entry.item)}`}
+					meal={entry}
+					onChange={(change) => setItem(place.date, place.index, change)}
+				/>
+			) : null}
+			{actions}
 		</Sheet>
 	);
 }
@@ -291,8 +360,15 @@ function MealSheet({
 export function PlannerPage() {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { addMeal, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
+	const { addMeal, addItem, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
 	const [adding, setAdding] = useState<IsoDate | null>(null);
+	// The day an extra is being added to, and whether it will go on the grocery list.
+	const [extraFor, setExtraFor] = useState<IsoDate | null>(null);
+	const [buyExtra, setBuyExtra] = useState(true);
+	const openExtra = (date: IsoDate) => {
+		setBuyExtra(true); // every extra starts on the grocery list
+		setExtraFor(date);
+	};
 	const [open, setOpen] = useState<Place | null>(null);
 	const [clearing, setClearing] = useState(false);
 	const [dragging, setDragging] = useState<Place | null>(null);
@@ -362,6 +438,7 @@ export function PlannerPage() {
 								today={today}
 								meals={day(plan, date)}
 								onAdd={() => setAdding(date)}
+								onExtra={() => openExtra(date)}
 								onOpen={(index) => setOpen({ date, index })}
 							/>
 						</li>
@@ -383,6 +460,11 @@ export function PlannerPage() {
 			>
 				<RecipePicker
 					recipes={DATA.recipes}
+					onExtra={() => {
+						// The same day, the other sheet.
+						if (adding) openExtra(adding);
+						setAdding(null);
+					}}
 					onPick={(recipe) => {
 						if (!adding) return;
 						addMeal(adding, recipe.id);
@@ -390,6 +472,37 @@ export function PlannerPage() {
 						setAdding(null);
 					}}
 				/>
+			</Sheet>
+
+			<Sheet
+				open={extraFor !== null}
+				onClose={() => setExtraFor(null)}
+				title={extraFor ? `Extra for ${formatDayInline(extraFor, today)}` : "Add an extra"}
+			>
+				<p className="mb-3 text-muted">
+					Anything that is not a recipe: an ingredient from the list, or whatever you type.
+				</p>
+				<ExtraInput
+					autoFocus
+					onAdd={(item) => {
+						if (!extraFor) return;
+						addItem(extraFor, item, buyExtra);
+						toast(formatAddedTo(extraFor, today));
+						setExtraFor(null);
+					}}
+				/>
+				<button
+					type="button"
+					aria-pressed={buyExtra}
+					onClick={() => setBuyExtra(!buyExtra)}
+					className={`${rowButton} mt-4`}
+				>
+					On the grocery list
+					<Stamp on={buyExtra} />
+				</button>
+				<p className="mt-2 font-mono text-muted text-xs">
+					Switch it off for something you already have (leftovers): it stays on the plan only.
+				</p>
 			</Sheet>
 
 			{open ? <MealSheet place={open} onClose={() => setOpen(null)} onPlace={setOpen} /> : null}

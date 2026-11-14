@@ -19,7 +19,7 @@ import {
 	sameRange,
 	toggleChecked,
 } from "./grocery";
-import { addExtra, addMeal, EMPTY_PLAN, type Plan, setServings } from "./plan";
+import { addExtra, addItem, addMeal, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
 
 const TODAY = "2026-10-25";
 const d = (n: number) => addDays(TODAY, n);
@@ -169,6 +169,109 @@ describe("aggregate", () => {
 		expect(find(list, "onion").amount).toBe(100);
 		list = aggregate(plan, d(3), d(4), data);
 		expect(names(list)).toEqual(["Dairy & Eggs"]); // only the extra
+	});
+
+	it("follows a meal's ingredient changes, for that meal only", () => {
+		const data = fixtureData([
+			recipeFile("soup", 2, [
+				{ ingredient: "scallion", amount: 2 },
+				{ ingredient: "garlic", amount: 3, unit: "cloves" },
+				{ ingredient: "salt" },
+			]),
+		]);
+		let plan = addMeal(EMPTY_PLAN, d(0), "soup");
+		plan = addMeal(plan, d(1), "soup");
+		plan = setServings(plan, d(1), 0, 4); // twice the recipe
+		plan = setChanges(plan, d(1), 0, [
+			{ kind: "swap", key: "scallion", for: "onion" },
+			{ kind: "skip", key: "salt" },
+			{ kind: "set", key: "garlic", amount: 1, unit: "clove" },
+			{ kind: "add", key: "lemon", amount: 1 },
+		]);
+		const list = aggregate(plan, d(0), d(13), data);
+		expect(find(list, "scallion").amount).toBe(30); // the unchanged meal: 2 x 15 g
+		expect(find(list, "onion")).toMatchObject({ amount: 600, sources: ["SOUP"] }); // 2 onions, doubled
+		expect(find(list, "garlic").amount).toBe(12 + 8); // 3 cloves + 1 clove doubled
+		expect(find(list, "lemon").amount).toBe(2);
+		expect(find(list, "salt").sources).toEqual(["SOUP"]); // still needed by the unchanged meal
+		// Only the changed meal in range: no scallion, no salt.
+		const later = aggregate(plan, d(1), d(13), data);
+		expect(allLines(later).map((l) => l.key)).toEqual(["garlic", "lemon", "onion"]);
+	});
+
+	it("lists a meal's freely typed ingredients in Other, as typed, for that recipe", () => {
+		const data = fixtureData([
+			recipeFile("soup", 2, [{ ingredient: "scallion", amount: 2 }, { ingredient: "salt" }]),
+		]);
+		let plan = addMeal(EMPTY_PLAN, d(0), "soup");
+		plan = setServings(plan, d(0), 0, 4);
+		plan = setChanges(plan, d(0), 0, [
+			{ kind: "swapFree", key: "scallion", name: "Shallots", quantity: "2" },
+			{ kind: "addFree", key: "custom:bay leaves", name: "Bay leaves", quantity: null },
+		]);
+		plan = addMeal(plan, d(1), "soup");
+		plan = setChanges(plan, d(1), 0, [
+			{ kind: "addFree", key: "custom:shallots", name: "shallots", quantity: "1 bunch" },
+		]);
+		const list = aggregate(plan, d(0), d(13), data);
+		expect(names(list)).toEqual(["Produce", "Spices & Oils", "Other"]);
+		// Not scaled with the servings and not added up: the quantities side by side.
+		expect(find(list, "custom:shallots")).toMatchObject({
+			name: "Shallots",
+			amount: null,
+			customQuantities: ["2", "1 bunch"],
+			sources: ["SOUP"],
+			extra: false,
+		});
+		expect(formatLineQuantity(find(list, "custom:shallots"))).toBe("2 + 1 bunch");
+		expect(find(list, "custom:bay leaves")).toMatchObject({
+			customQuantities: [],
+			sources: ["SOUP"],
+		});
+		expect(find(list, "scallion").amount).toBe(30); // only the second meal's
+	});
+
+	it("lists a day's extras that are to be bought, like any extra", () => {
+		const data = fixtureData([
+			recipeFile("r", 2, [{ ingredient: "salmon", amount: 2, unit: "fillets" }]),
+		]);
+		let plan = addItem(
+			EMPTY_PLAN,
+			d(0),
+			{ kind: "custom", name: "Frozen pizza", quantity: null },
+			true,
+		);
+		plan = addItem(plan, d(2), { kind: "custom", name: "frozen pizza", quantity: "2 boxes" }, true);
+		plan = addItem(plan, d(0), { kind: "custom", name: "Leftovers", quantity: null }, false); // plan only
+		plan = addItem(plan, d(9), { kind: "custom", name: "Ice cream", quantity: null }, true); // out of range
+		plan = addItem(plan, d(1), { kind: "catalog", key: "salmon", amount: 1, unit: "fillet" }, true);
+		plan = addItem(plan, d(1), { kind: "catalog", key: "egg", amount: 6 }, true);
+		plan = addItem(plan, d(1), { kind: "catalog", key: "milk" }, false); // plan only
+		plan = addMeal(plan, d(0), "r");
+		const list = aggregate(plan, d(0), d(5), data);
+		expect(names(list)).toEqual(["Fish", "Dairy & Eggs", "Other"]);
+		// From the list: added to the recipe's amount, in its aisle, never scaled.
+		expect(find(list, "salmon")).toMatchObject({ amount: 375, sources: ["R"], extra: true });
+		expect(find(list, "egg")).toMatchObject({
+			amount: 6,
+			sources: [],
+			extra: true,
+			optional: false,
+		});
+		// Typed: one line in Other, the quantities as written.
+		expect(find(list, "custom:frozen pizza")).toMatchObject({
+			name: "Frozen pizza",
+			amount: null,
+			customQuantities: ["2 boxes"],
+			sources: [],
+			extra: true,
+		});
+		expect(allLines(list)).toHaveLength(3);
+		// It joins an extra of the same name that has no day.
+		const withExtra = addExtra(plan, { kind: "custom", name: "Frozen pizza", quantity: "1" });
+		expect(
+			find(aggregate(withExtra, d(0), d(5), data), "custom:frozen pizza").customQuantities,
+		).toEqual(["2 boxes", "1"]);
 	});
 
 	it("orders aisles as in the shop and lines by name", () => {

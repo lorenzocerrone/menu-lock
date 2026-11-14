@@ -9,11 +9,11 @@ is now the one to edit).
 | Phase                     | State                                                                            |
 | ------------------------- | -------------------------------------------------------------------------------- |
 | 0. Bootstrap              | Done. Live at `lorenzocerrone.github.io/menu-lock/`                              |
-| 1. Design direction       | **Next** (brief below)                                                           |
+| 1. Design direction       | Done: direction B, with the notebook plan (design rules below)                   |
 | 2. Data and logic         | Done (done before phase 1: it needs no decisions and gives the design real data) |
-| 3. Screens at parity      | Not started                                                                      |
-| 4. Motion and personality | Not started                                                                      |
-| 5. PWA and cutover        | Not started                                                                      |
+| 3. Screens at parity      | Done (signed off by the user on the preview)                                     |
+| 4. Motion and personality | Done                                                                             |
+| 5. PWA and cutover        | Done: menu.lock is live and cooking-rs redirects to it (2026-11-14)              |
 
 Also done: the `add-recipe` skill (plan §9), in `.claude/skills/add-recipe/`.
 
@@ -118,6 +118,99 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Typing an ingredient: suggestions that forgive (2026-11-14)
+
+The user asked for more autocomplete wherever an ingredient is typed. `suggest`
+(`src/lib/extras.ts`) now ranks the dictionary for what is being typed: names (or
+aliases) that start with it, then a word of the name that does ("oil" finds Olive
+oil), then names containing it, then near misses of the start of a word (one slip
+from four letters, two from eight; "galric", "brocoli", "courgete"), then its letters
+in order ("mlk"). Guesses need the right first letter, so they don't drown the real
+matches. Singular and plural are the same; within a group the shorter name is first.
+It is used by the grocery page's extras and by a meal's swap and add.
+
+Also changed: in the extras line, a bare number now means pieces for an ingredient
+that is counted ("2 courgettes" is two zucchini, "3 garlic" three cloves) and the
+shopping unit otherwise ("flour 500" is 500 g). cooking-rs read every bare number as
+the shopping unit, which made "2 onions" two grams.
+
+## Standing decision: no users yet, so no compatibility burden (2026-11-14)
+
+The user: "App has no users so no need to worry about breaking links or changing
+schemas/legacy." Until they say otherwise, the wire format, the stored state and the
+data schema can change without migrations, and features ship to the live site without
+a staged rollout. The compatibility that already exists (reading cooking-rs links, the
+one-time import of its stored plan) stays because it is built and tested, not because
+it must: it can be removed when it gets in the way.
+
+## After the rewrite: two additions the user asked for (2026-11-14)
+
+Both go beyond the parity checklist and both add to the wire format, with the user's
+agreement. Links without them are written exactly as before, so every older link still
+reads the same; cooking-rs is gone, so nothing needs to read the new shapes but
+menu.lock.
+
+**Extras on a day** ("Salmon fillet, 2 fillets", "Leftover pizza").
+
+Third version in a day. First "notes" (free text with a buy switch), then "ingredients
+on a day" offered inside the meal picker; the user did not find them there, and asked
+for an explicit "+ add an extra", treated like the grocery page's extras.
+
+- A day's entry is a recipe or `{ item, buy? }`. `item` is an extra, exactly as on the
+  grocery page: a dictionary ingredient with an optional amount and unit, or anything
+  typed with a free-text quantity. On the wire the item is written like an extra:
+  `{"item":{"name":"salmon","amount":2,"unit":"fillets"},"buy":true}`,
+  `{"item":{"name":"Leftover pizza","quantity":null}}`.
+- Every day card has "+ add a meal" and "+ add an extra". The extra sheet has the same
+  one-line input as the grocery page (`ExtraInput`: "milk 1 l", fuzzy suggestions,
+  Enter adds what was typed) and an "On the grocery list" switch, on by default: extras
+  are things to buy. Switched off, the extra is on the plan only (leftovers). The meal
+  picker has a row, "Not a recipe? Add an extra", that leads to the same sheet, which is
+  also how an empty day gets one.
+- With `buy`, it is on the grocery list like any extra (a listed ingredient in its
+  aisle, summed with the recipes that use it and never scaled; a typed one in Other;
+  both marked "extra"), and it is in the grocery page's Extras list with its day, where
+  removing it takes it off the day.
+- Its sheet on the plan edits how much of it and has the same switch.
+- On the plan it has a ring where a recipe has a dot, then its quantity, and "plan
+  only" when it is not to be bought.
+- What makes it different from an extra without a day: it shows on that day, follows
+  the grocery range, and drops off when the day passes.
+
+**Changing a recipe for one planned meal** (the user picked: per meal, with all four
+kinds of change).
+
+- A planned recipe can carry `changes`, at most one per ingredient key: swap it for
+  another dictionary ingredient, leave it out, set its amount, or add an ingredient.
+  On the wire: `{"recipe":"lentil_dal","changes":[{"swap":"onion","for":"red_onion"},
+  {"skip":"salt"},{"set":"garlic","amount":6,"unit":"clove"},{"add":"lemon","amount":1}]}`.
+- The recipe file never changes. `applyChanges` (`src/lib/changes.ts`) gives the meal's
+  own lines; the grocery list and the recipe page opened from that meal use them.
+- Amounts in a change are for the recipe's own servings and scale with the meal like
+  every other line. The editor shows them for the meal's servings.
+- A swap without an amount keeps the recipe's amount when it means something for the
+  new ingredient (2 scallions become 2 onions); when it doesn't (2 tbsp of something
+  sold by weight), the line becomes "to taste" rather than a wrong number.
+- An ingredient that is not in the dictionary can be swapped in or added **as typed**
+  (the user: the strict list collided with changing a meal on the fly). It has a name
+  and a free-text quantity; on the grocery list it is a line in Other, for that recipe,
+  with its quantities side by side: not added up, not scaled with the servings, not in
+  its real aisle. On the wire: `{"swap":"onion","name":"Shallots","quantity":"3"}` and
+  `{"addName":"Bay leaves","quantity":null}`. When the name is in the dictionary, the
+  dictionary's entry is offered and "as typed" is not.
+- **Recipe files stay strict** (closed world): that is what makes the grocery list add
+  up. The slack is only in a meal's changes and in the grocery page's extras.
+- A change that can't be read in a link is dropped; the rest of the plan is kept.
+- "View recipe" from a planned meal opens `#/recipe/<id>?meal=<date>.<position>`, which
+  shows that meal's servings and changes; the steps are always the recipe's own words.
+- The meal's sheet reads top to bottom as the meal itself: when it is, how long it
+  takes, the recipe's description, the servings, then its ingredients as this meal has
+  them. Tapping an ingredient changes it in place. What is done to the meal as a whole
+  (view the recipe and steps, move, remove) comes last. (The user found the first
+  version, a sheet of actions with "Change ingredients" hidden behind a row, too blank:
+  you were asked to change ingredients you could not see.)
+- The plan says "changed" beside a meal that has changes.
+
 ## Phase 5: PWA and cutover (2026-11-14)
 
 The app part:
@@ -141,10 +234,15 @@ The app part:
 - `npm audit` reports low and moderate findings in the build-time dependencies of
   `workbox-build`; nothing of it ships in the app.
 
-The cutover (in the cooking-rs repo): see that repo's branch
-`claude/friendly-hopper-lmxc5w`. **Not merged: it goes live only when the user says so,
-and only after menu.lock itself is live** (PR #2 merged), or old links would redirect to
-the placeholder.
+The cutover, done on 2026-11-14 after menu.lock went live (the user confirmed nobody
+relied on the old site): cooking-rs's deployed site is now `redirect/index.html` from
+that repo (also its `404.html`), which sends every old address to the same page here
+with its plan and recipe filters, plus a `sw.js` that removes the old app's service
+worker. The mapping is tested in that repo (`node redirect/test.mjs`).
+
+The rewrite is complete. What the plan lists for later (§10): a tag-based set of
+illustrations, hosting on Cloudflare, family sync, a better way to add recipes from the
+phone.
 
 ## Phase 4: motion and personality (2026-11-14)
 
