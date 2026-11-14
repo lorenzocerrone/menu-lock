@@ -1,0 +1,53 @@
+/* Design tokens: the parchment / ink / sienna paper style carried over from
+   cooking-rs. Phase 1 evolves these; every colour in the app comes from here. */
+
+:root {
+	--paper: #efe8d8;
+	--panel: #f8f3e7;
+	--inset: #fbf8ef;
+	--ink: #3b3327;
+	--muted: #7c6e54;
+	--faint: #9e8b68;
+	--sienna: #a85e30;
+	--on-sienna: #fbf6ea;
+	--danger: #9b3b2e;
+	--rule: rgb(62 51 36 / 0.42);
+	--rule-soft: rgb(62 51 36 / 0.12);
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--paper: #221d16;
+		--panel: #2c261d;
+		--inset: #332c22;
+		--ink: #ede4d0;
+		--muted: #b5a68a;
+		--faint: #8a7d64;
+		--sienna: #d18653;
+		--on-sienna: #1f1710;
+		--danger: #e08a7a;
+		--rule: rgb(237 228 208 / 0.4);
+		--rule-soft: rgb(237 228 208 / 0.1);
+		color-scheme: dark;
+	}
+}
+
+/* Tailwind utilities for the tokens: bg-paper, text-ink, border-rule, font-mono… */
+@theme inline {
+	--color-paper: var(--paper);
+	--color-panel: var(--panel);
+	--color-inset: var(--inset);
+	--color-ink: var(--ink);
+	--color-muted: var(--muted);
+	--color-faint: var(--faint);
+	--color-sienna: var(--sienna);
+	--color-on-sienna: var(--on-sienna);
+	--color-danger: var(--danger);
+	--color-rule: var(--rule);
+	--color-rule-soft: var(--rule-soft);
+	--font-sans: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+	--font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	--radius-card: 6px;
+	--breakpoint-wide: 720px;
+}
