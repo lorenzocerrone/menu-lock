@@ -3,6 +3,7 @@ import { addDays } from "./dates";
 import {
 	addExtra,
 	addMeal,
+	addNote,
 	clearMeals,
 	day,
 	dropBefore,
@@ -10,20 +11,24 @@ import {
 	entries,
 	entriesIn,
 	isEmpty,
+	isNote,
 	lastDate,
+	type MealEntry,
 	mealCount,
 	moveMeal,
 	type Plan,
 	removeExtra,
 	removeMeal,
 	reorderMeal,
+	setChanges,
+	setNoteBuy,
 	setServings,
 } from "./plan";
 
 /** A Sunday. */
 const TODAY = "2026-10-25";
 const d = (n: number) => addDays(TODAY, n);
-const ids = (meals: readonly { recipe: string }[]) => meals.map((m) => m.recipe);
+const ids = (meals: readonly MealEntry[]) => meals.map((m) => (isNote(m) ? m.note : m.recipe));
 
 describe("plan", () => {
 	it("adds, removes, sets servings, and reads ranges", () => {
@@ -141,5 +146,54 @@ describe("plan", () => {
 		addExtra(plan, { kind: "catalog", key: "milk" });
 		expect(JSON.stringify(plan)).toBe(frozen);
 		expect(JSON.stringify(EMPTY_PLAN)).toBe('{"dates":{},"extras":[]}');
+	});
+
+	it("holds things that are not recipes, to buy or not", () => {
+		let plan = addNote(EMPTY_PLAN, d(0), "  Frozen pizza ", true);
+		plan = addNote(plan, d(0), "Leftovers", false);
+		expect(addNote(plan, d(0), "   ", true)).toBe(plan);
+		expect(day(plan, d(0))).toEqual([{ note: "Frozen pizza", buy: true }, { note: "Leftovers" }]);
+		expect(mealCount(plan)).toBe(2);
+
+		plan = setNoteBuy(plan, d(0), 1, true);
+		plan = setNoteBuy(plan, d(0), 0, false);
+		expect(day(plan, d(0))).toEqual([{ note: "Frozen pizza" }, { note: "Leftovers", buy: true }]);
+		expect(setNoteBuy(plan, d(0), 0, false)).toBe(plan);
+
+		// They move and reorder like any meal; servings and changes don't apply to them.
+		expect(setServings(plan, d(0), 0, 4)).toBe(plan);
+		expect(setChanges(plan, d(0), 0, [{ kind: "skip", key: "salt" }])).toBe(plan);
+		const moved = moveMeal(plan, d(0), 0, d(2));
+		expect(moved && day(moved.plan, d(2))).toEqual([{ note: "Frozen pizza" }]);
+		plan = addMeal(plan, d(0), "dal");
+		expect(setNoteBuy(plan, d(0), 2, true)).toBe(plan); // a recipe is not a note
+		expect(ids(day(reorderMeal(plan, d(0), 2, 0), d(0)))).toEqual([
+			"dal",
+			"Frozen pizza",
+			"Leftovers",
+		]);
+	});
+
+	it("keeps a meal's ingredient changes, through servings changes too", () => {
+		let plan = addMeal(EMPTY_PLAN, d(0), "dal");
+		plan = setChanges(plan, d(0), 0, [{ kind: "swap", key: "scallion", for: "onion" }]);
+		expect(day(plan, d(0))[0]).toEqual({
+			recipe: "dal",
+			changes: [{ kind: "swap", key: "scallion", for: "onion" }],
+		});
+		plan = setServings(plan, d(0), 0, 6, 4);
+		expect(day(plan, d(0))[0]).toEqual({
+			recipe: "dal",
+			servings: 6,
+			changes: [{ kind: "swap", key: "scallion", for: "onion" }],
+		});
+		plan = setServings(plan, d(0), 0, 4, 4);
+		expect(day(plan, d(0))[0]).toEqual({
+			recipe: "dal",
+			changes: [{ kind: "swap", key: "scallion", for: "onion" }],
+		});
+		plan = setChanges(plan, d(0), 0, []);
+		expect(day(plan, d(0))[0]).toEqual({ recipe: "dal" });
+		expect(setChanges(plan, d(0), 4, [])).toBe(plan);
 	});
 });

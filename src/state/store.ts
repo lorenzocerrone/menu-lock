@@ -4,6 +4,7 @@
  * the plan and ticks that no longer hold are dropped (REWRITE_PLAN §5.5, §5.6).
  */
 import { createStore } from "zustand/vanilla";
+import { withChange, withoutChange } from "../lib/changes";
 import type { Data } from "../lib/data";
 import type { IsoDate } from "../lib/dates";
 import {
@@ -20,15 +21,21 @@ import {
 import {
 	addExtra,
 	addMeal,
+	addNote,
 	clearMeals,
+	day,
 	dropBefore,
 	EMPTY_PLAN,
 	type Extra,
+	isNote,
+	type MealChange,
 	moveMeal,
 	type Plan,
 	removeExtra,
 	removeMeal,
 	reorderMeal,
+	setChanges,
+	setNoteBuy,
 	setServings,
 } from "../lib/plan";
 import type { StoredState } from "../lib/stored";
@@ -43,6 +50,13 @@ export type AppState = {
 	/** The date changed while the app was open. */
 	setToday: (today: IsoDate) => void;
 	addMeal: (date: IsoDate, recipe: string) => void;
+	/** Something that is not a recipe ("Frozen pizza"); `buy` puts it on the grocery list too. */
+	addNote: (date: IsoDate, note: string, buy: boolean) => void;
+	setNoteBuy: (date: IsoDate, index: number, buy: boolean) => void;
+	/** Change one ingredient of a planned recipe, for that meal only (replaces any earlier change to it). */
+	changeMeal: (date: IsoDate, index: number, change: MealChange) => void;
+	/** Put one ingredient of a planned recipe back to the recipe's own. */
+	resetChange: (date: IsoDate, index: number, key: string) => void;
 	removeMeal: (date: IsoDate, index: number) => void;
 	/** Returns the meal's new index, or `null` when nothing moved. */
 	moveMeal: (from: IsoDate, index: number, to: IsoDate, toIndex?: number) => number | null;
@@ -91,6 +105,20 @@ export function createAppStore(data: Data, today: IsoDate, initial: StoredState)
 			loadPlan: (plan) => updatePlan(() => plan),
 			setToday: (next) => update(() => ({ today: next })),
 			addMeal: (date, recipe) => updatePlan((plan) => addMeal(plan, date, recipe)),
+			addNote: (date, note, buy) => updatePlan((plan) => addNote(plan, date, note, buy)),
+			setNoteBuy: (date, index, buy) => updatePlan((plan) => setNoteBuy(plan, date, index, buy)),
+			changeMeal: (date, index, change) =>
+				updatePlan((plan) => {
+					const meal = day(plan, date)[index];
+					if (!meal || isNote(meal)) return plan;
+					return setChanges(plan, date, index, withChange(meal.changes, change));
+				}),
+			resetChange: (date, index, key) =>
+				updatePlan((plan) => {
+					const meal = day(plan, date)[index];
+					if (!meal || isNote(meal)) return plan;
+					return setChanges(plan, date, index, withoutChange(meal.changes, key));
+				}),
 			removeMeal: (date, index) => updatePlan((plan) => removeMeal(plan, date, index)),
 			moveMeal: (from, index, to, toIndex) => {
 				const moved = moveMeal(get().plan, from, index, to, toIndex);
@@ -101,8 +129,9 @@ export function createAppStore(data: Data, today: IsoDate, initial: StoredState)
 			reorderMeal: (date, from, to) => updatePlan((plan) => reorderMeal(plan, date, from, to)),
 			setServings: (date, index, servings) =>
 				updatePlan((plan) => {
-					const id = plan.dates[date]?.[index]?.recipe;
-					const own = id === undefined ? undefined : data.recipeById.get(id)?.servings;
+					const meal = day(plan, date)[index];
+					const own =
+						!meal || isNote(meal) ? undefined : data.recipeById.get(meal.recipe)?.servings;
 					return setServings(plan, date, index, Math.max(1, Math.round(servings)), own);
 				}),
 			clearPlan: (what) =>

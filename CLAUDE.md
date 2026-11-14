@@ -37,12 +37,13 @@ data/            ingredients.json (the dictionary), recipes/<id>.json
 public/          images/<id>.svg (+ placeholder.svg), icons/
 schema/          JSON Schemas for the data files (generated)
 src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforces it)
-                 schema, data, units, dates, plan, planCodec, grocery, filters,
+                 schema, data, units, dates, plan, planCodec, changes, grocery, filters,
                  extras, format, stored; fixtures.ts is for tests only
 src/dataset.ts   the bundled data, validated and resolved once (DATA)
 src/state/       the store (store.ts), its one instance and hooks (app.ts), URL sync, storage
 src/ui/          reusable components: Shell, Sheet, Chip, Stepper, RecipeCard, RecipeFilters,
-                 RecipePicker, DayPicker, PageTitle, Stamp, Roll, Underline, Toasts; styles.ts, motion.ts
+                 RecipePicker, DayPicker, MealChanges, PageTitle, Stamp, Roll, Underline, Toasts;
+                 styles.ts, motion.ts
 src/routes/      pages: recipes, recipe, planner, grocery; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), paper.css (textures), base.css
 tests/e2e/       Playwright flows (helpers.ts builds plan links from today's date)
@@ -57,8 +58,9 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
   parameter. Every function there has Vitest tests next to it (`x.test.ts`). The UI
   formats nothing itself: every user-facing number, date and quantity comes from
   `src/lib/format.ts`.
-- **The plan wire format is byte-compatible with cooking-rs links** (plan §5.4). Never
-  change it without the user.
+- **The plan wire format is byte-compatible with cooking-rs links** (plan §5.4), plus
+  two additions the user asked for (non-recipe items, per-meal ingredient changes: see
+  `docs/decisions.md`). Never change it without the user; old links must keep reading.
 - **Recipe ids and ingredient keys never change** once published: they are in share links.
 - **Closed-world ingredients**: every recipe line references a dictionary key and
   converts into that ingredient's shopping unit, or validation fails.

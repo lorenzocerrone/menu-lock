@@ -3,9 +3,10 @@
  * its extras, summed per dictionary ingredient in its shopping unit and grouped
  * by aisle; and this device's ticks and day range.
  */
+import { applyChanges } from "./changes";
 import { type Data, lookup, normalizeName } from "./data";
 import { addDays, type IsoDate } from "./dates";
-import { entriesIn, lastDate, type Plan } from "./plan";
+import { entriesIn, isNote, lastDate, type Plan } from "./plan";
 import { AISLES, type CountSpec, OTHER_AISLE, type ShoppingUnit } from "./schema";
 import { resolveUnit, toShopping } from "./units";
 
@@ -33,6 +34,9 @@ export type GroceryLine = {
 };
 
 export type GroceryAisle = { name: string; lines: GroceryLine[] };
+
+/** What a grocery line is "for" when it comes from a non-recipe item on the plan. */
+export const PLAN_SOURCE = "plan";
 
 /** Line key for a hand-typed extra: stable per name, case-insensitive. */
 export function customKey(name: string): string {
@@ -87,11 +91,18 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		else line.amount = (line.amount ?? 0) + amount;
 	};
 
+	/** Non-recipe things on the plan that are to be bought, by name. */
+	const notes: string[] = [];
 	for (const meal of entriesIn(plan, from, to)) {
+		if (isNote(meal)) {
+			if (meal.buy) notes.push(meal.note);
+			continue;
+		}
 		const recipe = data.recipeById.get(meal.recipe);
 		if (!recipe) continue;
 		const servings = meal.servings ?? recipe.servings;
-		for (const item of recipe.lines) {
+		// The meal's own version of the recipe, if it changed any ingredient.
+		for (const item of applyChanges(recipe, meal.changes, data.dictionary).lines) {
 			const line = lineFor(item.key);
 			if (!line) continue;
 			add(line, item.perServing === null ? null : item.perServing * servings, item.optional);
@@ -114,10 +125,18 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		line.extra = true;
 	}
 
-	// Custom extras join the line of the dictionary ingredient they name, if it
+	// Hand-typed things (custom extras, and non-recipe items on the plan that are
+	// to be bought) join the line of the dictionary ingredient they name, if it
 	// is on the list; otherwise they get their own line in "Other", by name.
-	for (const extra of plan.extras) {
-		if (extra.kind !== "custom") continue;
+	const typed = [
+		...plan.extras.flatMap((extra) =>
+			extra.kind === "custom"
+				? [{ name: extra.name, quantity: extra.quantity, planned: false }]
+				: [],
+		),
+		...notes.map((name) => ({ name, quantity: null, planned: true })),
+	];
+	for (const extra of typed) {
 		const name = extra.name.trim();
 		if (name === "") continue;
 		const known = lookup(data.dictionary, name);
@@ -134,14 +153,18 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 					toTaste: false,
 					optional: false,
 					sources: [],
-					extra: true,
+					extra: false,
 					customQuantities: [],
 				},
 			};
 			lines.set(key, slot);
 		}
 		slot.line.optional = false;
-		slot.line.extra = true;
+		if (extra.planned) {
+			if (!slot.line.sources.includes(PLAN_SOURCE)) slot.line.sources.push(PLAN_SOURCE);
+		} else {
+			slot.line.extra = true;
+		}
 		const quantity = extra.quantity?.trim();
 		if (quantity) slot.line.customQuantities.push(quantity);
 	}

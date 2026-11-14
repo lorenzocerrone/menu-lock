@@ -23,19 +23,22 @@ import { DATA } from "../dataset";
 import { type IsoDate, planDays, WEEKDAY_SHORT, weekday, ymd } from "../lib/dates";
 import {
 	formatAddedTo,
+	formatCount,
 	formatDate,
 	formatDay,
+	formatMealDetails,
 	formatMovedTo,
 	formatPlanCaption,
-	formatServes,
 	formatUnknownRecipe,
 } from "../lib/format";
-import { day, isEmpty, lastDate, type MealEntry, mealCount } from "../lib/plan";
+import { day, isEmpty, isNote, lastDate, type MealEntry, mealCount } from "../lib/plan";
 import { useApp } from "../state/app";
 import { DayPicker } from "../ui/DayPicker";
+import { MealChanges } from "../ui/MealChanges";
 import { PageTitle } from "../ui/PageTitle";
 import { RecipePicker } from "../ui/RecipePicker";
 import { Sheet } from "../ui/Sheet";
+import { Stamp } from "../ui/Stamp";
 import { Stepper } from "../ui/Stepper";
 import { buttonDanger, buttonPaper, rowButton } from "../ui/styles";
 import { copyText, toast } from "../ui/toast";
@@ -51,16 +54,21 @@ function placeOf(id: string): Place | null {
 }
 
 const mealTitle = (entry: MealEntry) =>
-	DATA.recipeById.get(entry.recipe)?.title ?? formatUnknownRecipe(entry.recipe);
+	isNote(entry)
+		? entry.note
+		: (DATA.recipeById.get(entry.recipe)?.title ?? formatUnknownRecipe(entry.recipe));
 
 function MealLine({ entry, children }: { entry: MealEntry; children?: ReactNode }) {
 	return (
 		<>
-			<span className="size-1.5 shrink-0 rounded-full bg-sienna" />
+			{/* A recipe is a filled dot; something that is not a recipe is a ring. */}
+			<span
+				className={`size-1.5 shrink-0 rounded-full ${isNote(entry) ? "ring-[1.5px] ring-sienna" : "bg-sienna"}`}
+			/>
 			<span className="min-w-0 flex-1 truncate font-medium">{mealTitle(entry)}</span>
-			{entry.servings ? (
+			{formatMealDetails(entry).length > 0 ? (
 				<span className="shrink-0 font-mono text-muted text-xs">
-					{formatServes(entry.servings)}
+					{formatMealDetails(entry).join(" · ")}
 				</span>
 			) : null}
 			{children}
@@ -173,7 +181,7 @@ function Day({ date, today, meals, onAdd, onOpen }: DayProps) {
 							{meals.map((entry, index) => (
 								// Meals have no identity of their own: the nth carbonara of the day is the key.
 								<motion.li
-									key={`${entry.recipe}#${meals.slice(0, index).filter((m) => m.recipe === entry.recipe).length}`}
+									key={`${mealTitle(entry)}#${meals.slice(0, index).filter((m) => mealTitle(m) === mealTitle(entry)).length}`}
 									initial={{ opacity: 0, x: -12 }}
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: 12 }}
@@ -210,18 +218,19 @@ function MealSheet({
 }) {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { setServings, reorderMeal, moveMeal, removeMeal } = useApp((s) => s);
-	const [moving, setMoving] = useState(false);
+	const { setServings, reorderMeal, moveMeal, removeMeal, setNoteBuy, changeMeal, resetChange } =
+		useApp((s) => s);
+	const [view, setView] = useState<"meal" | "move" | "changes">("meal");
 	const meals = day(plan, place.date);
 	const entry = meals[place.index];
 	if (!entry) return null;
-	const recipe = DATA.recipeById.get(entry.recipe);
+	const recipe = isNote(entry) ? undefined : DATA.recipeById.get(entry.recipe);
 	const step = (by: number) => {
 		reorderMeal(place.date, place.index, place.index + by);
 		onPlace({ date: place.date, index: place.index + by });
 	};
 
-	if (moving) {
+	if (view === "move") {
 		return (
 			<Sheet open onClose={onClose} title="Move to…">
 				<DayPicker
@@ -236,18 +245,50 @@ function MealSheet({
 			</Sheet>
 		);
 	}
+	if (view === "changes" && recipe && !isNote(entry)) {
+		return (
+			<Sheet open onClose={onClose} title="Change ingredients">
+				<MealChanges
+					recipe={recipe}
+					meal={entry}
+					onChange={(change) => changeMeal(place.date, place.index, change)}
+					onReset={(key) => resetChange(place.date, place.index, key)}
+					onBack={() => setView("meal")}
+				/>
+			</Sheet>
+		);
+	}
 	return (
 		<Sheet open onClose={onClose} title={mealTitle(entry)}>
 			<p className="font-mono text-muted text-xs">{formatDay(place.date, today)}</p>
-			{recipe ? (
-				<div className="flex min-h-14 items-center justify-between gap-3 border-rule-soft border-b">
-					<span>Servings</span>
-					<Stepper
-						value={entry.servings ?? recipe.servings}
-						onChange={(n) => setServings(place.date, place.index, n)}
-						label="Servings"
-					/>
-				</div>
+			{recipe && !isNote(entry) ? (
+				<>
+					<div className="flex min-h-14 items-center justify-between gap-3 border-rule-soft border-b">
+						<span>Servings</span>
+						<Stepper
+							value={entry.servings ?? recipe.servings}
+							onChange={(n) => setServings(place.date, place.index, n)}
+							label="Servings"
+						/>
+					</div>
+					<button type="button" onClick={() => setView("changes")} className={rowButton}>
+						Change ingredients
+						<span className="font-mono text-muted text-xs">
+							{entry.changes?.length ? `${formatCount(entry.changes.length, "change")} ›` : "›"}
+						</span>
+					</button>
+				</>
+			) : null}
+			{isNote(entry) ? (
+				<button
+					type="button"
+					aria-pressed={entry.buy ?? false}
+					onClick={() => setNoteBuy(place.date, place.index, !entry.buy)}
+					className={rowButton}
+				>
+					Also on the grocery list
+					<Stamp on={entry.buy ?? false} />
+				</button>
 			) : null}
 			<button
 				type="button"
@@ -265,11 +306,17 @@ function MealSheet({
 			>
 				Move down <span className="font-mono text-muted">↓</span>
 			</button>
-			<button type="button" onClick={() => setMoving(true)} className={rowButton}>
+			<button type="button" onClick={() => setView("move")} className={rowButton}>
 				Move to… <span className="font-mono text-muted">›</span>
 			</button>
 			{recipe ? (
-				<Link to="/recipe/$id" params={{ id: recipe.id }} className={rowButton}>
+				<Link
+					to="/recipe/$id"
+					params={{ id: recipe.id }}
+					// The recipe as this meal has it: its servings and its changes.
+					search={(prev) => ({ ...prev, meal: `${place.date}.${place.index}` })}
+					className={rowButton}
+				>
 					View recipe <span className="font-mono text-muted">›</span>
 				</Link>
 			) : null}
@@ -291,7 +338,7 @@ function MealSheet({
 export function PlannerPage() {
 	const plan = useApp((s) => s.plan);
 	const today = useApp((s) => s.today);
-	const { addMeal, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
+	const { addMeal, addNote, moveMeal, reorderMeal, clearPlan } = useApp((s) => s);
 	const [adding, setAdding] = useState<IsoDate | null>(null);
 	const [open, setOpen] = useState<Place | null>(null);
 	const [clearing, setClearing] = useState(false);
@@ -383,6 +430,12 @@ export function PlannerPage() {
 			>
 				<RecipePicker
 					recipes={DATA.recipes}
+					onNote={(text, buy) => {
+						if (!adding) return;
+						addNote(adding, text, buy);
+						toast(formatAddedTo(adding, today));
+						setAdding(null);
+					}}
 					onPick={(recipe) => {
 						if (!adding) return;
 						addMeal(adding, recipe.id);

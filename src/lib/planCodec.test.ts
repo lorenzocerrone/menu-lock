@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
-import { addExtra, addMeal, EMPTY_PLAN, type Plan, setServings } from "./plan";
+import { addExtra, addMeal, addNote, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
 import { decodePlan, encodePlan, fromWire, toWire } from "./planCodec";
 
 /** A Sunday. */
@@ -112,6 +112,81 @@ describe("plan wire format", () => {
 		).toBeNull();
 		// Unknown extra fields are ignored rather than fatal.
 		expect(read('{"dates":{"2026-10-25":["dal"]},"version":2}')?.dates[TODAY]).toHaveLength(1);
+	});
+});
+
+describe("what menu.lock added to the wire", () => {
+	it("writes things that are not recipes as {note, buy}", () => {
+		let plan = addNote(EMPTY_PLAN, d(0), "Frozen pizza", true);
+		plan = addNote(plan, d(0), "Leftovers", false);
+		plan = addMeal(plan, d(0), "dal");
+		const json = JSON.stringify(toWire(plan));
+		expect(json).toBe(
+			'{"dates":{"2026-10-25":[{"note":"Frozen pizza","buy":true},{"note":"Leftovers"},"dal"]}}',
+		);
+		expect(read(json)).toEqual(plan);
+		// An empty note is dropped, and a day left empty with it.
+		expect(
+			read(
+				'{"dates":{"2026-10-25":[{"note":"  "}],"2026-10-26":[{"note":" Pizza ","buy":false}]}}',
+			),
+		).toEqual({
+			dates: { "2026-10-26": [{ note: "Pizza" }] },
+			extras: [],
+		});
+	});
+
+	it("writes a meal's ingredient changes, and nothing new when there are none", () => {
+		let plan = addMeal(EMPTY_PLAN, d(0), "dal");
+		plan = setChanges(plan, d(0), 0, [
+			{ kind: "swap", key: "scallion", for: "onion" },
+			{ kind: "swap", key: "garlic", for: "lemon", amount: 1 },
+			{ kind: "skip", key: "salt" },
+			{ kind: "set", key: "olive_oil", amount: 1, unit: "tbsp" },
+			{ kind: "set", key: "egg" },
+			{ kind: "add", key: "milk", amount: 0.5, unit: "l" },
+		]);
+		plan = setServings(plan, d(0), 0, 6);
+		const json = JSON.stringify(toWire(plan));
+		expect(json).toBe(
+			'{"dates":{"2026-10-25":[{"recipe":"dal","servings":6,"changes":[' +
+				'{"swap":"scallion","for":"onion"},{"swap":"garlic","for":"lemon","amount":1},{"skip":"salt"},' +
+				'{"set":"olive_oil","amount":1,"unit":"tbsp"},{"set":"egg"},{"add":"milk","amount":0.5,"unit":"l"}]}]}}',
+		);
+		expect(read(json)).toEqual(plan);
+		// Without servings.
+		const bare = setServings(plan, d(0), 0, undefined);
+		expect(JSON.stringify(toWire(bare))).toContain('[{"recipe":"dal","changes":[');
+		expect(read(JSON.stringify(toWire(bare)))).toEqual(bare);
+		// No changes: the cooking-rs shapes, byte for byte.
+		expect(JSON.stringify(toWire(setChanges(bare, d(0), 0, [])))).toBe(
+			'{"dates":{"2026-10-25":["dal"]}}',
+		);
+	});
+
+	it("drops a change it can't read and keeps the rest", () => {
+		const meal = (changes: string) =>
+			read(`{"dates":{"2026-10-25":[{"recipe":"dal","changes":${changes}}]}}`)?.dates[TODAY]?.[0];
+		expect(
+			meal(
+				'[{"swap":"scallion","for":"no_such_key"},{"skip":"salt"},{"add":"no_such_key"},7,{"what":1}]',
+			),
+		).toEqual({
+			recipe: "dal",
+			changes: [{ kind: "skip", key: "salt" }],
+		});
+		// One change per ingredient: the later one wins.
+		expect(meal('[{"skip":"salt"},{"set":"salt","amount":5,"unit":"g"}]')).toEqual({
+			recipe: "dal",
+			changes: [{ kind: "set", key: "salt", amount: 5, unit: "g" }],
+		});
+		// A bad amount is ignored, not fatal.
+		expect(meal('[{"set":"salt","amount":-1,"unit":"g"}]')).toEqual({
+			recipe: "dal",
+			changes: [{ kind: "set", key: "salt", unit: "g" }],
+		});
+		expect(meal("[]")).toEqual({ recipe: "dal" });
+		expect(meal('"nope"')).toBeUndefined(); // a wrong shape is still no plan at all
 	});
 });
 

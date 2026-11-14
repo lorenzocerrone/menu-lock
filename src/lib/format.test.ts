@@ -3,6 +3,7 @@ import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
 import {
 	formatAddedTo,
+	formatAmountInput,
 	formatCount,
 	formatDate,
 	formatDay,
@@ -12,10 +13,13 @@ import {
 	formatGroceryAmount,
 	formatLeft,
 	formatLineAmount,
+	formatLineChange,
 	formatLineQuantity,
+	formatMealDetails,
 	formatMovedTo,
 	formatOption,
 	formatPlanCaption,
+	formatPlannedFor,
 	formatQuantity,
 	formatRange,
 	formatRecipeMeta,
@@ -246,5 +250,39 @@ describe("format", () => {
 			name: "Candles",
 			quantity: "",
 		});
+	});
+
+	it("describes a planned meal and its changed lines", () => {
+		expect(formatMealDetails({ recipe: "dal" })).toEqual([]);
+		expect(formatMealDetails({ recipe: "dal", servings: 6 })).toEqual(["serves 6"]);
+		expect(formatMealDetails({ recipe: "dal", changes: [{ kind: "skip", key: "salt" }] })).toEqual([
+			"changed",
+		]);
+		expect(
+			formatMealDetails({ recipe: "dal", servings: 6, changes: [{ kind: "skip", key: "salt" }] }),
+		).toEqual(["serves 6", "changed"]);
+		expect(formatMealDetails({ recipe: "dal", changes: [] })).toEqual([]);
+		expect(formatMealDetails({ note: "Frozen pizza" })).toEqual([]);
+		expect(formatMealDetails({ note: "Frozen pizza", buy: true })).toEqual(["to buy"]);
+
+		const base = {
+			key: "onion",
+			name: "Onion",
+			amount: 1,
+			unit: "pcs",
+			optional: false,
+			perServing: 75,
+		} as const;
+		expect(formatLineChange(base)).toBeNull();
+		expect(formatLineChange({ ...base, change: "set" })).toBe("changed");
+		expect(formatLineChange({ ...base, change: "add" })).toBe("added");
+		expect(
+			formatLineChange({ ...base, change: "swap", instead: { key: "scallion", name: "Scallion" } }),
+		).toBe("instead of Scallion");
+		expect(formatPlannedFor("2026-10-26", "2026-10-25")).toBe("As planned for tomorrow");
+		expect(formatPlannedFor("2026-10-28", "2026-10-25")).toBe("As planned for Wed 28 Oct");
+		expect(formatAmountInput(1.5)).toBe("1.5");
+		expect(formatAmountInput(0.333)).toBe("0.33");
+		expect(formatAmountInput(null)).toBe("");
 	});
 });

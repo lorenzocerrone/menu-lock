@@ -118,6 +118,46 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## After the rewrite: two additions the user asked for (2026-11-14)
+
+Both go beyond the parity checklist and both add to the wire format, with the user's
+agreement. Links without them are written exactly as before, so every older link still
+reads the same; cooking-rs is gone, so nothing needs to read the new shapes but
+menu.lock.
+
+**Things on the plan that are not recipes** ("Frozen pizza", "Leftovers").
+
+- A day's meal is now a recipe or a note: `{ note, buy? }`. On the wire:
+  `{"note":"Frozen pizza","buy":true}`.
+- In the "add a meal" picker, typing something offers, under the recipes, to add what
+  was typed as it is: "plan only" or "and buy it". The user chose to decide each time.
+- One with `buy` is a grocery line in Other, once however often it is planned, with
+  "plan" as what it is for. It joins a custom extra of the same name, or the line of a
+  dictionary ingredient of that name if that is on the list. Its sheet has "Also on the
+  grocery list" to switch that.
+- On the plan it has a ring where a recipe has a dot, and says "to buy" when it is.
+
+**Changing a recipe for one planned meal** (the user picked: per meal, with all four
+kinds of change).
+
+- A planned recipe can carry `changes`, at most one per ingredient key: swap it for
+  another dictionary ingredient, leave it out, set its amount, or add an ingredient.
+  On the wire: `{"recipe":"lentil_dal","changes":[{"swap":"onion","for":"red_onion"},
+  {"skip":"salt"},{"set":"garlic","amount":6,"unit":"clove"},{"add":"lemon","amount":1}]}`.
+- The recipe file never changes. `applyChanges` (`src/lib/changes.ts`) gives the meal's
+  own lines; the grocery list and the recipe page opened from that meal use them.
+- Amounts in a change are for the recipe's own servings and scale with the meal like
+  every other line. The editor shows them for the meal's servings.
+- A swap without an amount keeps the recipe's amount when it means something for the
+  new ingredient (2 scallions become 2 onions); when it doesn't (2 tbsp of something
+  sold by weight), the line becomes "to taste" rather than a wrong number.
+- Only dictionary ingredients can be swapped in or added: the grocery list must be able
+  to add them up. Something not in the dictionary is an extra on the grocery page.
+- A change that can't be read in a link is dropped; the rest of the plan is kept.
+- "View recipe" from a planned meal opens `#/recipe/<id>?meal=<date>.<position>`, which
+  shows that meal's servings and changes; the steps are always the recipe's own words.
+- The meal's sheet has "Change ingredients"; the plan says "changed" beside the meal.
+
 ## Phase 5: PWA and cutover (2026-11-14)
 
 The app part:

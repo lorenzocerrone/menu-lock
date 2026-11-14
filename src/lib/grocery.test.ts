@@ -19,7 +19,7 @@ import {
 	sameRange,
 	toggleChecked,
 } from "./grocery";
-import { addExtra, addMeal, EMPTY_PLAN, type Plan, setServings } from "./plan";
+import { addExtra, addMeal, addNote, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
 
 const TODAY = "2026-10-25";
 const d = (n: number) => addDays(TODAY, n);
@@ -169,6 +169,67 @@ describe("aggregate", () => {
 		expect(find(list, "onion").amount).toBe(100);
 		list = aggregate(plan, d(3), d(4), data);
 		expect(names(list)).toEqual(["Dairy & Eggs"]); // only the extra
+	});
+
+	it("follows a meal's ingredient changes, for that meal only", () => {
+		const data = fixtureData([
+			recipeFile("soup", 2, [
+				{ ingredient: "scallion", amount: 2 },
+				{ ingredient: "garlic", amount: 3, unit: "cloves" },
+				{ ingredient: "salt" },
+			]),
+		]);
+		let plan = addMeal(EMPTY_PLAN, d(0), "soup");
+		plan = addMeal(plan, d(1), "soup");
+		plan = setServings(plan, d(1), 0, 4); // twice the recipe
+		plan = setChanges(plan, d(1), 0, [
+			{ kind: "swap", key: "scallion", for: "onion" },
+			{ kind: "skip", key: "salt" },
+			{ kind: "set", key: "garlic", amount: 1, unit: "clove" },
+			{ kind: "add", key: "lemon", amount: 1 },
+		]);
+		const list = aggregate(plan, d(0), d(13), data);
+		expect(find(list, "scallion").amount).toBe(30); // the unchanged meal: 2 x 15 g
+		expect(find(list, "onion")).toMatchObject({ amount: 600, sources: ["SOUP"] }); // 2 onions, doubled
+		expect(find(list, "garlic").amount).toBe(12 + 8); // 3 cloves + 1 clove doubled
+		expect(find(list, "lemon").amount).toBe(2);
+		expect(find(list, "salt").sources).toEqual(["SOUP"]); // still needed by the unchanged meal
+		// Only the changed meal in range: no scallion, no salt.
+		const later = aggregate(plan, d(1), d(13), data);
+		expect(allLines(later).map((l) => l.key)).toEqual(["garlic", "lemon", "onion"]);
+	});
+
+	it("lists non-recipe items that are to be bought, once, in Other", () => {
+		const data = fixtureData([
+			recipeFile("r", 1, [{ ingredient: "flour", amount: 100, unit: "g" }]),
+		]);
+		let plan = addNote(EMPTY_PLAN, d(0), "Frozen pizza", true);
+		plan = addNote(plan, d(2), "frozen pizza", true);
+		plan = addNote(plan, d(0), "Leftovers", false);
+		plan = addNote(plan, d(9), "Ice cream", true);
+		let list = aggregate(plan, d(0), d(5), data);
+		expect(names(list)).toEqual(["Other"]);
+		expect(allLines(list)).toHaveLength(1);
+		expect(find(list, "custom:frozen pizza")).toMatchObject({
+			name: "Frozen pizza",
+			amount: null,
+			sources: ["plan"],
+			extra: false,
+			optional: false,
+		});
+		expect(formatLineQuantity(find(list, "custom:frozen pizza"))).toBe("");
+		// It joins a custom extra of the same name, and a dictionary ingredient that is on the list.
+		plan = addExtra(plan, { kind: "custom", name: "Frozen pizza", quantity: "2" });
+		plan = addMeal(plan, d(0), "r");
+		plan = addNote(plan, d(0), "Flour", true);
+		list = aggregate(plan, d(0), d(5), data);
+		expect(find(list, "custom:frozen pizza")).toMatchObject({
+			customQuantities: ["2"],
+			sources: ["plan"],
+			extra: true,
+		});
+		expect(find(list, "flour").sources).toEqual(["R", "plan"]);
+		expect(allLines(list)).toHaveLength(2);
 	});
 
 	it("orders aisles as in the shop and lines by name", () => {

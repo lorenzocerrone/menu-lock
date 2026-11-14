@@ -123,6 +123,45 @@ export function lookup(
 	return null;
 }
 
+/**
+ * One ingredient line for a recipe of `servings`, resolved against the
+ * dictionary: used for the lines a planned meal changes or adds. An amount that
+ * does not convert for the ingredient becomes "to taste" rather than a wrong
+ * number. `null` for a key the dictionary doesn't have.
+ */
+export function makeLine(
+	dictionary: Dictionary,
+	key: string,
+	amount: number | undefined,
+	unitText: string | undefined,
+	servings: number,
+	keep: { note?: string | undefined; optional?: boolean } = {},
+): RecipeLine | null {
+	const entry = dictionary.entries.get(key);
+	if (!entry) return null;
+	const line: RecipeLine = {
+		key,
+		name: entry.name,
+		amount: null,
+		unit: null,
+		optional: keep.optional ?? false,
+		perServing: null,
+	};
+	if (entry.count) line.count = entry.count;
+	if (keep.note !== undefined) line.note = keep.note;
+	const unit = resolveUnit(unitText, entry.count);
+	const inShoppingUnit =
+		amount === undefined || !(amount > 0) || unit === null
+			? null
+			: toShopping(amount, unit, entry.unit, entry.count);
+	if (amount !== undefined && unit !== null && inShoppingUnit !== null) {
+		line.amount = amount;
+		line.unit = unit;
+		line.perServing = inShoppingUnit / servings;
+	}
+	return line;
+}
+
 function describePath(path: PropertyKey[]): string {
 	const parts: string[] = [];
 	for (let i = 0; i < path.length; i++) {
