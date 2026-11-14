@@ -9,6 +9,7 @@ export function Toasts() {
 		<div
 			role="status"
 			aria-live="polite"
+			data-testid="toast"
 			className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 wide:bottom-8"
 		>
 			<AnimatePresence>

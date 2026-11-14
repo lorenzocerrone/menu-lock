@@ -16,7 +16,7 @@ export function Chip({ label, on, onClick, dim = false, ariaLabel }: Props) {
 			aria-pressed={on}
 			aria-label={ariaLabel}
 			onClick={onClick}
-			className={`min-h-9 rounded-card border px-3 font-mono text-xs ${
+			className={`min-h-11 rounded-card border px-3 font-mono text-xs ${
 				on ? "border-sienna bg-sienna text-on-sienna" : "border-rule border-dashed text-muted"
 			} ${dim ? "opacity-40" : ""}`}
 		>

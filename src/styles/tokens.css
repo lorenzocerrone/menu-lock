@@ -7,9 +7,10 @@
 	--panel: #f8f3e7;
 	--inset: #fbf8ef;
 	--ink: #3b3327;
-	--muted: #7c6e54;
+	--muted: #756649;
+	/* Decoration and done things only: too light for text that must be read. */
 	--faint: #9e8b68;
-	--sienna: #a85e30;
+	--sienna: #9a5426;
 	--on-sienna: #fbf6ea;
 	--danger: #9b3b2e;
 	--rule: rgb(62 51 36 / 0.42);
@@ -42,7 +43,7 @@
 	/* The veil behind an open sheet: dark in both themes. */
 	--scrim: rgb(28 20 10 / 0.45);
 	/* The height of one ruled line. */
-	--line: 2.25rem;
+	--line: 2.75rem;
 }
 
 /* Tailwind utilities for the tokens: bg-paper, text-ink, border-rule, font-mono… */

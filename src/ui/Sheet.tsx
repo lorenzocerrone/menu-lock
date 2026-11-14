@@ -27,7 +27,9 @@ export function Sheet({ open, onClose, title, children, footer }: Props) {
 					className="fixed inset-x-0 bottom-0 z-40 flex max-h-[90dvh] flex-col outline-none wide:inset-0 wide:max-h-none wide:items-center wide:justify-center"
 				>
 					<div className="flex max-h-[90dvh] w-full flex-col rounded-t-[14px] border border-rule-soft bg-panel text-ink shadow-lift wide:max-h-[80dvh] wide:max-w-md wide:rounded-card">
-						<Drawer.Handle className="mt-2 shrink-0 wide:hidden" />
+						<div className="shrink-0 pt-2 wide:hidden">
+							<Drawer.Handle />
+						</div>
 						<header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-3 pb-2">
 							<Drawer.Title className="font-bold text-xl">{title}</Drawer.Title>
 							<Drawer.Close

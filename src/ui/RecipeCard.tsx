@@ -34,7 +34,7 @@ export function RecipeCard({ recipe, index }: { recipe: Recipe; index: number })
 					))}
 				</p>
 				{recipe.tags.length > 0 ? (
-					<p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[0.68rem] text-faint">
+					<p className="mt-0.5 flex flex-wrap gap-x-2 font-mono text-[0.68rem] text-muted">
 						{recipe.tags.map((tag) => (
 							<span key={tag} className="whitespace-nowrap">
 								{tag}

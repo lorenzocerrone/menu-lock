@@ -34,6 +34,10 @@ describe("extras", () => {
 		expect(names("  ", 5)).toEqual([]);
 		expect(names("zzz", 5)).toEqual([]);
 		expect(names("on", 5)).toEqual(["Onion", "Lemon", "Salmon fillet", "Scallion"]);
+		// A plural finds its singular.
+		expect(names("eggs", 5)).toEqual(["Egg"]);
+		expect(names("lemons", 5)).toEqual(["Lemon"]);
+		expect(names("tomatoes", 5)).toEqual(["Chopped tomatoes"]);
 		// An alias finds its entry.
 		expect(names("spring", 5)).toEqual(["Scallion"]);
 		expect(suggest(dictionary, "milk", 5)[0]).toEqual({

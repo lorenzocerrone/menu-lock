@@ -41,19 +41,24 @@ export type Suggestion = { key: string; name: string; aisle: string };
 
 /**
  * Dictionary ingredients whose name or an alias matches `name`
- * (case-insensitive): starts-with first, then contains, each sorted by name.
- * Empty input gives nothing.
+ * (case-insensitive, singular or plural): starts-with first, then contains,
+ * each sorted by name. Empty input gives nothing.
  */
 export function suggest(dictionary: Dictionary, name: string, max: number): Suggestion[] {
 	const needle = name.trim().toLowerCase();
 	if (needle === "") return [];
+	// What was typed, and its singular: "eggs" finds Egg.
+	const needles = [needle];
+	if (needle.endsWith("es") && needle.length > 3) needles.push(needle.slice(0, -2));
+	if (needle.endsWith("s") && needle.length > 2) needles.push(needle.slice(0, -1));
 	const prefix: Suggestion[] = [];
 	const inner: Suggestion[] = [];
 	for (const [key, entry] of dictionary.entries) {
 		const names = [entry.name, ...(entry.aliases ?? [])].map((n) => n.toLowerCase());
 		const suggestion = { key, name: entry.name, aisle: entry.aisle };
-		if (names.some((n) => n.startsWith(needle))) prefix.push(suggestion);
-		else if (names.some((n) => n.includes(needle))) inner.push(suggestion);
+		if (names.some((n) => needles.some((needle) => n.startsWith(needle)))) prefix.push(suggestion);
+		else if (names.some((n) => needles.some((needle) => n.includes(needle))))
+			inner.push(suggestion);
 	}
 	const byName = (a: Suggestion, b: Suggestion) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 	return [...prefix.sort(byName), ...inner.sort(byName)].slice(0, max);

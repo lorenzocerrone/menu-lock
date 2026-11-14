@@ -9,18 +9,42 @@ import { mkdir, rm } from "node:fs/promises";
 import { chromium } from "@playwright/test";
 import { preview } from "vite";
 
+/** `days` from today, as YYYY-MM-DD. */
+function iso(days: number): string {
+	const d = new Date();
+	d.setDate(d.getDate() + days);
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** A fixture plan in the wire format, so the plan and the grocery list have something on them. */
+const PLAN = Buffer.from(
+	JSON.stringify({
+		dates: {
+			[iso(0)]: ["carbonara", "greek_salad"],
+			[iso(1)]: [{ recipe: "lentil_dal", servings: 6 }],
+			[iso(3)]: ["teriyaki_salmon"],
+			[iso(4)]: ["shakshuka", "pancakes"],
+			[iso(6)]: [{ recipe: "margherita_pizza", servings: 4 }],
+			[iso(8)]: ["mushroom_risotto"],
+		},
+		extras: [
+			{ name: "milk", amount: 1, unit: "l" },
+			{ name: "egg", amount: 6 },
+			{ name: "Toilet paper", quantity: "1 pack" },
+		],
+	}),
+).toString("base64url");
+
 /** Add a line here for every new screen. `hash` is the route, with any fixture plan. */
 const SCREENS = [
 	{ name: "recipes", hash: "#/" },
 	{ name: "recipes-filtered", hash: "#/?diet=veg&time=20" },
 	{ name: "recipe", hash: "#/recipe/lentil_dal" },
-	{ name: "planner", hash: "#/planner" },
-	{ name: "grocery", hash: "#/grocery" },
-	// The reference screens of the chosen design (needs VITE_LAB=1; `npm run shots` sets it).
-	...(["recipes", "planner", "grocery"] as const).map((s) => ({
-		name: `lab-${s}`,
-		hash: `#/lab?s=${s}`,
-	})),
+	{ name: "planner", hash: `#/planner?plan=${PLAN}` },
+	{ name: "planner-empty", hash: "#/planner" },
+	{ name: "grocery", hash: `#/grocery?plan=${PLAN}` },
+	{ name: "grocery-empty", hash: "#/grocery" },
 ];
 
 const VIEWPORTS = [
@@ -43,14 +67,15 @@ const browser = await chromium.launch();
 try {
 	for (const viewport of VIEWPORTS) {
 		for (const colorScheme of SCHEMES) {
-			const context = await browser.newContext({
-				viewport: { width: viewport.width, height: viewport.height },
-				deviceScaleFactor: 2,
-				colorScheme,
-				reducedMotion: "reduce",
-			});
-			const page = await context.newPage();
 			for (const screen of SCREENS) {
+				// A fresh context (and so fresh storage) per screen: one screen's plan must not leak into the next.
+				const context = await browser.newContext({
+					viewport: { width: viewport.width, height: viewport.height },
+					deviceScaleFactor: 2,
+					colorScheme,
+					reducedMotion: "reduce",
+				});
+				const page = await context.newPage();
 				await page.goto(origin + screen.hash);
 				await page.evaluate(async () => {
 					await document.fonts.ready;
@@ -58,16 +83,16 @@ try {
 					for (const img of document.images) img.loading = "eager";
 					await Promise.all([...document.images].map((img) => img.decode().catch(() => {})));
 				});
-				// A tab bar fixed to the viewport would land mid-page in a full-page shot.
+				// Things fixed to the viewport would land mid-page in a full-page shot.
 				await page.addStyleTag({
-					content: 'nav[aria-label="Sections"] { position: static !important; }',
+					content: 'nav[aria-label="Sections"], [data-fixed] { position: static !important; }',
 				});
 				await page.waitForTimeout(400); // let entrance animations settle
 				const path = `${OUT}/${screen.name}.${viewport.name}.${colorScheme}.png`;
 				await page.screenshot({ path, fullPage: true });
 				console.log(path);
+				await context.close();
 			}
-			await context.close();
 		}
 	}
 } finally {

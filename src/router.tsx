@@ -8,7 +8,6 @@ import {
 import { z } from "zod";
 import { type QuerySearch, queryFromSearch, queryToSearch } from "./lib/filters";
 import { GroceryPage } from "./routes/grocery";
-import { LabRoute } from "./routes/lab";
 import { PlannerPage } from "./routes/planner";
 import { RecipePage } from "./routes/recipe";
 import { RecipesPage } from "./routes/recipes";
@@ -61,18 +60,8 @@ const groceryRoute = createRoute({
 	component: GroceryPage,
 });
 
-/** The reference screens of the chosen design; `s` is the screen. Remove with src/lab/. */
-const labRoute = createRoute({
-	getParentRoute: () => shellRoute,
-	path: "/lab",
-	component: LabRoute,
-	validateSearch: z.object({
-		s: z.enum(["recipes", "planner", "grocery"]).catch("recipes"),
-	}),
-});
-
 const routeTree = rootRoute.addChildren([
-	shellRoute.addChildren([recipesRoute, recipeRoute, plannerRoute, groceryRoute, labRoute]),
+	shellRoute.addChildren([recipesRoute, recipeRoute, plannerRoute, groceryRoute]),
 ]);
 
 export const router = createRouter({

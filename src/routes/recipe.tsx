@@ -76,7 +76,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 						<p className="mt-2 font-mono text-muted text-xs">{facts.join(" · ")}</p>
 					) : null}
 					{recipe.tags.length > 0 ? (
-						<p className="mt-1 font-mono text-faint text-xs">{recipe.tags.join(" · ")}</p>
+						<p className="mt-1 font-mono text-muted text-xs">{recipe.tags.join(" · ")}</p>
 					) : null}
 				</div>
 			</div>
@@ -86,7 +86,10 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 					<h3 className="font-bold text-xl">Ingredients</h3>
 					<Stepper value={servings} onChange={setServings} label="Servings" />
 				</div>
-				<ul className="mt-3 rounded-card border border-rule-soft bg-inset px-3 shadow-card">
+				<ul
+					aria-label="Ingredients"
+					className="mt-3 rounded-card border border-rule-soft bg-inset px-3 shadow-card"
+				>
 					{recipe.lines.map((line, i) => (
 						<li
 							key={i}
@@ -96,7 +99,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 								{line.name}
 								{line.note ? <span className="text-muted">, {line.note}</span> : null}
 								{line.optional ? (
-									<span className="font-mono text-faint text-xs"> (optional)</span>
+									<span className="font-mono text-muted text-xs"> (optional)</span>
 								) : null}
 							</span>
 							<span className="mx-1.5 min-w-3 flex-1 -translate-y-1 border-rule border-b-2 border-dotted" />
@@ -113,7 +116,10 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
 				<Steps steps={recipe.steps} />
 			</section>
 
-			<div className="fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+			<div
+				data-fixed
+				className="fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+			>
 				<button
 					type="button"
 					onClick={() => setPicking(true)}

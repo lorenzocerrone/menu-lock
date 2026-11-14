@@ -39,12 +39,12 @@ src/lib/         PURE logic: no React, no DOM, no clock, no store (Biome enforce
                  schema, data, units, dates, plan, planCodec, grocery, filters,
                  extras, format, stored; fixtures.ts is for tests only
 src/dataset.ts   the bundled data, validated and resolved once (DATA)
-src/state/       localStorage boundary; the Zustand store and URL sync (phase 3)
-src/ui/          reusable components: Shell, PageTitle, Stamp, Underline, motion.ts
-src/routes/      pages; the route table is src/router.tsx
-src/lab/         the chosen design as reference screens (#/lab); phase 3 ports and deletes it
+src/state/       the store (store.ts), its one instance and hooks (app.ts), URL sync, storage
+src/ui/          reusable components: Shell, Sheet, Chip, Stepper, RecipeCard, RecipeFilters,
+                 RecipePicker, DayPicker, PageTitle, Stamp, Underline, Toasts; styles.ts, motion.ts
+src/routes/      pages: recipes, recipe, planner, grocery; the route table is src/router.tsx
 src/styles/      tokens.css (every colour and font), paper.css (textures), base.css
-tests/e2e/       Playwright flows
+tests/e2e/       Playwright flows (helpers.ts builds plan links from today's date)
 scripts/         shots.ts, gen-schema.ts, the one-off migration
 ```
 
@@ -68,8 +68,11 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
   hard-coded colours.
 - **Follow the design rules** in `docs/decisions.md` (phase 1): paper objects on a
   grainy page, Grotesk for names and Mono for everything else, sienna as the only
-  accent, the receipt, the notebook plan. Look at `#/lab` (`npm run dev`) before
-  building a screen.
+  accent, the receipt, the notebook plan. Reuse `src/ui/` and `src/ui/styles.ts`.
+- **State changes go through the store's actions** (`useApp((s) => s.addMeal)`), never
+  around them: they are what keeps the URL, storage and the grocery ticks in step.
+- Tap targets are at least 44px; text uses `text-ink`, `text-muted`, `text-sienna` or
+  `text-danger` (`text-faint` is for decoration and done things only).
 - Keep the dependency list as it is. Ask before adding a library.
 - No new features beyond the parity checklist unless the user asks. The non-goals in
   plan §1 are deliberate.

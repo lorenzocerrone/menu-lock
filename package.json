@@ -18,7 +18,7 @@
 		"test": "vitest run",
 		"check": "biome check . && tsc --noEmit && vitest run",
 		"e2e": "playwright test",
-		"shots": "VITE_LAB=1 vite build && tsx scripts/shots.ts",
+		"shots": "vite build && tsx scripts/shots.ts",
 		"schema": "tsx scripts/gen-schema.ts && biome format --write schema"
 	},
 	"dependencies": {

@@ -69,17 +69,54 @@ Where it lives: `src/styles/tokens.css` (colours, fonts, `--line`, the two shado
 `src/styles/paper.css` (grain, receipt, tape, plan lines), `src/ui/` (`Shell`,
 `PageTitle`, `Stamp`, `Underline`, `motion.ts`).
 
-### The reference screens (`#/lab`)
+The lab that held the three directions, and then B's reference screens, is deleted:
+phase 3 ported the screens into the real routes.
 
-`src/lab/Screens.tsx` holds the chosen design's three screens (recipes, plan, grocery)
-on the real recipes and a fixture plan, with working search, chips and ticks; the plan
-is look only. They are the starting point for phase 3: port each into its route, wire
-it to the store, then delete the lab.
+## Phase 3: screens at parity (2026-11-14)
 
-The lab is in development builds, pull-request previews and builds made with
-`VITE_LAB=1` (the browser tests and `npm run shots` use that); never on the live site.
-**When phase 3 has replaced them, delete `src/lab/`, `src/routes/lab.tsx`, the `/lab`
-route, `tests/e2e/lab.spec.ts`, the lab entries in `scripts/shots.ts` and `VITE_LAB`.**
+Every page of plan §6 is built in the chosen design and wired to the store. Each box of
+the parity checklist is covered by a unit test or a browser flow (`tests/e2e/`): the
+seven flows of plan §8 plus drag and drop, keyboard reordering, clearing, the range,
+extras, copying, the unknown recipe, garbage in the address, and the last plan coming
+back. Not in this phase, by the plan: the installable PWA and offline (phase 5), and
+the richer motion (phase 4).
+
+How it is put together:
+
+- **One store** (`src/state/store.ts`, a vanilla Zustand store so it is unit-tested
+  without a browser): the plan, the grocery state and today. Every action goes through
+  `src/lib` and then _settles_: past days drop off and ticks that no longer hold are
+  dropped. `src/state/app.ts` creates it once from the URL and storage, saves it on
+  every change, and moves "today" when the page is looked at again on a later date.
+- **URL sync** (`src/state/urlSync.ts`): the store writes `?plan=` with `replace`; a
+  plan that appears in the address (a link pasted into an open tab) is loaded. A plan
+  that cannot be read is ignored and the address is rewritten.
+- **Ticks are pruned against the current range.** Narrowing the range keeps a tick
+  (the line needs less); widening it drops the tick if the line now needs more than
+  when it was ticked.
+- **Recipe filters** are validated by the route itself (`queryFromSearch`), so a
+  hand-edited address can't break the page. Opening a recipe drops them from the
+  address; Back returns to the filtered list.
+- **"Add to week" adds the recipe with its own servings**, as in cooking-rs, whatever
+  the stepper on the recipe page says: that stepper is for reading the recipe.
+- **Sheets** are Vaul drawers: a bottom sheet on phones, the same panel centred from
+  720px. A second step ("Move to…") replaces the sheet's content instead of stacking a
+  sheet on a sheet. No snap points: no sheet is long enough to need them.
+- **Drag and drop** (dnd-kit) is by a handle on each meal, so a tap on the meal still
+  opens its sheet and the page still scrolls under a finger. Dropping on a meal takes
+  its place; dropping on a day adds to its end. The handle also works from the
+  keyboard (Space, arrows, Space).
+- **Extras suggestions** also match the singular of what was typed ("2 eggs" offers
+  Egg), which cooking-rs did not.
+- **Accessibility pass**: every tap target is at least 44px (so `--line`, the ruled
+  line, grew from 2.25rem to 2.75rem and chips are 44px tall). Text colours pass AA on
+  every surface in both themes, checked by `src/styles/tokens.test.ts`; for that the
+  light theme's `--muted` went from `#7c6e54` to `#756649` and `--sienna` from `#a85e30`
+  to `#9a5426`. `--faint` is now only for decoration and done things.
+- **User-facing strings with a number or a date** come from `src/lib/format.ts`
+  (captions, button labels, toasts); fixed labels are written where they are used.
+- Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
+  but their position.
 
 ## Phase 2: data and logic (2026-11-14)
 

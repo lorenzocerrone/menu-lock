@@ -19,7 +19,7 @@ export default defineConfig({
 		},
 	],
 	webServer: {
-		command: "VITE_LAB=1 npm run build && npm run preview",
+		command: "npm run build && npm run preview",
 		url: "http://localhost:4173",
 		reuseExistingServer: !process.env.CI,
 		timeout: 120_000,

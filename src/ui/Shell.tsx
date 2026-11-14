@@ -58,7 +58,7 @@ export function Shell() {
 									<span className="relative">
 										{tab.label}
 										{tab.to === "/grocery" && left > 0 ? (
-											<span className="ml-1.5 text-xs opacity-80">{left}</span>
+											<span className="text-xs opacity-80"> {left}</span>
 										) : null}
 									</span>
 								</Link>
