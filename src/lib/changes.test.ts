@@ -59,6 +59,51 @@ describe("applyChanges", () => {
 		]);
 	});
 
+	it("carries the quantity over through weight, volume or pieces when the unit doesn't fit", () => {
+		// 3 cloves of garlic (4 g each) for guanciale, sold by weight: 12 g.
+		expect(brief({ kind: "swap", key: "garlic", for: "guanciale" })[1]).toEqual([
+			"guanciale",
+			12,
+			"g",
+			6,
+			"swap",
+		]);
+		// 2 scallions (15 g each) for flour: 30 g.
+		expect(brief({ kind: "swap", key: "scallion", for: "flour" })[0]).toEqual([
+			"flour",
+			30,
+			"g",
+			15,
+			"swap",
+		]);
+		// 2 tbsp of olive oil for milk: the recipe's own amount already fits.
+		expect(brief({ kind: "swap", key: "olive_oil", for: "milk" })[2]).toEqual([
+			"milk",
+			2,
+			"tbsp",
+			15,
+			"swap",
+		]);
+		// A can of tomatoes (a pcs ingredient, 400 g a piece) for flour: 400 g.
+		const stew = fixtureData([
+			recipeFile("stew", 4, [{ ingredient: "chopped_tomatoes", amount: 1, unit: "can" }]),
+		]).recipeById.get("stew");
+		if (!stew) throw new Error("fixture");
+		const [flour] = applyChanges(
+			stew,
+			[{ kind: "swap", key: "chopped_tomatoes", for: "flour" }],
+			data.dictionary,
+		).lines;
+		expect(flour).toMatchObject({ key: "flour", amount: 400, unit: "g", perServing: 100 });
+		// 1 can for eggs (pieces, no weight): 1 egg.
+		const [egg] = applyChanges(
+			stew,
+			[{ kind: "swap", key: "chopped_tomatoes", for: "egg" }],
+			data.dictionary,
+		).lines;
+		expect(egg).toMatchObject({ key: "egg", amount: 1, perServing: 0.25 });
+	});
+
 	it("leaves an ingredient out", () => {
 		const { lines, skipped } = apply({ kind: "skip", key: "garlic" });
 		expect(lines.map((l) => l.key)).toEqual(["scallion", "olive_oil", "salt"]);
