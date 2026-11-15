@@ -118,6 +118,24 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Back and Forward never bring back an older plan (2026-11-15)
+
+The user saw changes to the plan get lost: the first recipe added stayed, later ones
+didn't, and a meal's ingredient change didn't reach the grocery list. The cause was
+`src/state/urlSync.ts`: every history entry keeps the plan its address had when it was
+left, and when Back or Forward (the phone's back gesture too) landed on one, the app
+took that older plan for a link from outside and loaded it, undoing everything since.
+The first meal survived because an entry from before it had no plan in the address,
+and "no plan" was never loaded.
+
+Now the store is the plan, and the address always follows it. A plan is loaded from the
+address only when the address was changed from outside the app: a link typed or pasted
+into an open tab makes a history entry without `history.state`, which the router sets on
+every entry it makes. Opening the app with a link is unchanged (read once at start, in
+`src/state/app.ts`). The same rule also covers a tab clicked before the address caught
+up with the last change: it is rewritten instead of loaded. Browser tests:
+`tests/e2e/history.spec.ts`.
+
 ## The household's own recipes (2026-11-14)
 
 The user replaced the 25 placeholder recipes with their own list (Italian notes,
