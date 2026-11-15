@@ -118,6 +118,32 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Any unit in a recipe; what doesn't add up is listed beside the total (2026-11-15)
+
+The user wanted more freedom in how recipes write amounts: pastry needs precise grams
+even for things sold by the piece, everyday cooking writes "1 mozzarella". They were
+fine with a grocery line saying "Mozzarella 250 g + 1".
+
+- **Changed rule** (plan §5.2–5.3, `CLAUDE.md`): a recipe line still names a dictionary
+  key, but its amount may be in any unit: the known ones, the piece label, or a word of
+  the recipe's own ("ball", "bunch", "zest"). What converts into the shopping unit is
+  added up as before. What doesn't is no longer a validation error: the line keeps it
+  `aside`, per serving, in its own unit (`quantify` in `src/lib/data.ts`).
+- **Summed per unit** (`asideQuantity` in `src/lib/units.ts`): grams for any mass, ml
+  for ml and l, pieces for a count, otherwise the unit as written (tsp, tbsp, cup,
+  words). Scaled with the servings like any amount. The grocery line lists them after
+  its total ("250 g + 1 ball + 2 tbsp"); pieces and words round up to whole ones, tsp,
+  tbsp and cups keep two decimals. A word is grouped as written ("ball" and "balls"
+  would be two).
+- **Ticks** remember these amounts too, and drop when one grows.
+- **A meal's editor** offers pieces and the line's own unit beside the units that add
+  up, so "1 mozzarella" can be set for one meal.
+- **A swap that converts no way** ("2 tbsp" of oil for salt sold by weight) now keeps
+  the recipe's amount as written, beside the total, instead of becoming "to taste".
+- `gr` is now a spelling of grams.
+- The add-recipe skill keeps a recipe's own units where they matter (pastry grams, "1
+  ball") and still prefers units that add up otherwise.
+
 ## Changing a meal's ingredient: one screen, and swaps keep a quantity (2026-11-15)
 
 The user found replacing an ingredient unreliable and the editor too involved.

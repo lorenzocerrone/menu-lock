@@ -30,7 +30,7 @@ describe("units", () => {
 		] as const;
 		for (const [s, unit] of cases) expect(parseUnit(s), s).toBe(unit);
 		for (const unit of UNITS) expect(parseUnit(unit)).toBe(unit);
-		for (const bad of ["gr", "unit", "clove", "", "oz"]) expect(parseUnit(bad), bad).toBeNull();
+		for (const bad of ["unit", "clove", "", "oz"]) expect(parseUnit(bad), bad).toBeNull();
 	});
 
 	it("has the base conversion factors", () => {

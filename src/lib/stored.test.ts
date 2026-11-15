@@ -22,8 +22,8 @@ function sample(): StoredState {
 	plan = addExtra(plan, { kind: "catalog", key: "milk", amount: 1, unit: "l" });
 	const grocery: GroceryState = {
 		checked: [
-			{ key: "onion", amount: 250, custom: [] },
-			{ key: "custom:bread", amount: null, custom: ["1 loaf"] },
+			{ key: "onion", amount: 250, aside: [], custom: [] },
+			{ key: "custom:bread", amount: null, aside: [], custom: ["1 loaf"] },
 		],
 		range: { days: 3 },
 	};
@@ -36,7 +36,7 @@ describe("stored state", () => {
 		const raw = encodeStored(state);
 		expect(raw.startsWith('{"version":1,"plan":{"dates":{"2026-10-26":["dal"]}')).toBe(true);
 		expect(raw).toContain('"range":{"days":3}');
-		expect(raw).toContain('{"key":"onion","amount":250,"custom":[]}');
+		expect(raw).toContain('{"key":"onion","amount":250,"aside":[],"custom":[]}');
 		expect(decode(raw)).toEqual(state);
 		expect(decode(encodeStored({ plan: EMPTY_PLAN, grocery: DEFAULT_GROCERY }))).toEqual({
 			plan: EMPTY_PLAN,
@@ -62,7 +62,7 @@ describe("stored state", () => {
 		);
 		expect(odd).toEqual({
 			plan: EMPTY_PLAN,
-			grocery: { checked: [{ key: "onion", amount: null, custom: [] }], range: "all" },
+			grocery: { checked: [{ key: "onion", amount: null, aside: [], custom: [] }], range: "all" },
 		});
 	});
 

@@ -9,7 +9,7 @@ import { daysUntil, type IsoDate, MONTH_SHORT, WEEKDAY_SHORT, weekday, ymd } fro
 import type { GroceryAisle, GroceryLine } from "./grocery";
 import { type Extra, isItem, type MealEntry } from "./plan";
 import type { CountSpec } from "./schema";
-import { labelFor, type Unit } from "./units";
+import { labelFor } from "./units";
 
 /** At most `max` decimals, trailing zeros dropped: 1.50 → "1.5", 2.00 → "2", 0.333 → "0.33". */
 export function trimDecimals(n: number, max: number): string {
@@ -18,10 +18,11 @@ export function trimDecimals(n: number, max: number): string {
 }
 
 /**
- * A quantity as authored in a recipe: at most two decimals, then the unit, or
- * the ingredient's piece label for counts ("3 cloves"), or nothing ("4").
+ * A quantity as authored in a recipe: at most two decimals, then the unit (or
+ * the recipe's own word: "1 ball"), or the ingredient's piece label for counts
+ * ("3 cloves"), or nothing ("4").
  */
-export function formatQuantity(amount: number, unit: Unit, count: CountSpec | undefined): string {
+export function formatQuantity(amount: number, unit: string, count: CountSpec | undefined): string {
 	const num = trimDecimals(amount, 2);
 	if (unit !== "pcs") return `${num} ${unit}`;
 	const label = labelFor(count, amount);
@@ -64,12 +65,37 @@ export function formatGroceryAmount(
 }
 
 /**
- * The quantity text of a grocery line: its amount, any custom quantities and
- * "to taste" joined with " + ", then "(optional)". Empty when there is nothing to say.
+ * A summed quantity that doesn't convert into the shopping unit, beside the
+ * total: grams and ml like any amount ("60 g"); tsp, tbsp and cups with up to
+ * two decimals ("1.5 tbsp"); pieces and the recipe's own words rounded up to
+ * whole ones, as there is no buying half a ball ("2 ball", "3").
+ */
+export function formatAside(
+	aside: { unit: string; amount: number },
+	count: CountSpec | undefined,
+): string {
+	const { unit, amount } = aside;
+	if (unit === "g") return scaled(amount, "g", "kg");
+	if (unit === "ml") return scaled(amount, "ml", "l");
+	if (unit === "tsp" || unit === "tbsp" || unit === "cup")
+		return `${trimDecimals(amount, 2)} ${unit}`;
+	const n = Math.max(0, Math.ceil(amount - 1e-6));
+	if (unit === "pcs") {
+		const label = labelFor(count, n);
+		return label ? `${n} ${label}` : String(n);
+	}
+	return `${n} ${unit}`;
+}
+
+/**
+ * The quantity text of a grocery line: its amount, the quantities that don't
+ * convert, any custom quantities and "to taste", joined with " + ", then
+ * "(optional)". Empty when there is nothing to say.
  */
 export function formatLineQuantity(line: GroceryLine): string {
 	const parts: string[] = [];
 	if (line.amount !== null) parts.push(formatGroceryAmount(line.amount, line));
+	for (const aside of line.aside) parts.push(formatAside(aside, line.count));
 	parts.push(...line.customQuantities);
 	if (line.toTaste) parts.push("to taste");
 	const out = parts.join(" + ");

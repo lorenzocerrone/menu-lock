@@ -326,3 +326,32 @@ test("a swap carries the quantity over when the unit doesn't fit", async ({ page
 	await expect(row(page, "Chicken breast")).toContainText("960 g");
 	await expect(row(page, "Chicken thighs")).toHaveCount(0);
 });
+
+test("an amount that doesn't add up is listed beside the total", async ({ page }) => {
+	// Two meals with mozzarella (sold by weight): one as the recipe has it, 250 g; one changed to 1 piece.
+	await open(page, "/planner", {
+		dates: {
+			[iso(0)]: ["pasta_cherry_tomatoes_mozzarella"],
+			[iso(1)]: ["pasta_cherry_tomatoes_mozzarella"],
+		},
+	});
+	const dialog = page.getByRole("dialog");
+	const lines = dialog.getByRole("list", { name: "Ingredients of this meal" });
+	await page
+		.getByRole("region")
+		.first()
+		.getByRole("button", { name: /^Pasta with Cherry Tomatoes/ })
+		.click();
+	await lines.getByRole("button", { name: /^Mozzarella/ }).click();
+	await dialog.getByLabel("Amount").fill("1");
+	await dialog.getByLabel("Unit").selectOption("pcs");
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await expect(lines.getByRole("button", { name: /^Mozzarella/ })).toContainText(/changed.*1$/);
+	await dialog.getByRole("button", { name: "Close" }).click();
+
+	await page.getByRole("link", { name: /^Grocery/ }).click();
+	await expect(row(page, "Mozzarella")).toContainText("250 g + 1");
+	await page.getByRole("button", { name: "Today", exact: true }).click();
+	await expect(row(page, "Mozzarella")).toContainText("1");
+	await expect(row(page, "Mozzarella")).not.toContainText("250 g");
+});

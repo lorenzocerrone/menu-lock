@@ -49,7 +49,8 @@ function unitText(line: RecipeLine): string | undefined {
  * ("1 onion" becomes 1 red onion), the same weight or volume (8 chicken thighs,
  * 960 g, become 960 g of chicken breast), the same number of pieces (a can of
  * 400 g becomes 400 g of flour, 2 scallions become 2 onions). If none converts
- * (2 tbsp of oil, for salt sold by weight) the line is to taste: never a wrong number.
+ * (2 tbsp of oil, for salt sold by weight), the recipe's own amount is kept as
+ * written, and the grocery list shows it beside the total ("2 tbsp").
  */
 function carryOver(
 	dictionary: Dictionary,
@@ -74,12 +75,12 @@ function carryOver(
 			if (perPiece) attempts.push([total / perPiece, undefined]);
 		}
 	}
-	let made: RecipeLine | null = null;
 	for (const [amount, unit] of attempts) {
-		made = makeLine(dictionary, to, amount, unit, servings, keep);
-		if (made === null || made.amount !== null) return made;
+		const made = makeLine(dictionary, to, amount, unit, servings, keep);
+		if (made === null || made.perServing !== null) return made;
 	}
-	return made;
+	const [amount, unit] = attempts[0] ?? [undefined, undefined];
+	return makeLine(dictionary, to, amount, unit, servings, keep);
 }
 
 /**

@@ -44,9 +44,9 @@ step per line. `npm run format` keeps it that way.
 - An ingredient line:
   - `ingredient`: a key of `data/ingredients.json`. Not the display name.
   - `amount`: a number > 0. Leave it out for "to taste".
-  - `unit`: `g kg ml l tsp tbsp cup pcs`, or the entry's piece label, singular or plural
-    (`clove`, `cloves`, `can`). **No `unit` means a count of pieces** ("onion, 1"). No
-    `unit` without an `amount`.
+  - `unit`: `g kg ml l tsp tbsp cup pcs`, the entry's piece label, singular or plural
+    (`clove`, `cloves`, `can`), or any word (`ball`, `bunch`). **No `unit` means a count
+    of pieces** ("onion, 1"). No `unit` without an `amount`.
   - `note`: shown after the name ("finely chopped", "red"). The place for a variety or a
     preparation.
   - `optional: true`: listed but flagged, in the recipe and on the grocery list.
@@ -56,15 +56,25 @@ step per line. `npm run format` keeps it that way.
 
 ## Amounts and units
 
-- **Every amount must convert into the entry's shopping unit**, or the check fails:
+- **An amount may be in any unit**: `g kg ml l tsp tbsp cup pcs`, the entry's piece
+  label, or a word of the recipe's own (`ball`, `bunch`, `zest`). The ingredient must
+  still be a dictionary key.
+- **What converts into the entry's shopping unit is added up** on the grocery list:
   - mass (`g`, `kg`) into a `g` entry; volume (`ml`, `l`, `tsp` = 5 ml, `tbsp` = 15 ml,
     `cup` = 240 ml) into an `ml` entry; a count into a `pcs` entry;
   - a count (no unit, `pcs`, or the piece label) into a `g` or `ml` entry that has
     `count.perPiece`: pieces × `perPiece`;
   - grams into a `pcs` entry that has `count.perPiece`: grams ÷ `perPiece` ("400 g
     chopped tomatoes" is 1 can).
-- There are no densities: `1 tbsp butter` or `1 cup flour` does not convert. Convert it
-  yourself and show it in the preview. Rough values:
+- **What doesn't convert is listed beside the total**, in its own unit, still scaled
+  with the servings: "Mozzarella 250 g + 1 ball", "Butter 100 g + 2 tbsp". There are no
+  densities, so `1 tbsp butter` or `1 cup flour` is such an amount.
+- **Keep the recipe's own units where they matter**: grams in pastry (even for eggs or
+  butter), a count or a word in everyday cooking ("1 ball of mozzarella", "a bunch of
+  basil"). Don't convert a pastry recipe's grams into pieces, or round a precise amount.
+- Otherwise prefer a unit that converts, so the list adds up into one number: write
+  `1 tbsp butter` as 14 g when the recipe doesn't care. Rough values, listed in the
+  preview's Guesses whenever used:
   - ground spice 1 tsp ≈ 2 g, 1 tbsp ≈ 6 g; dried herbs 1 tsp ≈ 1 g
   - salt 1 tsp ≈ 6 g; sugar 1 tbsp ≈ 12 g, 1 cup ≈ 200 g; flour 1 cup ≈ 125 g
   - butter 1 tbsp ≈ 14 g, a knob ≈ 15 g; honey 1 tbsp ≈ 21 g; peanut butter 1 tbsp ≈ 16 g
@@ -132,13 +142,13 @@ it out when the dish has no clear one.
 
 Every file parses and has no unknown fields; ids are `snake_case`, equal their file
 names and are unique; title, author, servings ≥ 1, at least one ingredient and one
-non-empty step; every `ingredient` is a dictionary key; every amount is > 0 and
-converts into the shopping unit; no `unit` without `amount`; no `vegetarian` tag; a named
+non-empty step; every `ingredient` is a dictionary key; every amount is > 0; no
+`unit` without `amount`; no `vegetarian` tag; a named
 `image` exists in `public/images/`; dictionary units are `g`/`ml`/`pcs`, aisles are from
 the list, `perPiece` > 0, and no name or alias points at two entries.
 
 A failure reads like:
 
 ```
-data/recipes/pancakes.json, ingredient 1 (flour): "1 cup" does not convert into g, the shopping unit of flour. Use one of: g, kg; or add "count" to flour in data/ingredients.json
+data/recipes/pancakes.json, ingredient 1 (flour): "flor" is not a key in data/ingredients.json; use "flour"
 ```

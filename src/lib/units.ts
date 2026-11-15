@@ -12,6 +12,7 @@ export type Dimension = "mass" | "volume" | "count";
 
 const SPELLINGS: Record<string, Unit> = {
 	g: "g",
+	gr: "g",
 	gram: "g",
 	grams: "g",
 	kg: "kg",
@@ -126,7 +127,25 @@ export function toShopping(
 	return null;
 }
 
-/** The units that convert for an ingredient, for error messages: "g, kg, pcs, clove". */
+/**
+ * A quantity that does not convert into the shopping unit (pieces of something
+ * sold by weight, a tablespoon of butter, "1 ball"), in the unit it is summed in
+ * beside the total: grams for any mass, ml for ml and l, pieces for a count, and
+ * otherwise the unit as written (tsp, tbsp, cup, or the recipe's own word).
+ */
+export function asideQuantity(
+	amount: number,
+	raw: string | undefined,
+	count: CountSpec | undefined,
+): { unit: string; amount: number } {
+	const unit = resolveUnit(raw, count);
+	if (unit === null) return { unit: (raw ?? "").trim().toLowerCase(), amount };
+	if (unit === "g" || unit === "kg") return { unit: "g", amount: amount * toBase(unit) };
+	if (unit === "ml" || unit === "l") return { unit: "ml", amount: amount * toBase(unit) };
+	return { unit, amount };
+}
+
+/** The units that convert for an ingredient: "g, kg, pcs, clove". */
 export function convertibleUnits(
 	shoppingUnit: ShoppingUnit,
 	count: CountSpec | undefined,

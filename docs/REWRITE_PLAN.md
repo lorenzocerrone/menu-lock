@@ -246,14 +246,18 @@ docs/decisions.md           decision log (start by copying §2 and §3)
 - Unknown fields are errors (catches typos).
 - An ingredient line: `ingredient` (dictionary key), `amount` (> 0; absent = "to taste"),
   `unit`, `note` (shown after the name), `optional`.
-- `unit` may be `g kg ml l tsp tbsp cup pcs` (also the long spellings: gram(s),
+- `unit` may be `g kg ml l tsp tbsp cup pcs` (also the long spellings: gr, gram(s),
   kilogram(s), milliliter/millilitre(s), liter/litre(s), teaspoon(s), tablespoon(s),
-  cup(s), piece(s), pc), or the ingredient's piece `label` / plural. **No unit means a
-  count of pieces** ("onion, 1"), whatever the dictionary's shopping unit.
+  cup(s), piece(s), pc), the ingredient's piece `label` / plural, or any word of the
+  recipe's own ("ball", "bunch"). **No unit means a count of pieces** ("onion, 1"),
+  whatever the dictionary's shopping unit.
 - No `unit` without an `amount`.
 - The tag `vegetarian` is not allowed: it is computed (§6.1).
-- **Every amount must convert into the ingredient's shopping unit** (§5.3); a line that
-  doesn't is a validation error.
+- **An amount that converts into the ingredient's shopping unit** (§5.3) is added up on
+  the grocery list; **one that doesn't** ("1 ball" of mozzarella sold by weight, "2 tbsp"
+  of butter) is listed beside the total in its own unit. (Changed 2026-11-15, at the
+  user's request: pastry wants precise grams even for things sold by the piece, everyday
+  cooking writes "1 mozzarella"; see `decisions.md`.)
 - The recipe page shows the dictionary `name`, the amount in the unit **as written** in
   the recipe (scaled by servings), and the `note`.
 
@@ -265,10 +269,10 @@ docs/decisions.md           decision log (start by copying §2 and §3)
   - same dimension: convert to the base unit (g, ml, pcs);
   - count → mass or volume: pieces × `perPiece`;
   - mass → count (a `pcs` ingredient): grams ÷ `perPiece`;
-  - anything else (e.g. tbsp of a `g` ingredient, pieces without `perPiece`): **not
-    convertible, so the recipe fails validation**. Fix it in the data (change the unit, or
-    add `count` to the dictionary entry). There is no density table; if one is ever
-    needed, ask the user.
+  - anything else (e.g. tbsp of a `g` ingredient, pieces without `perPiece`, a word):
+    **not convertible, so it is kept aside**, in its own unit, and listed beside the
+    total (§5.5). Adding `count` to the dictionary entry makes pieces convert. There is
+    no density table; if one is ever needed, ask the user.
 
 ### 5.4 The plan and its URL (the lockfile)
 
@@ -319,6 +323,10 @@ address.
 - For each meal: factor = chosen servings ÷ recipe servings. Each resolved line adds
   `perServing × chosen servings` (= amount × factor) to the line for its dictionary key.
 - A line with no amount marks the grocery line "to taste" (also in the text export).
+- A line whose amount doesn't convert adds `amount × factor` in its own unit beside the
+  total, summed per unit: grams for any mass, ml for ml and l, pieces for a count, and
+  otherwise the unit as written. Shown after the total: "250 g + 1 ball". Pieces and
+  words round up to whole ones; tsp, tbsp and cups keep two decimals.
 - A grocery line is optional only if **every** contribution is optional.
 - Sources: the recipe titles that contributed, de-duplicated, in plan order.
 - Catalog extras add like recipe lines (unscaled, no source; shown as "extra").
@@ -342,9 +350,9 @@ A summary line shows "N of M left to buy · <range> · <K meals>". The range lab
 "Today", "Today – Tomorrow", or "Sun 25 – Sat 31" style.
 
 **Ticks** (per device, not shared): tapping a row toggles it. A tick records the line's
-amount at the time. When the plan changes, a tick is **dropped** if its line disappeared
-or now needs more than when ticked (a larger amount, or a custom quantity it didn't
-have). A line that needs less (e.g. a past day dropped off) stays ticked. Compare
+amounts at the time. When the plan changes, a tick is **dropped** if its line disappeared
+or now needs more than when ticked (a larger amount, more of a quantity beside the total,
+or a custom quantity it didn't have). A line that needs less (e.g. a past day dropped off) stays ticked. Compare
 amounts rounded to 3 decimals so float noise never unticks.
 
 **Badge**: the Grocery tab shows the number of unticked lines in the current range.

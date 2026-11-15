@@ -41,14 +41,15 @@ describe("applyChanges", () => {
 		expect(
 			brief({ kind: "swap", key: "scallion", for: "onion", amount: 100, unit: "g" })[0],
 		).toEqual(["onion", 100, "g", 50, "swap"]);
-		// 2 tbsp of oil means nothing for salt (sold in g): to taste, never a wrong number.
-		expect(brief({ kind: "swap", key: "olive_oil", for: "salt" })[2]).toEqual([
-			"salt",
-			null,
-			null,
-			null,
-			"swap",
-		]);
+		// 2 tbsp of oil doesn't convert for salt (sold in g): kept as written, beside the total.
+		const [, , salt] = apply({ kind: "swap", key: "olive_oil", for: "salt" }).lines;
+		expect(salt).toMatchObject({
+			key: "salt",
+			amount: 2,
+			unit: "tbsp",
+			perServing: null,
+			aside: { unit: "tbsp", perServing: 1 },
+		});
 		// "3 cloves" of garlic become 3 lemons: pieces stay pieces.
 		expect(brief({ kind: "swap", key: "garlic", for: "lemon" })[1]).toEqual([
 			"lemon",

@@ -120,11 +120,31 @@ describe("loadData", () => {
 		expect(problems).toEqual([
 			'data/recipes/bad.json, ingredient 1 (onions): "onions" is not a key in data/ingredients.json; use "onion"',
 			'data/recipes/bad.json, ingredient 2 (star_anise): "star_anise" is not in data/ingredients.json; add it there first',
-			'data/recipes/bad.json, ingredient 3 (salt): "1 tbsp" does not convert into g, the shopping unit of salt. Use one of: g, kg; or add "count" to salt in data/ingredients.json',
-			'data/recipes/bad.json, ingredient 4 (lemon): "100 g" does not convert into pcs, the shopping unit of lemon. Use one of: pcs; or add "count" to lemon in data/ingredients.json',
-			'data/recipes/bad.json, ingredient 5 (olive_oil): "1" (a count of pieces) does not convert into ml, the shopping unit of olive_oil. Use one of: ml, l, tsp, tbsp, cup; or add "count" to olive_oil in data/ingredients.json',
-			'data/recipes/bad.json, ingredient 6 (garlic): "bunch" is not a unit, nor the piece label of garlic. Use one of: g, kg, pcs, clove',
 			'data/recipes/bad.json, ingredient 7 (salt): "unit" without "amount" ("to taste" has no unit)',
+		]);
+	});
+
+	it("keeps an amount that doesn't convert aside, in its own unit, for one serving", () => {
+		const { data, problems } = loadData(DICTIONARY, [
+			recipeFile("flexible", 2, [
+				{ ingredient: "salt", amount: 1, unit: "tbsp" },
+				{ ingredient: "lemon", amount: 100, unit: "g" },
+				{ ingredient: "olive_oil", amount: 1 },
+				{ ingredient: "garlic", amount: 1, unit: "bunch" },
+				{ ingredient: "milk", amount: 0.5, unit: "l" },
+				{ ingredient: "salt", amount: 2, unit: "g" },
+			]),
+		]);
+		expect(problems).toEqual([]);
+		const lines = data?.recipeById.get("flexible")?.lines ?? [];
+		expect(lines.map((l) => [l.key, l.amount, l.unit, l.perServing, l.aside ?? null])).toEqual([
+			["salt", 1, "tbsp", null, { unit: "tbsp", perServing: 0.5 }],
+			["lemon", 100, "g", null, { unit: "g", perServing: 50 }],
+			["olive_oil", 1, "pcs", null, { unit: "pcs", perServing: 0.5 }],
+			["garlic", 1, "bunch", null, { unit: "bunch", perServing: 0.5 }],
+			// What converts is resolved as always, and the same ingredient may appear twice.
+			["milk", 0.5, "l", 250, null],
+			["salt", 2, "g", 1, null],
 		]);
 	});
 

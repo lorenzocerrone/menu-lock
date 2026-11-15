@@ -242,7 +242,11 @@ function LineEditor(props: EditorProps & { recipe: Recipe; servings: number }) {
 	);
 	const [amount, setAmount] = useState(shown);
 	const [unit, setUnit] = useState(unitOf(line));
-	const units = entry ? convertibleUnits(entry.unit, entry.count) : [];
+	// The units that add up with the total, then pieces and the line's own unit, which
+	// any ingredient may use: they are listed beside the total on the grocery list.
+	const units = [
+		...new Set([...(entry ? convertibleUnits(entry.unit, entry.count) : []), "pcs", unitOf(line)]),
+	];
 	const number = amount.trim() === "" ? undefined : (parseNumber(amount.trim()) ?? null);
 
 	const save = (event: FormEvent) => {
