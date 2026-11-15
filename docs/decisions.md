@@ -118,6 +118,27 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Changing a meal's ingredient: one screen, and swaps keep a quantity (2026-11-15)
+
+The user found replacing an ingredient unreliable and the editor too involved.
+
+- **A swap carries the recipe's quantity over** (`carryOver` in `src/lib/changes.ts`):
+  first as the recipe wrote it ("1 onion" becomes 1 red onion), then the same weight or
+  volume (8 chicken thighs, 960 g, become 960 g of chicken breast), then the same number
+  of pieces. Before, any swap whose written unit didn't fit the new ingredient became
+  "to taste", so the grocery list lost the quantity. Only when nothing converts (2 tbsp
+  of oil for salt sold by weight) is it still to taste.
+- **One screen per ingredient.** Tapping an ingredient shows how much (amount, unit,
+  Save on one row), "or use instead" (a search field), and Leave out / Undo change.
+  Picking a replacement goes straight back to the list, already swapped: tap, type,
+  pick. Before, a swap was tap, "Swap for another ingredient", type, pick, then Save on
+  a second amount screen. An ingredient typed freely still asks for its quantity, and an
+  added one still opens on its amount.
+- **No silent dead end**: an ingredient the meal already has appears in the suggestions
+  as "in this meal" (disabled), instead of not appearing at all. Enter picks the first
+  suggestion.
+- The back button reads "‹ Ingredients" (the sheet's title already names the recipe).
+
 ## Back and Forward never bring back an older plan (2026-11-15)
 
 The user saw changes to the plan get lost: the first recipe added stayed, later ones
