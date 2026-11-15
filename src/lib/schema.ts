@@ -67,7 +67,7 @@ export const recipeLineSchema = z.strictObject({
 	unit: text
 		.optional()
 		.describe(
-			"g kg ml l tsp tbsp cup pcs, or the ingredient's piece label. Absent means a count of pieces.",
+			"g kg ml l tsp tbsp cup pcs, the ingredient's piece label, or any word (\"ball\"). Absent means a count of pieces. An amount that doesn't convert into the shopping unit is listed beside the total.",
 		),
 	note: text.optional().describe('Shown after the name: "finely chopped".'),
 	optional: z.boolean().optional(),

@@ -4,7 +4,7 @@
  * it) and this device's grocery state, which is never shared.
  *
  *   { "version": 1, "plan": <wire plan>,
- *     "grocery": { "checked": [{ "key", "amount", "custom" }], "range": "all" | { "days": n } } }
+ *     "grocery": { "checked": [{ "key", "amount", "aside", "custom" }], "range": "all" | { "days": n } } }
  */
 import { z } from "zod";
 import type { Dictionary } from "./data";
@@ -24,6 +24,10 @@ const storedGrocery = z.object({
 			z.object({
 				key: z.string(),
 				amount: z.number().nullable().catch(null),
+				aside: z
+					.array(z.object({ unit: z.string(), amount: z.number() }))
+					.catch([])
+					.default([]),
 				custom: z.array(z.string()).catch([]),
 			}),
 		)

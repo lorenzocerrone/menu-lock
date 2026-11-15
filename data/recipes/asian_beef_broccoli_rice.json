@@ -1,0 +1,77 @@
+{
+  "id": "asian_beef_broccoli_rice",
+  "title": "Asian-Style Beef and Broccoli Rice",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Basmati rice with ground beef and broccoli in a soy, ginger and honey sauce.",
+  "cuisine": "Asian",
+  "tags": ["main", "quick"],
+  "prepTime": 10,
+  "cookTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "rice",
+      "amount": 300,
+      "unit": "g",
+      "note": "basmati"
+    },
+    {
+      "ingredient": "ground_beef",
+      "amount": 400,
+      "unit": "g"
+    },
+    {
+      "ingredient": "broccoli",
+      "amount": 400,
+      "unit": "g",
+      "note": "in small florets"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves",
+      "note": "crushed"
+    },
+    {
+      "ingredient": "ginger",
+      "amount": 1,
+      "unit": "thumb",
+      "note": "grated"
+    },
+    {
+      "ingredient": "soy_sauce",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "honey",
+      "amount": 20,
+      "unit": "g"
+    },
+    {
+      "ingredient": "sesame_oil",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "vegetable_oil",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "scallion",
+      "amount": 2,
+      "note": "sliced"
+    },
+    {
+      "ingredient": "chili_flakes",
+      "optional": true
+    }
+  ],
+  "steps": [
+    "Cook the rice.",
+    "Brown the beef in the vegetable oil over high heat, breaking it up, then add the garlic and ginger.",
+    "Add the broccoli and a splash of water, cover and cook for 4 minutes.",
+    "Stir in the soy sauce, honey and sesame oil and cook until glossy. Serve over the rice with scallions."
+  ]
+}

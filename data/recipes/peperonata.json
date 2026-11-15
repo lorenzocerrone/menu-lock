@@ -1,0 +1,47 @@
+{
+  "id": "peperonata",
+  "title": "Peperonata",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Sweet peppers and onion stewed with a little tomato. Good hot or cold.",
+  "cuisine": "Italian",
+  "tags": ["side", "make-ahead"],
+  "prepTime": 10,
+  "cookTime": 35,
+  "ingredients": [
+    {
+      "ingredient": "bell_pepper",
+      "amount": 3,
+      "note": "in strips"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 1,
+      "note": "sliced"
+    },
+    {
+      "ingredient": "peeled_tomatoes",
+      "amount": 200,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 5,
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Soften the onion in the oil, then add the peppers and a pinch of salt.",
+    "Cook covered for 10 minutes, add the tomatoes and simmer uncovered for 20 minutes, until soft and sweet.",
+    "Finish with basil."
+  ]
+}

@@ -32,6 +32,42 @@ function find(aisles: GroceryAisle[], key: string): GroceryLine {
 const names = (aisles: GroceryAisle[]) => aisles.map((a) => a.name);
 
 describe("aggregate", () => {
+	it("lists what doesn't convert beside the total, summed per unit and scaled with the servings", () => {
+		const data = fixtureData([
+			// Pastry: eggs by weight. Everyday: eggs by count, and a lemon "by weight".
+			recipeFile("cake", 4, [
+				{ ingredient: "egg", amount: 2 },
+				{ ingredient: "flour", amount: 2, unit: "cups" },
+				{ ingredient: "flour", amount: 200, unit: "g" },
+				{ ingredient: "lemon", amount: 60, unit: "g" },
+			]),
+			recipeFile("pasta", 2, [
+				{ ingredient: "egg", amount: 1 },
+				{ ingredient: "flour", amount: 1, unit: "cup" },
+				{ ingredient: "flour", amount: 1, unit: "kg" },
+				{ ingredient: "lemon", amount: 1 },
+				{ ingredient: "lemon", amount: 1, unit: "zest" },
+			]),
+		]);
+		let plan = addMeal(EMPTY_PLAN, TODAY, "cake");
+		plan = addMeal(plan, d(1), "pasta");
+		plan = setServings(plan, d(1), 0, 4, 2); // the pasta for 4: twice the recipe
+		const list = aggregate(plan, TODAY, d(1), data);
+
+		const flour = find(list, "flour");
+		expect(flour.amount).toBe(2200); // 200 g + 2 kg
+		expect(flour.aside).toEqual([{ unit: "cup", amount: 4 }]); // 2 cups + 1 cup × 2
+		expect(formatLineQuantity(flour)).toBe("2.2 kg + 4 cup");
+		const lemon = find(list, "lemon");
+		expect(lemon.amount).toBe(2);
+		expect(lemon.aside).toEqual([
+			{ unit: "g", amount: 60 },
+			{ unit: "zest", amount: 2 },
+		]);
+		expect(formatLineQuantity(lemon)).toBe("2 + 60 g + 2 zest");
+		expect(lemon.sources).toEqual(["CAKE", "PASTA"]);
+	});
+
 	it("converts the canonical inputs into shopping units", () => {
 		const data = fixtureData([
 			recipeFile("dal", 2, [
@@ -314,6 +350,7 @@ function line(key: string, amount: number | null, customQuantities: string[] = [
 		name: key.toUpperCase(),
 		unit: "g",
 		amount,
+		aside: [],
 		toTaste: amount === null,
 		optional: false,
 		sources: [],
@@ -325,11 +362,26 @@ const aisle = (name: string, ...lines: GroceryLine[]): GroceryAisle => ({ name, 
 const tick = (state: GroceryState, ...lines: GroceryLine[]) => lines.reduce(toggleChecked, state);
 
 describe("ticks", () => {
+	it("drop when a quantity beside the total grows, and stay when it shrinks", () => {
+		const data = fixtureData([
+			recipeFile("cake", 1, [{ ingredient: "lemon", amount: 60, unit: "g" }]),
+		]);
+		const plan = addMeal(EMPTY_PLAN, TODAY, "cake");
+		const list = (p: Plan) => aggregate(p, TODAY, d(1), data);
+		const ticked = toggleChecked(DEFAULT_GROCERY, find(list(plan), "lemon"));
+		expect(ticked.checked[0]?.aside).toEqual([{ unit: "g", amount: 60 }]);
+		expect(pruneChecked(ticked, list(setServings(plan, TODAY, 0, 2, 1)))).toEqual({
+			...ticked,
+			checked: [],
+		});
+		expect(pruneChecked(ticked, list(plan))).toBe(ticked);
+	});
+
 	it("toggle on and off", () => {
 		const onion = line("onion", 1);
 		let state = toggleChecked(DEFAULT_GROCERY, onion);
 		expect(isChecked(state, "onion")).toBe(true);
-		expect(state.checked).toEqual([{ key: "onion", amount: 1, custom: [] }]);
+		expect(state.checked).toEqual([{ key: "onion", amount: 1, aside: [], custom: [] }]);
 		state = toggleChecked(state, onion);
 		expect(isChecked(state, "onion")).toBe(false);
 		expect(DEFAULT_GROCERY.checked).toEqual([]);

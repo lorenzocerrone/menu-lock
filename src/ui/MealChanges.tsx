@@ -4,7 +4,7 @@
  * use more or less, add one). Amounts are shown for the meal's servings and
  * stored for the recipe's own.
  */
-import { type ReactNode, useState } from "react";
+import { type FormEvent, type ReactNode, useState } from "react";
 import { DATA } from "../dataset";
 import { applyChanges, freeKey, type PlannedLine } from "../lib/changes";
 import type { Recipe } from "../lib/data";
@@ -44,53 +44,83 @@ function unitOf(line: PlannedLine): string {
 }
 
 type SearchProps = {
-	/** Keys already in the meal: not offered again. */
+	/** The field's label: "Use instead" when swapping, "Add an ingredient" when adding. */
+	label: string;
+	/** Keys already in the meal: shown, but not offered again. */
 	exclude: ReadonlySet<string>;
 	onPick: (key: string) => void;
 	/** Use what was typed as it is: an ingredient that is not in the list. */
 	onFree: (name: string) => void;
+	autoFocus?: boolean;
 };
 
 /**
  * Pick an ingredient by typing: the matching ones from the list appear as you
- * type (typos forgiven), and what you typed can be used as it is.
+ * type (typos forgiven), and what you typed can be used as it is. One the meal
+ * already has is shown as such, so a search never comes up empty for no reason.
  */
-function IngredientSearch({ exclude, onPick, onFree }: SearchProps) {
+function IngredientSearch({ label, exclude, onPick, onFree, autoFocus = false }: SearchProps) {
 	const [text, setText] = useState("");
 	const typed = capitalize(text.trim());
-	const found = suggest(DATA.dictionary, text, 8).filter((s) => !exclude.has(s.key));
+	const found = suggest(DATA.dictionary, text, 6);
 	// Already in the list under that very name: no need to offer it as typed.
 	const listed = typed !== "" && lookup(DATA.dictionary, typed) !== null;
+	const free = typed !== "" && !listed;
 	return (
 		<div>
 			<input
 				value={text}
 				onChange={(event) => setText(event.target.value)}
 				placeholder="Type an ingredient"
-				aria-label="Ingredient"
+				aria-label={label}
 				autoComplete="off"
 				autoCapitalize="none"
+				enterKeyHint="done"
+				// biome-ignore lint/a11y/noAutofocus: the screen was opened to type into this field
+				autoFocus={autoFocus}
+				onKeyDown={(event) => {
+					if (event.key !== "Enter") return;
+					const first = found.find((f) => !exclude.has(f.key));
+					if (first) onPick(first.key);
+					else if (free) onFree(typed);
+				}}
 				className={input}
 			/>
-			<ul aria-label="Suggestions" className="mt-2">
-				{found.map((s) => (
-					<li key={s.key}>
-						<button type="button" onClick={() => onPick(s.key)} className={rowButton}>
-							<span>{s.name}</span>
-							<span className="font-mono text-muted text-xs">{s.aisle}</span>
-						</button>
-					</li>
-				))}
-				{typed !== "" && !listed ? (
-					<li>
-						<button type="button" onClick={() => onFree(typed)} className={rowButton}>
-							<span className="min-w-0 truncate">Use “{typed}”</span>
-							<span className="shrink-0 font-mono text-muted text-xs">as typed</span>
-						</button>
-					</li>
-				) : null}
-			</ul>
-			{typed !== "" && !listed ? (
+			{found.length > 0 || free ? (
+				<ul
+					aria-label="Suggestions"
+					className="mt-2 rounded-card border border-rule-soft bg-inset px-3 shadow-card"
+				>
+					{found.map((s) => (
+						<li key={s.key}>
+							<button
+								type="button"
+								disabled={exclude.has(s.key)}
+								onClick={() => onPick(s.key)}
+								className={`${rowButton} last:border-b-0`}
+							>
+								<span>{s.name}</span>
+								<span className="font-mono text-muted text-xs">
+									{exclude.has(s.key) ? "in this meal" : s.aisle}
+								</span>
+							</button>
+						</li>
+					))}
+					{free ? (
+						<li>
+							<button
+								type="button"
+								onClick={() => onFree(typed)}
+								className={`${rowButton} last:border-b-0`}
+							>
+								<span className="min-w-0 truncate">Use “{typed}”</span>
+								<span className="shrink-0 font-mono text-muted text-xs">as typed</span>
+							</button>
+						</li>
+					) : null}
+				</ul>
+			) : null}
+			{free ? (
 				<p className="mt-2 font-mono text-muted text-xs">
 					Not in the ingredient list: it goes on the grocery list as typed, under Other, and is not
 					added up.
@@ -100,18 +130,71 @@ function IngredientSearch({ exclude, onPick, onFree }: SearchProps) {
 	);
 }
 
-type FreeEditorProps = {
+/** A small mono caption over a part of the editor. */
+function Caption({ children }: { children: ReactNode }) {
+	return (
+		<p className="mt-5 mb-2 font-mono text-muted text-xs uppercase tracking-wider">{children}</p>
+	);
+}
+
+type EditorProps = {
 	line: PlannedLine;
+	/** What can be swapped in, or `null` for an added ingredient (it is removed, not swapped). */
+	swap: ReactNode;
 	onChange: (change: MealChange) => void;
 	onReset: (key: string) => void;
 	onDone: () => void;
-	onSwap: () => void;
 };
 
+/** The way out of an ingredient's screen: leave it out (or remove an added one), or undo the change. */
+function Actions({ line, onChange, onReset, onDone }: Omit<EditorProps, "swap">) {
+	const added = line.change === "add";
+	return (
+		<div className="mt-6 flex gap-2">
+			<button
+				type="button"
+				onClick={() => {
+					if (added) onReset(line.key);
+					else onChange({ kind: "skip", key: originalKey(line) });
+					onDone();
+				}}
+				className={`${buttonDanger} flex-1`}
+			>
+				{added ? "Remove" : "Leave out"}
+			</button>
+			{!added && line.change ? (
+				<button
+					type="button"
+					onClick={() => {
+						onReset(originalKey(line));
+						onDone();
+					}}
+					className={`${buttonPaper} flex-1`}
+				>
+					Undo change ↺
+				</button>
+			) : null}
+		</div>
+	);
+}
+
+function Heading({ line }: { line: PlannedLine }) {
+	return (
+		<>
+			<h3 className="font-bold text-lg">{line.name}</h3>
+			{formatLineChange(line) ? (
+				<p className="font-mono text-sienna text-xs">{formatLineChange(line)}</p>
+			) : null}
+		</>
+	);
+}
+
 /** An ingredient that was typed freely: its quantity is text, kept as written. */
-function FreeEditor({ line, onChange, onReset, onDone, onSwap }: FreeEditorProps) {
+function FreeEditor(props: EditorProps) {
+	const { line, swap, onChange, onDone } = props;
 	const [quantity, setQuantity] = useState(line.free?.quantity ?? "");
-	const save = () => {
+	const save = (event: FormEvent) => {
+		event.preventDefault();
 		const text = quantity.trim() || null;
 		if (line.instead)
 			onChange({ kind: "swapFree", key: line.instead.key, name: line.name, quantity: text });
@@ -120,84 +203,54 @@ function FreeEditor({ line, onChange, onReset, onDone, onSwap }: FreeEditorProps
 	};
 	return (
 		<div>
-			<h3 className="font-bold text-lg">{line.name}</h3>
-			{formatLineChange(line) ? (
-				<p className="font-mono text-sienna text-xs">{formatLineChange(line)}</p>
-			) : null}
-			<input
-				value={quantity}
-				onChange={(event) => setQuantity(event.target.value)}
-				placeholder="how much (2, 1 bunch…)"
-				aria-label="Quantity"
-				autoComplete="off"
-				className={`${input} mt-3`}
-			/>
+			<Heading line={line} />
+			<Caption>How much</Caption>
+			<form onSubmit={save} className="flex gap-2">
+				<input
+					value={quantity}
+					onChange={(event) => setQuantity(event.target.value)}
+					placeholder="2, 1 bunch…"
+					aria-label="Quantity"
+					autoComplete="off"
+					enterKeyHint="done"
+					className={`${input} min-w-0 flex-1`}
+				/>
+				<button type="submit" className={`${buttonPrimary} shrink-0`}>
+					Save
+				</button>
+			</form>
 			<p className="mt-1 font-mono text-muted text-xs">
 				Not in the ingredient list: kept as typed, and not scaled with the servings.
 			</p>
-			<button type="button" onClick={save} className={`${buttonPrimary} mt-4 w-full`}>
-				Save
-			</button>
-			{line.instead ? (
-				<div className="mt-4">
-					<button type="button" onClick={onSwap} className={rowButton}>
-						Swap for another ingredient <span className="font-mono text-muted">›</span>
-					</button>
-					<button
-						type="button"
-						onClick={() => {
-							onReset(originalKey(line));
-							onDone();
-						}}
-						className={rowButton}
-					>
-						Back to the recipe’s <span className="font-mono text-muted">↺</span>
-					</button>
-				</div>
+			{swap ? (
+				<>
+					<Caption>Or use instead</Caption>
+					{swap}
+				</>
 			) : null}
-			<button
-				type="button"
-				onClick={() => {
-					if (line.instead) onChange({ kind: "skip", key: line.instead.key });
-					else onReset(line.key);
-					onDone();
-				}}
-				className={`${buttonDanger} mt-4 w-full`}
-			>
-				{line.instead ? "Leave out" : "Remove"}
-			</button>
+			<Actions {...props} />
 		</div>
 	);
 }
 
-type LineEditorProps = Props & {
-	line: PlannedLine;
-	servings: number;
-	onDone: () => void;
-	onSwap: () => void;
-};
-
-/** One ingredient of the meal: its amount and unit, and what else can be done with it. */
-function LineEditor({
-	recipe,
-	line,
-	servings,
-	onChange,
-	onReset,
-	onDone,
-	onSwap,
-}: LineEditorProps) {
+/** One ingredient of the meal, on one screen: how much of it, what to use instead, or leave it out. */
+function LineEditor(props: EditorProps & { recipe: Recipe; servings: number }) {
+	const { recipe, line, servings, swap, onChange, onDone } = props;
 	const entry = DATA.dictionary.entries.get(line.key);
 	const shown = formatAmountInput(
 		line.amount === null ? null : (line.amount * servings) / recipe.servings,
 	);
 	const [amount, setAmount] = useState(shown);
 	const [unit, setUnit] = useState(unitOf(line));
-	const units = entry ? convertibleUnits(entry.unit, entry.count) : [];
+	// The units that add up with the total, then pieces and the line's own unit, which
+	// any ingredient may use: they are listed beside the total on the grocery list.
+	const units = [
+		...new Set([...(entry ? convertibleUnits(entry.unit, entry.count) : []), "pcs", unitOf(line)]),
+	];
 	const number = amount.trim() === "" ? undefined : (parseNumber(amount.trim()) ?? null);
-	const added = line.change === "add";
 
-	const save = () => {
+	const save = (event: FormEvent) => {
+		event.preventDefault();
 		if (number === null) return;
 		// Untouched: leave it exactly as it was (re-reading a rounded number would change it).
 		if (amount === shown && unit === unitOf(line)) return onDone();
@@ -207,7 +260,7 @@ function LineEditor({
 			quantity.amount = (number * recipe.servings) / servings;
 			if (unit !== "pcs") quantity.unit = unit;
 		}
-		if (added) onChange({ kind: "add", key: line.key, ...quantity });
+		if (line.change === "add") onChange({ kind: "add", key: line.key, ...quantity });
 		else if (line.instead)
 			onChange({ kind: "swap", key: line.instead.key, for: line.key, ...quantity });
 		else onChange({ kind: "set", key: line.key, ...quantity });
@@ -216,15 +269,14 @@ function LineEditor({
 
 	return (
 		<div>
-			<h3 className="font-bold text-lg">{line.name}</h3>
-			{formatLineChange(line) ? (
-				<p className="font-mono text-sienna text-xs">{formatLineChange(line)}</p>
-			) : null}
-			<div className="mt-3 flex gap-2">
+			<Heading line={line} />
+			<Caption>How much, for {formatCount(servings, "serving")}</Caption>
+			<form onSubmit={save} className="flex gap-2">
 				<input
 					value={amount}
 					onChange={(event) => setAmount(event.target.value)}
 					inputMode="decimal"
+					enterKeyHint="done"
 					placeholder="to taste"
 					aria-label="Amount"
 					aria-invalid={number === null}
@@ -234,7 +286,7 @@ function LineEditor({
 					value={unit}
 					onChange={(event) => setUnit(event.target.value)}
 					aria-label="Unit"
-					className="h-11 w-28 shrink-0 rounded-card border border-rule-soft bg-inset px-2 font-mono text-sm focus:outline-none focus-visible:border-sienna"
+					className="h-11 w-24 shrink-0 rounded-card border border-rule-soft bg-inset px-2 font-mono text-sm focus:outline-none focus-visible:border-sienna"
 				>
 					{units.map((u) => (
 						<option key={u} value={u}>
@@ -242,59 +294,25 @@ function LineEditor({
 						</option>
 					))}
 				</select>
-			</div>
+				<button type="submit" disabled={number === null} className={`${buttonPrimary} shrink-0`}>
+					Save
+				</button>
+			</form>
 			<p className="mt-1 font-mono text-muted text-xs">
-				{number === null
-					? "A number, or nothing for “to taste”."
-					: "For this meal. Empty means “to taste”."}
+				{number === null ? "A number, or nothing for “to taste”." : "Empty means “to taste”."}
 			</p>
-			<button
-				type="button"
-				onClick={save}
-				disabled={number === null}
-				className={`${buttonPrimary} mt-4 w-full`}
-			>
-				Save
-			</button>
-			<div className="mt-4">
-				{added ? null : (
-					<button type="button" onClick={onSwap} className={rowButton}>
-						Swap for another ingredient <span className="font-mono text-muted">›</span>
-					</button>
-				)}
-				{!added && line.change ? (
-					<button
-						type="button"
-						onClick={() => {
-							onReset(originalKey(line));
-							onDone();
-						}}
-						className={rowButton}
-					>
-						Back to the recipe’s <span className="font-mono text-muted">↺</span>
-					</button>
-				) : null}
-			</div>
-			<button
-				type="button"
-				onClick={() => {
-					if (added) onReset(line.key);
-					else onChange({ kind: "skip", key: originalKey(line) });
-					onDone();
-				}}
-				className={`${buttonDanger} mt-4 w-full`}
-			>
-				{added ? "Remove" : "Leave out"}
-			</button>
+			{swap ? (
+				<>
+					<Caption>Or use instead</Caption>
+					{swap}
+				</>
+			) : null}
+			<Actions {...props} />
 		</div>
 	);
 }
 
-type View =
-	| { at: "list" }
-	| { at: "edit"; key: string }
-	| { at: "swap"; key: string }
-	| { at: "add" };
+type View = { at: "list" } | { at: "edit"; key: string } | { at: "add" };
 
 export function MealChanges(props: Props) {
 	const { recipe, meal, onChange, onReset, header, footer } = props;
@@ -304,63 +322,67 @@ export function MealChanges(props: Props) {
 	const inMeal = new Set([...lines.map((l) => l.key), ...recipe.lines.map((l) => l.key)]);
 	const back = (
 		<button type="button" onClick={() => setView({ at: "list" })} className={`${buttonPaper} mb-4`}>
-			‹ {recipe.title}
+			‹ Ingredients
 		</button>
 	);
+
+	const toList = () => setView({ at: "list" });
 
 	if (view.at === "edit") {
 		const line = lines.find((l) => l.key === view.key);
 		if (line) {
+			// Swapping in another ingredient takes it straight back to the list, with the
+			// recipe's quantity carried over; one typed freely asks for its quantity.
+			const swap =
+				line.change === "add" ? null : (
+					<IngredientSearch
+						key={line.key}
+						label="Use instead"
+						exclude={inMeal}
+						onPick={(key) => {
+							onChange({ kind: "swap", key: originalKey(line), for: key });
+							toList();
+						}}
+						onFree={(name) => {
+							onChange({ kind: "swapFree", key: originalKey(line), name, quantity: null });
+							setView({ at: "edit", key: freeKey(name) });
+						}}
+					/>
+				);
+			const editor = { line, swap, onChange, onReset, onDone: toList };
 			return (
 				<>
 					{back}
 					{line.free ? (
-						<FreeEditor
-							key={`${line.key}:${line.free.quantity}`}
-							line={line}
-							onChange={onChange}
-							onReset={onReset}
-							onDone={() => setView({ at: "list" })}
-							onSwap={() => setView({ at: "swap", key: originalKey(line) })}
-						/>
+						<FreeEditor key={`${line.key}:${line.free.quantity}`} {...editor} />
 					) : (
 						<LineEditor
-							{...props}
 							// A new line (after a swap) gets a fresh form.
 							key={`${line.key}:${line.amount}:${line.unit}`}
-							line={line}
+							{...editor}
+							recipe={recipe}
 							servings={servings}
-							onDone={() => setView({ at: "list" })}
-							onSwap={() => setView({ at: "swap", key: originalKey(line) })}
 						/>
 					)}
 				</>
 			);
 		}
 	}
-	if (view.at === "swap" || view.at === "add") {
+	if (view.at === "add") {
 		return (
 			<>
 				{back}
-				<p className="mb-2 text-muted">
-					{view.at === "add"
-						? "Add an ingredient to this meal."
-						: "Use another ingredient instead, for this meal."}
-				</p>
+				<p className="mb-2 text-muted">Add an ingredient to this meal.</p>
 				<IngredientSearch
+					label="Add an ingredient"
 					exclude={inMeal}
+					autoFocus
 					onFree={(name) => {
-						onChange(
-							view.at === "add"
-								? { kind: "addFree", key: freeKey(name), name, quantity: null }
-								: { kind: "swapFree", key: view.key, name, quantity: null },
-						);
+						onChange({ kind: "addFree", key: freeKey(name), name, quantity: null });
 						setView({ at: "edit", key: freeKey(name) }); // straight to its quantity
 					}}
 					onPick={(key) => {
-						onChange(
-							view.at === "add" ? { kind: "add", key } : { kind: "swap", key: view.key, for: key },
-						);
+						onChange({ kind: "add", key });
 						setView({ at: "edit", key }); // straight to its amount
 					}}
 				/>

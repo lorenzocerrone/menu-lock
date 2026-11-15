@@ -1,0 +1,59 @@
+{
+  "id": "pasta_alla_norma",
+  "title": "Pasta alla Norma",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Sicilian: fried eggplant in tomato sauce, finished with grated ricotta salata.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "classic"],
+  "prepTime": 15,
+  "cookTime": 30,
+  "ingredients": [
+    {
+      "ingredient": "short_pasta",
+      "amount": 320,
+      "unit": "g",
+      "note": "rigatoni"
+    },
+    {
+      "ingredient": "eggplant",
+      "amount": 2,
+      "note": "diced"
+    },
+    {
+      "ingredient": "peeled_tomatoes",
+      "amount": 1,
+      "unit": "can"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 6,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "ricotta_salata",
+      "amount": 60,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 10,
+      "unit": "g"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Fry the eggplant in batches in most of the oil until golden; drain on paper and salt.",
+    "Warm the rest of the oil with the garlic, add the tomatoes, crushed, and simmer for 15 minutes.",
+    "Boil the pasta in salted water, toss it with the sauce, half the eggplant and the basil.",
+    "Serve topped with the rest of the eggplant and the ricotta salata."
+  ]
+}

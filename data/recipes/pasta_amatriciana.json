@@ -1,0 +1,52 @@
+{
+  "id": "pasta_amatriciana",
+  "title": "Pasta all'Amatriciana",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Crisp guanciale, tomato and pecorino: the Roman classic, with a little heat.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "classic"],
+  "prepTime": 10,
+  "cookTime": 25,
+  "ingredients": [
+    {
+      "ingredient": "bucatini",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "guanciale",
+      "amount": 150,
+      "unit": "g",
+      "note": "cut into strips"
+    },
+    {
+      "ingredient": "peeled_tomatoes",
+      "amount": 1,
+      "unit": "can"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 50,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "pecorino",
+      "amount": 60,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "chili_flakes"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Render the guanciale in a dry pan over medium heat until golden. Lift it out and keep the fat in the pan.",
+    "Deglaze with the wine, then add the tomatoes, crushed by hand, and the chili. Simmer for 15 minutes.",
+    "Boil the bucatini in salted water until al dente.",
+    "Put the guanciale back in the sauce, toss in the pasta with a splash of its water, and finish with the pecorino."
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": "prosciutto_breadsticks",
+  "title": "Breadsticks Wrapped in Prosciutto",
+  "author": "Claude",
+  "servings": 6,
+  "description": "The easiest aperitivo: crisp grissini wrapped in prosciutto.",
+  "cuisine": "Italian",
+  "tags": ["party", "quick", "no-cook"],
+  "prepTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "breadsticks",
+      "amount": 125,
+      "unit": "g"
+    },
+    {
+      "ingredient": "prosciutto",
+      "amount": 100,
+      "unit": "g",
+      "note": "thin slices"
+    }
+  ],
+  "steps": [
+    "Halve the prosciutto slices lengthways and wrap each around the top of a breadstick. Serve standing in a glass."
+  ]
+}

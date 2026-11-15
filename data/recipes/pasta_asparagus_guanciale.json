@@ -1,0 +1,52 @@
+{
+  "id": "pasta_asparagus_guanciale",
+  "title": "Pasta with Asparagus and Guanciale",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Spring asparagus, crisp guanciale and pecorino in a creamy pasta.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "quick"],
+  "prepTime": 10,
+  "cookTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "short_pasta",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "asparagus",
+      "amount": 400,
+      "unit": "g",
+      "note": "woody ends removed"
+    },
+    {
+      "ingredient": "guanciale",
+      "amount": 120,
+      "unit": "g",
+      "note": "cut into strips"
+    },
+    {
+      "ingredient": "pecorino",
+      "amount": 40,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "black_pepper"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Cut the asparagus into short pieces, keeping the tips apart.",
+    "Crisp the guanciale in the oil, add the asparagus stems and cook for 5 minutes, then the tips for 2 more.",
+    "Boil the pasta in salted water, toss it in the pan with a ladle of its water, and finish with pecorino and pepper."
+  ]
+}

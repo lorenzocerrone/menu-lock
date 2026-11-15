@@ -48,6 +48,7 @@ function line(over: Partial<GroceryLine> = {}): GroceryLine {
 		name: "Thing",
 		unit: "g",
 		amount: null,
+		aside: [],
 		toTaste: false,
 		optional: false,
 		sources: [],
@@ -134,6 +135,23 @@ describe("format", () => {
 			"500 g + 1 bag",
 		);
 		expect(formatLineQuantity(line())).toBe("");
+		// Beside the total: what doesn't convert, in its own unit.
+		expect(
+			formatLineQuantity(
+				line({
+					amount: 250,
+					aside: [
+						{ unit: "pcs", amount: 1.2 },
+						{ unit: "tbsp", amount: 1.5 },
+						{ unit: "ball", amount: 0.5 },
+						{ unit: "g", amount: 1500 },
+					],
+				}),
+			),
+		).toBe("250 g + 2 + 1.5 tbsp + 1 ball + 1.5 kg");
+		expect(formatLineQuantity(line({ count: clove, aside: [{ unit: "pcs", amount: 3 }] }))).toBe(
+			"3 cloves",
+		);
 	});
 
 	it("says what a line is for", () => {

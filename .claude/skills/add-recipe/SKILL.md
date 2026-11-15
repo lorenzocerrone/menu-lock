@@ -34,7 +34,7 @@ say so instead of working around it.
    - Use an existing entry whenever it is the same thing to buy (see reference: mapping).
    - If none fits, **add an entry to `data/ingredients.json` first** (see reference:
      dictionary), then use its key.
-   - Write each amount in a unit that converts into the entry's shopping unit. Convert
+   - Keep each amount in the recipe's own unit (see reference: amounts and units). Convert
      the recipe's units yourself when needed ("1 cup lentils ≈ 200 g") and list every
      such conversion in the preview.
 4. **One preview, then wait.** Keep it compact:

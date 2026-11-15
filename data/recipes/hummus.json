@@ -1,0 +1,54 @@
+{
+  "id": "hummus",
+  "title": "Hummus",
+  "author": "Claude",
+  "servings": 6,
+  "description": "Smooth chickpea and tahini dip with lemon and garlic.",
+  "cuisine": "Middle Eastern",
+  "tags": ["party", "quick", "no-cook"],
+  "prepTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "chickpeas",
+      "amount": 1,
+      "unit": "can",
+      "note": "drained, liquid kept"
+    },
+    {
+      "ingredient": "tahini",
+      "amount": 60,
+      "unit": "g"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 1,
+      "note": "juiced"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "cumin",
+      "amount": 1,
+      "unit": "g"
+    },
+    {
+      "ingredient": "paprika",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Blend the chickpeas, tahini, lemon, garlic, cumin and salt, loosening with the chickpea liquid until smooth.",
+    "Spread in a bowl, make a well and fill it with the oil; dust with paprika."
+  ]
+}

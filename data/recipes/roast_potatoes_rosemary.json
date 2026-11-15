@@ -1,0 +1,43 @@
+{
+  "id": "roast_potatoes_rosemary",
+  "title": "Roast Potatoes with Rosemary",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Crisp-edged roast potatoes with garlic and rosemary.",
+  "cuisine": "Italian",
+  "tags": ["side"],
+  "prepTime": 10,
+  "cookTime": 45,
+  "ingredients": [
+    {
+      "ingredient": "potato",
+      "amount": 1,
+      "unit": "kg",
+      "note": "in chunks"
+    },
+    {
+      "ingredient": "rosemary",
+      "amount": 2,
+      "unit": "sprigs"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 3,
+      "unit": "cloves",
+      "note": "unpeeled"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Heat the oven to 200 °C.",
+    "Toss the potatoes with the oil, garlic, rosemary and salt on a tray in one layer.",
+    "Roast for 40–45 minutes, turning once, until golden and crisp."
+  ]
+}

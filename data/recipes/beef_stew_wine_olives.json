@@ -1,0 +1,88 @@
+{
+  "id": "beef_stew_wine_olives",
+  "title": "Beef Stew with Wine and Olives",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Beef braised slowly in red wine with olives and rosemary until it falls apart.",
+  "cuisine": "Italian",
+  "tags": ["main", "comfort", "make-ahead"],
+  "prepTime": 20,
+  "cookTime": 120,
+  "ingredients": [
+    {
+      "ingredient": "stewing_beef",
+      "amount": 800,
+      "unit": "g",
+      "note": "in large chunks"
+    },
+    {
+      "ingredient": "red_wine",
+      "amount": 250,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "olives",
+      "amount": 100,
+      "unit": "g",
+      "note": "pitted"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 1,
+      "note": "chopped"
+    },
+    {
+      "ingredient": "carrot",
+      "amount": 1,
+      "note": "chopped"
+    },
+    {
+      "ingredient": "celery",
+      "amount": 1,
+      "unit": "stalk",
+      "note": "chopped"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "tomato_paste",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "flour",
+      "amount": 20,
+      "unit": "g"
+    },
+    {
+      "ingredient": "vegetable_broth",
+      "amount": 300,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "rosemary",
+      "amount": 1,
+      "unit": "sprig"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Toss the beef in the flour and brown it in batches in the oil; set aside.",
+    "Soften the onion, carrot, celery and garlic in the same pot, then stir in the tomato paste.",
+    "Pour in the wine and scrape the bottom, then return the beef with the broth and rosemary.",
+    "Cover and simmer on low heat for 1½ hours, add the olives and cook for 30 minutes more, until tender."
+  ]
+}

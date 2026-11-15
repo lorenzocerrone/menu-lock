@@ -1,0 +1,26 @@
+{
+  "id": "affogato",
+  "title": "Affogato",
+  "author": "Claude",
+  "servings": 4,
+  "description": "A scoop of vanilla ice cream drowned in hot espresso. Dessert in two minutes.",
+  "cuisine": "Italian",
+  "tags": ["dessert", "quick", "no-cook"],
+  "prepTime": 5,
+  "ingredients": [
+    {
+      "ingredient": "vanilla_ice_cream",
+      "amount": 4,
+      "unit": "scoops"
+    },
+    {
+      "ingredient": "espresso",
+      "amount": 120,
+      "unit": "ml",
+      "note": "hot"
+    }
+  ],
+  "steps": [
+    "Put a scoop of ice cream in each cup and pour a shot of hot espresso over it at the table."
+  ]
+}

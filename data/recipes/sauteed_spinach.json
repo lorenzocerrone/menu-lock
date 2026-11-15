@@ -1,0 +1,46 @@
+{
+  "id": "sauteed_spinach",
+  "title": "Sautéed Spinach with Garlic",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Spinach wilted in garlic oil with a pinch of chili.",
+  "cuisine": "Italian",
+  "tags": ["side", "quick"],
+  "prepTime": 5,
+  "cookTime": 5,
+  "ingredients": [
+    {
+      "ingredient": "spinach",
+      "amount": 500,
+      "unit": "g"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves",
+      "note": "sliced"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "chili_flakes",
+      "optional": true
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 0.5,
+      "note": "juiced",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Warm the oil with the garlic and chili until the garlic just colours.",
+    "Add the spinach by handfuls, stirring until it wilts, and season with salt and a squeeze of lemon."
+  ]
+}

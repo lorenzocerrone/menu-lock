@@ -1,0 +1,52 @@
+{
+  "id": "tzatziki",
+  "title": "Tzatziki",
+  "author": "Claude",
+  "servings": 6,
+  "description": "Cool yogurt dip with grated cucumber, garlic and mint.",
+  "cuisine": "Greek",
+  "tags": ["party", "quick", "no-cook"],
+  "prepTime": 15,
+  "ingredients": [
+    {
+      "ingredient": "greek_yogurt",
+      "amount": 500,
+      "unit": "g"
+    },
+    {
+      "ingredient": "cucumber",
+      "amount": 1
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves",
+      "note": "grated"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "mint",
+      "amount": 5,
+      "unit": "g",
+      "note": "chopped",
+      "optional": true
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 0.5,
+      "note": "juiced",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Grate the cucumber, salt it and squeeze out the water in a towel.",
+    "Stir it into the yogurt with the garlic, oil, mint and lemon. Chill for 30 minutes."
+  ]
+}

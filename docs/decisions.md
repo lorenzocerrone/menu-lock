@@ -118,6 +118,95 @@ How it is put together:
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
 
+## Any unit in a recipe; what doesn't add up is listed beside the total (2026-11-15)
+
+The user wanted more freedom in how recipes write amounts: pastry needs precise grams
+even for things sold by the piece, everyday cooking writes "1 mozzarella". They were
+fine with a grocery line saying "Mozzarella 250 g + 1".
+
+- **Changed rule** (plan §5.2–5.3, `CLAUDE.md`): a recipe line still names a dictionary
+  key, but its amount may be in any unit: the known ones, the piece label, or a word of
+  the recipe's own ("ball", "bunch", "zest"). What converts into the shopping unit is
+  added up as before. What doesn't is no longer a validation error: the line keeps it
+  `aside`, per serving, in its own unit (`quantify` in `src/lib/data.ts`).
+- **Summed per unit** (`asideQuantity` in `src/lib/units.ts`): grams for any mass, ml
+  for ml and l, pieces for a count, otherwise the unit as written (tsp, tbsp, cup,
+  words). Scaled with the servings like any amount. The grocery line lists them after
+  its total ("250 g + 1 ball + 2 tbsp"); pieces and words round up to whole ones, tsp,
+  tbsp and cups keep two decimals. A word is grouped as written ("ball" and "balls"
+  would be two).
+- **Ticks** remember these amounts too, and drop when one grows.
+- **A meal's editor** offers pieces and the line's own unit beside the units that add
+  up, so "1 mozzarella" can be set for one meal.
+- **A swap that converts no way** ("2 tbsp" of oil for salt sold by weight) now keeps
+  the recipe's amount as written, beside the total, instead of becoming "to taste".
+- `gr` is now a spelling of grams.
+- The add-recipe skill keeps a recipe's own units where they matter (pastry grams, "1
+  ball") and still prefers units that add up otherwise.
+
+## Changing a meal's ingredient: one screen, and swaps keep a quantity (2026-11-15)
+
+The user found replacing an ingredient unreliable and the editor too involved.
+
+- **A swap carries the recipe's quantity over** (`carryOver` in `src/lib/changes.ts`):
+  first as the recipe wrote it ("1 onion" becomes 1 red onion), then the same weight or
+  volume (8 chicken thighs, 960 g, become 960 g of chicken breast), then the same number
+  of pieces. Before, any swap whose written unit didn't fit the new ingredient became
+  "to taste", so the grocery list lost the quantity. Only when nothing converts (2 tbsp
+  of oil for salt sold by weight) is it still to taste.
+- **One screen per ingredient.** Tapping an ingredient shows how much (amount, unit,
+  Save on one row), "or use instead" (a search field), and Leave out / Undo change.
+  Picking a replacement goes straight back to the list, already swapped: tap, type,
+  pick. Before, a swap was tap, "Swap for another ingredient", type, pick, then Save on
+  a second amount screen. An ingredient typed freely still asks for its quantity, and an
+  added one still opens on its amount.
+- **No silent dead end**: an ingredient the meal already has appears in the suggestions
+  as "in this meal" (disabled), instead of not appearing at all. Enter picks the first
+  suggestion.
+- The back button reads "‹ Ingredients" (the sheet's title already names the recipe).
+
+## Back and Forward never bring back an older plan (2026-11-15)
+
+The user saw changes to the plan get lost: the first recipe added stayed, later ones
+didn't, and a meal's ingredient change didn't reach the grocery list. The cause was
+`src/state/urlSync.ts`: every history entry keeps the plan its address had when it was
+left, and when Back or Forward (the phone's back gesture too) landed on one, the app
+took that older plan for a link from outside and loaded it, undoing everything since.
+The first meal survived because an entry from before it had no plan in the address,
+and "no plan" was never loaded.
+
+Now the store is the plan, and the address always follows it. A plan is loaded from the
+address only when the address was changed from outside the app: a link typed or pasted
+into an open tab makes a history entry without `history.state`, which the router sets on
+every entry it makes. Opening the app with a link is unchanged (read once at start, in
+`src/state/app.ts`). The same rule also covers a tab clicked before the address caught
+up with the last change: it is rewritten instead of loaded. Browser tests:
+`tests/e2e/history.spec.ts`.
+
+## The household's own recipes (2026-11-14)
+
+The user replaced the 25 placeholder recipes with their own list (Italian notes,
+translated to English; they will edit the details themselves). 39 recipes:
+
+- **The user's dishes** (author `Lorenzo`): 10 pastas, 4 risottos, 9 mains and one-dish
+  meals, and the tiramisù. Amounts, times and steps were written by Claude from the
+  standard version of each dish, for the user to correct. "Sughero finto" was read as
+  _sugo finto_ (the meatless ragù); "wrap … proteina" uses chicken, the description says
+  any protein works.
+- **What the user asked Claude to add** (author `Claude`): 4 sides, 3 more desserts,
+  3 salads, 5 dips and party dishes.
+- **Course tags**: every recipe has one of `pasta`, `risotto`, `main`, `side`, `salad`,
+  `dessert`, `party`, so the tag filter works as a course filter. `dinner`,
+  `breakfast` and `soup` are no longer used.
+- **Dictionary**: 59 new entries (130 in all). The old entries that no recipe uses are
+  kept: they still help when typing extras and a meal's changes. Saffron is bought and
+  counted in sachets.
+- **Illustrations**: only the carbonara's is still used; the other 24 old SVGs are
+  deleted (they are in the history) and the new recipes get the placeholder until the
+  illustration session (plan §10).
+- The browser tests now use `beef_stew_wine_olives` where they used `lentil_dal` (it has
+  the same shape: 1 onion, garlic in cloves, salt to taste, serves 4).
+
 ## Typing an ingredient: suggestions that forgive (2026-11-14)
 
 The user asked for more autocomplete wherever an ingredient is typed. `suggest`

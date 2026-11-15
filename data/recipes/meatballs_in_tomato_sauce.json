@@ -1,0 +1,88 @@
+{
+  "id": "meatballs_in_tomato_sauce",
+  "title": "Meatballs in Tomato Sauce",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Soft beef and pork meatballs simmered slowly in tomato sauce.",
+  "cuisine": "Italian",
+  "tags": ["main", "comfort", "make-ahead"],
+  "prepTime": 25,
+  "cookTime": 40,
+  "ingredients": [
+    {
+      "ingredient": "ground_beef",
+      "amount": 300,
+      "unit": "g"
+    },
+    {
+      "ingredient": "ground_pork",
+      "amount": 200,
+      "unit": "g"
+    },
+    {
+      "ingredient": "egg",
+      "amount": 1
+    },
+    {
+      "ingredient": "breadcrumbs",
+      "amount": 50,
+      "unit": "g"
+    },
+    {
+      "ingredient": "milk",
+      "amount": 50,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 50,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove",
+      "note": "crushed"
+    },
+    {
+      "ingredient": "parsley",
+      "amount": 5,
+      "unit": "g",
+      "note": "chopped"
+    },
+    {
+      "ingredient": "tomato_passata",
+      "amount": 700,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 0.5,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 5,
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Soak the breadcrumbs in the milk, then mix with the meat, egg, parmesan, garlic, parsley, salt and pepper.",
+    "Roll into walnut-sized balls.",
+    "Soften the onion in the oil, add the passata and a pinch of salt and bring to a simmer.",
+    "Lower the meatballs into the sauce, cover and simmer gently for 30 minutes, turning them once. Finish with basil."
+  ]
+}

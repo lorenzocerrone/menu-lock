@@ -21,6 +21,11 @@ export type GroceryLine = {
 	count?: CountSpec;
 	/** The summed amount in `unit`; `null` when nothing has an amount. */
 	amount: number | null;
+	/**
+	 * Amounts that don't convert into `unit` ("1 ball" of mozzarella sold by
+	 * weight), summed per unit, in order of first appearance: listed beside `amount`.
+	 */
+	aside: { unit: string; amount: number }[];
 	/** True if at least one contribution had no amount. */
 	toTaste: boolean;
 	/** True only if every contribution was optional. */
@@ -71,6 +76,7 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 			name: entry.name,
 			unit: entry.unit,
 			amount: null,
+			aside: [],
 			toTaste: false,
 			optional: true,
 			sources: [],
@@ -86,6 +92,12 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		line.optional &&= optional;
 		if (amount === null) line.toTaste = true;
 		else line.amount = (line.amount ?? 0) + amount;
+	};
+	const addAside = (line: GroceryLine, unit: string, amount: number, optional: boolean) => {
+		line.optional &&= optional;
+		const same = line.aside.find((a) => a.unit === unit);
+		if (same) same.amount += amount;
+		else line.aside.push({ unit, amount });
 	};
 
 	/**
@@ -120,7 +132,9 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 			}
 			const line = lineFor(item.key);
 			if (!line) continue;
-			add(line, item.perServing === null ? null : item.perServing * servings, item.optional);
+			if (item.aside)
+				addAside(line, item.aside.unit, item.aside.perServing * servings, item.optional);
+			else add(line, item.perServing === null ? null : item.perServing * servings, item.optional);
 			if (!line.sources.includes(recipe.title)) line.sources.push(recipe.title);
 		}
 	}
@@ -162,6 +176,7 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 					name: capitalize(name),
 					unit: null,
 					amount: null,
+					aside: [],
 					toTaste: false,
 					optional: false,
 					sources: [],
@@ -220,7 +235,12 @@ export function rangeEnd(range: GroceryRange, plan: Plan, today: IsoDate): IsoDa
 }
 
 /** A ticked line and what it needed at the time, so the tick goes once the plan needs more. */
-export type CheckedItem = { key: string; amount: number | null; custom: string[] };
+export type CheckedItem = {
+	key: string;
+	amount: number | null;
+	aside: { unit: string; amount: number }[];
+	custom: string[];
+};
 
 /** Per-device grocery state. Never shared in the URL. */
 export type GroceryState = { checked: CheckedItem[]; range: GroceryRange };
@@ -234,6 +254,7 @@ function snapshot(line: GroceryLine): CheckedItem {
 	return {
 		key: line.key,
 		amount: line.amount === null ? null : round3(line.amount),
+		aside: line.aside.map((a) => ({ unit: a.unit, amount: round3(a.amount) })),
 		custom: [...line.customQuantities],
 	};
 }
@@ -258,6 +279,11 @@ export function clearChecked(state: GroceryState): GroceryState {
 function stillCovers(ticked: CheckedItem, line: GroceryLine): boolean {
 	if (line.amount !== null && (ticked.amount === null || round3(line.amount) > ticked.amount))
 		return false;
+	const asideCovered = line.aside.every((a) => {
+		const had = ticked.aside.find((t) => t.unit === a.unit);
+		return had !== undefined && round3(a.amount) <= had.amount;
+	});
+	if (!asideCovered) return false;
 	const had = [...ticked.custom];
 	return line.customQuantities.every((quantity) => {
 		const i = had.indexOf(quantity);
@@ -269,7 +295,8 @@ function stillCovers(ticked: CheckedItem, line: GroceryLine): boolean {
 
 /**
  * Drop the ticks of lines that are gone or now need more than when ticked (a
- * larger amount, or a custom quantity they didn't have). A line that needs
+ * larger amount, more of a quantity that doesn't convert, or a custom quantity
+ * they didn't have). A line that needs
  * less, as when a past day drops off the plan, stays ticked. Returns the same
  * state when nothing changes.
  */

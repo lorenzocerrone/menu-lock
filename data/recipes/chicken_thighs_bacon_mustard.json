@@ -1,0 +1,63 @@
+{
+  "id": "chicken_thighs_bacon_mustard",
+  "title": "Chicken Thighs with Bacon and Mustard",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Chicken thighs wrapped in bacon and roasted with a honey-mustard glaze.",
+  "tags": ["main"],
+  "prepTime": 15,
+  "cookTime": 40,
+  "ingredients": [
+    {
+      "ingredient": "chicken_thigh",
+      "amount": 8,
+      "unit": "thighs",
+      "note": "boneless, skin off"
+    },
+    {
+      "ingredient": "bacon",
+      "amount": 150,
+      "unit": "g",
+      "note": "thin slices"
+    },
+    {
+      "ingredient": "mustard",
+      "amount": 30,
+      "unit": "g"
+    },
+    {
+      "ingredient": "honey",
+      "amount": 20,
+      "unit": "g"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "rosemary",
+      "amount": 1,
+      "unit": "sprig"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 2,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "black_pepper"
+    }
+  ],
+  "steps": [
+    "Heat the oven to 200 °C. Mix the mustard and honey.",
+    "Brush the thighs with half the mustard mix, season with pepper and wrap each in bacon.",
+    "Lay them in an oiled dish with the garlic, rosemary and wine.",
+    "Roast for 35–40 minutes, brushing with the rest of the mustard halfway, until the bacon is crisp."
+  ]
+}

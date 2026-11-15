@@ -66,9 +66,10 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
 - Recipe ids and ingredient keys are in share links and in plans; rename one only with
   a reason, and update every recipe and test that uses it.
 - **Closed-world ingredients in recipe files**: every recipe line references a
-  dictionary key and converts into that ingredient's shopping unit, or validation
-  fails. Only a planned meal's changes and the grocery extras may name something that
-  is not in the dictionary, kept as typed.
+  dictionary key, or validation fails. Its amount may be in any unit: what converts
+  into the ingredient's shopping unit is added up on the grocery list, what doesn't is
+  listed beside the total ("250 g + 1 ball"). Only a planned meal's changes and the
+  grocery extras may name something that is not in the dictionary, kept as typed.
 - Routing is in the hash; `plan` is retained on every route by the root route's search
   middleware. Use `<Link to="…">`, never hand-built hrefs.
 - Colours and fonts come from `src/styles/tokens.css` (Tailwind utilities `bg-paper`,
@@ -85,6 +86,10 @@ To add or change a recipe, use the `add-recipe` skill (`.claude/skills/add-recip
 - No new features beyond the parity checklist unless the user asks. The non-goals in
   plan §1 are deliberate.
 - Commits: small, `feat(scope): …` / `fix(scope): …` / `docs: …`.
+- Every pull request body starts with its preview site:
+  `**Preview:** https://lorenzocerrone.github.io/menu-lock/pr-preview/pr-<number>/`. The
+  number is known only once the PR exists, so open it, then edit the body to add the link
+  (the user asked for this, 2026-11-14).
 
 The old repo is the reference implementation: each Rust module in its `src/` ends with
 unit tests that are the spec for the logic being ported. Where it and the plan disagree,

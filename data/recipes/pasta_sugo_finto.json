@@ -1,0 +1,69 @@
+{
+  "id": "pasta_sugo_finto",
+  "title": "Pasta with Sugo Finto",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "The 'fake' ragù: a slow tomato sauce on a soffritto base, with all the depth and no meat.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "comfort"],
+  "prepTime": 15,
+  "cookTime": 45,
+  "ingredients": [
+    {
+      "ingredient": "short_pasta",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "tomato_passata",
+      "amount": 500,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "onion",
+      "amount": 1,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "carrot",
+      "amount": 1,
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "celery",
+      "amount": 1,
+      "unit": "stalk",
+      "note": "finely chopped"
+    },
+    {
+      "ingredient": "white_wine",
+      "amount": 100,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "parmesan",
+      "amount": 40,
+      "unit": "g",
+      "note": "grated"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 5,
+      "unit": "g",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Soften the onion, carrot and celery in the oil over low heat for 10 minutes.",
+    "Add the wine and let it evaporate, then the passata and a pinch of salt. Simmer gently for 30 minutes.",
+    "Boil the pasta in salted water, toss it with the sauce and serve with parmesan and basil."
+  ]
+}

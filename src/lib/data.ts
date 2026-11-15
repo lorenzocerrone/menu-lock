@@ -1,9 +1,11 @@
 /**
  * Load, validate and resolve the data files: the ingredient dictionary and the
  * recipes (REWRITE_PLAN §5.1–5.3). The world is closed: every recipe line
- * names a dictionary key and converts into that ingredient's shopping unit, so
- * each line is resolved once into a per-serving amount and the grocery list
- * only multiplies and adds.
+ * names a dictionary key. Its amount may be in any unit: one that converts into
+ * the ingredient's shopping unit is resolved once into a per-serving amount, so
+ * the grocery list only multiplies and adds; one that doesn't ("1 ball" of
+ * mozzarella sold by weight) is kept aside, in its own unit, and listed beside
+ * the total.
  */
 import type { z } from "zod";
 import {
@@ -15,7 +17,7 @@ import {
 	recipeSchema,
 	VEGETARIAN_TAG,
 } from "./schema";
-import { convertibleUnits, resolveUnit, toShopping, type Unit } from "./units";
+import { asideQuantity, resolveUnit, toShopping, type Unit } from "./units";
 
 /** The dictionary, with every name it answers to. */
 export type Dictionary = {
@@ -34,12 +36,20 @@ export type RecipeLine = {
 	count?: CountSpec;
 	/** As written, for the recipe page. `null` is "to taste". */
 	amount: number | null;
-	/** The unit as written ("pcs" for a bare count or a piece label). `null` with no amount. */
-	unit: Unit | null;
+	/**
+	 * The unit as written: a known unit ("pcs" for a bare count or a piece label),
+	 * or the recipe's own word ("ball"). `null` with no amount.
+	 */
+	unit: string | null;
 	note?: string;
 	optional: boolean;
-	/** The amount for one serving, in the shopping unit. `null` is "to taste". */
+	/**
+	 * The amount for one serving, in the shopping unit. `null` for "to taste",
+	 * and for an amount that doesn't convert (then `aside` has it).
+	 */
 	perServing: number | null;
+	/** An amount that doesn't convert into the shopping unit: for one serving, in its own unit. */
+	aside?: { unit: string; perServing: number };
 };
 
 export type Recipe = {
@@ -124,10 +134,34 @@ export function lookup(
 }
 
 /**
+ * The quantity of a line for a recipe of `servings`: in the shopping unit when it
+ * converts, otherwise aside in its own unit. No amount (or none above 0) is "to taste".
+ */
+function quantify(
+	entry: Ingredient,
+	amount: number | undefined,
+	unitText: string | undefined,
+	servings: number,
+): Pick<RecipeLine, "amount" | "unit" | "perServing" | "aside"> {
+	if (amount === undefined || !(amount > 0)) return { amount: null, unit: null, perServing: null };
+	const unit: Unit | null = resolveUnit(unitText, entry.count);
+	const written = unit ?? (unitText ?? "").trim();
+	const inShoppingUnit = unit === null ? null : toShopping(amount, unit, entry.unit, entry.count);
+	if (inShoppingUnit !== null)
+		return { amount, unit: written, perServing: inShoppingUnit / servings };
+	const aside = asideQuantity(amount, unitText, entry.count);
+	return {
+		amount,
+		unit: written,
+		perServing: null,
+		aside: { unit: aside.unit, perServing: aside.amount / servings },
+	};
+}
+
+/**
  * One ingredient line for a recipe of `servings`, resolved against the
- * dictionary: used for the lines a planned meal changes or adds. An amount that
- * does not convert for the ingredient becomes "to taste" rather than a wrong
- * number. `null` for a key the dictionary doesn't have.
+ * dictionary: used for the lines a planned meal changes or adds. `null` for a
+ * key the dictionary doesn't have.
  */
 export function makeLine(
 	dictionary: Dictionary,
@@ -142,23 +176,11 @@ export function makeLine(
 	const line: RecipeLine = {
 		key,
 		name: entry.name,
-		amount: null,
-		unit: null,
 		optional: keep.optional ?? false,
-		perServing: null,
+		...quantify(entry, amount, unitText, servings),
 	};
 	if (entry.count) line.count = entry.count;
 	if (keep.note !== undefined) line.note = keep.note;
-	const unit = resolveUnit(unitText, entry.count);
-	const inShoppingUnit =
-		amount === undefined || !(amount > 0) || unit === null
-			? null
-			: toShopping(amount, unit, entry.unit, entry.count);
-	if (amount !== undefined && unit !== null && inShoppingUnit !== null) {
-		line.amount = amount;
-		line.unit = unit;
-		line.perServing = inShoppingUnit / servings;
-	}
 	return line;
 }
 
@@ -243,42 +265,16 @@ function resolveRecipe(
 			return;
 		}
 		if (MEAT_AISLES.includes(entry.aisle)) vegetarian = false;
+		if (line.amount === undefined && line.unit !== undefined)
+			problems.push(`${at}: "unit" without "amount" ("to taste" has no unit)`);
 		const resolved: RecipeLine = {
 			key: line.ingredient,
 			name: entry.name,
-			amount: null,
-			unit: null,
 			optional: line.optional ?? false,
-			perServing: null,
+			...quantify(entry, line.amount, line.unit, raw.servings),
 		};
 		if (entry.count) resolved.count = entry.count;
 		if (line.note !== undefined) resolved.note = line.note;
-		if (line.amount === undefined) {
-			if (line.unit !== undefined)
-				problems.push(`${at}: "unit" without "amount" ("to taste" has no unit)`);
-		} else {
-			const written = `${line.amount}${line.unit === undefined ? "" : ` ${line.unit}`}`;
-			const unit = resolveUnit(line.unit, entry.count);
-			const usable = convertibleUnits(entry.unit, entry.count).join(", ");
-			if (unit === null) {
-				problems.push(
-					`${at}: "${line.unit}" is not a unit, nor the piece label of ${line.ingredient}. Use one of: ${usable}`,
-				);
-			} else {
-				const inShoppingUnit = toShopping(line.amount, unit, entry.unit, entry.count);
-				if (inShoppingUnit === null) {
-					const what =
-						line.unit === undefined ? `"${written}" (a count of pieces)` : `"${written}"`;
-					problems.push(
-						`${at}: ${what} does not convert into ${entry.unit}, the shopping unit of ${line.ingredient}. Use one of: ${usable}; or add "count" to ${line.ingredient} in ${DICTIONARY_PATH}`,
-					);
-				} else {
-					resolved.amount = line.amount;
-					resolved.unit = unit;
-					resolved.perServing = inShoppingUnit / raw.servings;
-				}
-			}
-		}
 		lines.push(resolved);
 	});
 

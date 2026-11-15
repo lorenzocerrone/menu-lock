@@ -69,7 +69,7 @@
             "exclusiveMinimum": 0
           },
           "unit": {
-            "description": "g kg ml l tsp tbsp cup pcs, or the ingredient's piece label. Absent means a count of pieces.",
+            "description": "g kg ml l tsp tbsp cup pcs, the ingredient's piece label, or any word (\"ball\"). Absent means a count of pieces. An amount that doesn't convert into the shopping unit is listed beside the total.",
             "type": "string",
             "minLength": 1
           },

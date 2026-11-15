@@ -1,0 +1,59 @@
+{
+  "id": "orecchiette_turnip_greens_sausage",
+  "title": "Orecchiette with Turnip Greens and Sausage",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Puglia on a plate: bitter cime di rapa, crumbled sausage and a hint of chili.",
+  "cuisine": "Italian",
+  "tags": ["pasta"],
+  "prepTime": 15,
+  "cookTime": 20,
+  "ingredients": [
+    {
+      "ingredient": "orecchiette",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "turnip_greens",
+      "amount": 800,
+      "unit": "g",
+      "note": "tops and tender leaves"
+    },
+    {
+      "ingredient": "sausage",
+      "amount": 250,
+      "unit": "g",
+      "note": "skin removed, crumbled"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "chili_flakes"
+    },
+    {
+      "ingredient": "pecorino",
+      "amount": 30,
+      "unit": "g",
+      "note": "grated",
+      "optional": true
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Brown the crumbled sausage in a little of the oil and set aside.",
+    "Boil the turnip greens in salted water for 5 minutes, then add the orecchiette to the same pot and cook until al dente.",
+    "Meanwhile warm the rest of the oil with the garlic and chili.",
+    "Drain the pasta and greens, toss them in the garlic oil with the sausage and a splash of the water, and serve with pecorino."
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "wrap_tomato_feta_onion",
+  "title": "Cherry Tomato, Feta and Red Onion Wraps",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Fresh, no-cook wraps with juicy tomatoes, crumbled feta and sharp red onion.",
+  "tags": ["main", "quick", "no-cook"],
+  "prepTime": 10,
+  "ingredients": [
+    {
+      "ingredient": "tortilla",
+      "amount": 4
+    },
+    {
+      "ingredient": "cherry_tomatoes",
+      "amount": 250,
+      "unit": "g",
+      "note": "quartered"
+    },
+    {
+      "ingredient": "feta",
+      "amount": 200,
+      "unit": "g",
+      "note": "crumbled"
+    },
+    {
+      "ingredient": "red_onion",
+      "amount": 1,
+      "note": "thinly sliced"
+    },
+    {
+      "ingredient": "lettuce",
+      "amount": 80,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 1,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "oregano",
+      "amount": 1,
+      "unit": "g"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Toss the tomatoes and onion with the oil, oregano and a pinch of salt.",
+    "Warm the tortillas for a few seconds in a dry pan.",
+    "Fill each with lettuce, the tomato mix and feta, and roll up tightly."
+  ]
+}

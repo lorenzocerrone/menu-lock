@@ -1,0 +1,61 @@
+{
+  "id": "spaghetti_anchovies_taralli",
+  "title": "Spaghetti with Anchovies and Taralli Crumbs",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Anchovies melted in garlic oil, topped with crushed taralli for crunch.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "quick"],
+  "prepTime": 5,
+  "cookTime": 15,
+  "ingredients": [
+    {
+      "ingredient": "spaghetti",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "anchovies",
+      "amount": 40,
+      "unit": "g",
+      "note": "in oil"
+    },
+    {
+      "ingredient": "taralli",
+      "amount": 60,
+      "unit": "g",
+      "note": "crushed"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 2,
+      "unit": "cloves"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 4,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "parsley",
+      "amount": 10,
+      "unit": "g",
+      "note": "chopped"
+    },
+    {
+      "ingredient": "chili_flakes"
+    },
+    {
+      "ingredient": "lemon",
+      "amount": 0.5,
+      "note": "zest",
+      "optional": true
+    }
+  ],
+  "steps": [
+    "Toast the crushed taralli in a dry pan until golden and set aside.",
+    "Boil the spaghetti in lightly salted water (the anchovies are salty).",
+    "Gently warm the oil with the garlic and chili, add the anchovies and stir until they melt.",
+    "Toss the pasta in the pan with a splash of its water, then finish with parsley, lemon zest and the taralli crumbs."
+  ]
+}

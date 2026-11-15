@@ -40,7 +40,10 @@ describe("storageKey", () => {
 describe("stored state", () => {
 	const state = {
 		plan: addMeal(EMPTY_PLAN, "2026-10-26", "dal"),
-		grocery: { checked: [{ key: "onion", amount: 250, custom: [] }], range: { days: 3 } },
+		grocery: {
+			checked: [{ key: "onion", amount: 250, aside: [], custom: [] }],
+			range: { days: 3 },
+		},
 	};
 
 	it("saves and loads under its key", () => {

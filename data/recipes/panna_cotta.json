@@ -1,0 +1,45 @@
+{
+  "id": "panna_cotta",
+  "title": "Panna Cotta with Berries",
+  "author": "Claude",
+  "servings": 4,
+  "description": "Set vanilla cream with a wobble, served with fresh berries.",
+  "cuisine": "Italian",
+  "tags": ["dessert", "make-ahead"],
+  "prepTime": 15,
+  "cookTime": 5,
+  "ingredients": [
+    {
+      "ingredient": "cream",
+      "amount": 500,
+      "unit": "ml"
+    },
+    {
+      "ingredient": "sugar",
+      "amount": 80,
+      "unit": "g"
+    },
+    {
+      "ingredient": "gelatin",
+      "amount": 4,
+      "unit": "sheets"
+    },
+    {
+      "ingredient": "vanilla_extract",
+      "amount": 1,
+      "unit": "tsp"
+    },
+    {
+      "ingredient": "mixed_berries",
+      "amount": 200,
+      "unit": "g",
+      "optional": true
+    }
+  ],
+  "steps": [
+    "Soak the gelatin in cold water for 10 minutes.",
+    "Warm the cream with the sugar and vanilla until steaming; do not boil.",
+    "Off the heat, squeeze the gelatin and stir it in until dissolved.",
+    "Pour into 4 glasses and chill for at least 4 hours. Serve with the berries."
+  ]
+}

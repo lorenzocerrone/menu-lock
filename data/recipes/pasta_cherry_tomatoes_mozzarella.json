@@ -1,0 +1,53 @@
+{
+  "id": "pasta_cherry_tomatoes_mozzarella",
+  "title": "Pasta with Cherry Tomatoes and Mozzarella",
+  "author": "Lorenzo",
+  "servings": 4,
+  "description": "Cherry tomatoes cooked just until they burst, with mozzarella melting into the hot pasta.",
+  "cuisine": "Italian",
+  "tags": ["pasta", "quick"],
+  "prepTime": 10,
+  "cookTime": 15,
+  "ingredients": [
+    {
+      "ingredient": "short_pasta",
+      "amount": 320,
+      "unit": "g"
+    },
+    {
+      "ingredient": "cherry_tomatoes",
+      "amount": 400,
+      "unit": "g",
+      "note": "halved"
+    },
+    {
+      "ingredient": "mozzarella",
+      "amount": 250,
+      "unit": "g",
+      "note": "diced and drained"
+    },
+    {
+      "ingredient": "garlic",
+      "amount": 1,
+      "unit": "clove"
+    },
+    {
+      "ingredient": "basil",
+      "amount": 10,
+      "unit": "g"
+    },
+    {
+      "ingredient": "olive_oil",
+      "amount": 3,
+      "unit": "tbsp"
+    },
+    {
+      "ingredient": "salt"
+    }
+  ],
+  "steps": [
+    "Warm the oil with the garlic, add the tomatoes and a pinch of salt and cook for 8–10 minutes, until they soften.",
+    "Boil the pasta in salted water until al dente.",
+    "Toss the pasta with the tomatoes off the heat, then add the mozzarella and torn basil and serve at once."
+  ]
+}

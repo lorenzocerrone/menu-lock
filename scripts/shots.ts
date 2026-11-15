@@ -21,12 +21,12 @@ function iso(days: number): string {
 const PLAN = Buffer.from(
 	JSON.stringify({
 		dates: {
-			[iso(0)]: ["carbonara", "greek_salad"],
-			[iso(1)]: [{ recipe: "lentil_dal", servings: 6 }],
-			[iso(3)]: ["teriyaki_salmon"],
-			[iso(4)]: ["shakshuka", "pancakes"],
-			[iso(6)]: [{ recipe: "margherita_pizza", servings: 4 }],
-			[iso(8)]: ["mushroom_risotto"],
+			[iso(0)]: ["carbonara", "fennel_orange_salad"],
+			[iso(1)]: [{ recipe: "beef_stew_wine_olives", servings: 6 }],
+			[iso(3)]: ["lemon_chicken_scaloppine", "roast_potatoes_rosemary"],
+			[iso(4)]: ["pasta_alla_norma", "tiramisu"],
+			[iso(6)]: [{ recipe: "lasagna", servings: 8 }],
+			[iso(8)]: ["saffron_risotto"],
 		},
 		extras: [
 			{ name: "milk", amount: 1, unit: "l" },
@@ -40,7 +40,7 @@ const PLAN = Buffer.from(
 const SCREENS = [
 	{ name: "recipes", hash: "#/" },
 	{ name: "recipes-filtered", hash: "#/?diet=veg&time=20" },
-	{ name: "recipe", hash: "#/recipe/lentil_dal" },
+	{ name: "recipe", hash: "#/recipe/carbonara" },
 	{ name: "planner", hash: `#/planner?plan=${PLAN}` },
 	{ name: "planner-empty", hash: "#/planner" },
 	{ name: "grocery", hash: `#/grocery?plan=${PLAN}` },

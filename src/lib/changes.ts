@@ -44,6 +44,46 @@ function unitText(line: RecipeLine): string | undefined {
 }
 
 /**
+ * A recipe line's quantity, for the ingredient swapped in for it. Tried in
+ * order, the first that converts wins: the amount as the recipe wrote it
+ * ("1 onion" becomes 1 red onion), the same weight or volume (8 chicken thighs,
+ * 960 g, become 960 g of chicken breast), the same number of pieces (a can of
+ * 400 g becomes 400 g of flour, 2 scallions become 2 onions). If none converts
+ * (2 tbsp of oil, for salt sold by weight), the recipe's own amount is kept as
+ * written, and the grocery list shows it beside the total ("2 tbsp").
+ */
+function carryOver(
+	dictionary: Dictionary,
+	line: RecipeLine,
+	to: string,
+	servings: number,
+	keep: { note?: string | undefined; optional?: boolean },
+): RecipeLine | null {
+	const attempts: [number | undefined, string | undefined][] = [
+		[line.amount ?? undefined, unitText(line)],
+	];
+	const from = dictionary.entries.get(line.key);
+	if (from && line.perServing !== null) {
+		const total = line.perServing * servings; // in the shopping unit of `from`
+		const perPiece = from.count?.perPiece;
+		if (from.unit === "pcs") {
+			// A piece of a pcs ingredient weighs `perPiece` grams.
+			if (perPiece) attempts.push([total * perPiece, "g"]);
+			attempts.push([total, undefined]);
+		} else {
+			attempts.push([total, from.unit]);
+			if (perPiece) attempts.push([total / perPiece, undefined]);
+		}
+	}
+	for (const [amount, unit] of attempts) {
+		const made = makeLine(dictionary, to, amount, unit, servings, keep);
+		if (made === null || made.perServing !== null) return made;
+	}
+	const [amount, unit] = attempts[0] ?? [undefined, undefined];
+	return makeLine(dictionary, to, amount, unit, servings, keep);
+}
+
+/**
  * The meal's ingredient lines after its changes, and the recipe lines it
  * leaves out. A change that names an ingredient the recipe or the dictionary
  * doesn't have is ignored.
@@ -78,10 +118,11 @@ export function applyChanges(
 			);
 			lines.push(made ? { ...made, change: "set" } : line);
 		} else if (change.kind === "swap") {
-			// No amount given: the recipe's own amount, if it means something for the new ingredient.
-			const amount = change.amount ?? line.amount ?? undefined;
-			const unit = change.amount === undefined ? unitText(line) : change.unit;
-			const made = makeLine(dictionary, change.for, amount, unit, recipe.servings, keep);
+			// No amount given: the recipe's own quantity, carried over to the new ingredient.
+			const made =
+				change.amount === undefined
+					? carryOver(dictionary, line, change.for, recipe.servings, keep)
+					: makeLine(dictionary, change.for, change.amount, change.unit, recipe.servings, keep);
 			lines.push(
 				made ? { ...made, change: "swap", instead: { key: line.key, name: line.name } } : line,
 			);
