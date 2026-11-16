@@ -232,9 +232,14 @@ export function formatUnknownRecipe(id: string): string {
 	return `Unknown recipe (${id})`;
 }
 
-/** The toast after adding a recipe to a day: "Added to tomorrow". */
-export function formatAddedTo(date: IsoDate, today: IsoDate): string {
-	return `Added to ${formatDayInline(date, today)}`;
+/** The toast after adding a recipe to a day: "Added to tomorrow", "Added to tomorrow · serves 5". */
+export function formatAddedTo(
+	date: IsoDate,
+	today: IsoDate,
+	servings: number | null = null,
+): string {
+	const added = `Added to ${formatDayInline(date, today)}`;
+	return servings === null ? added : `${added} · serves ${servings}`;
 }
 
 /** The toast after moving a meal: "Moved to Fri 31 Oct". */

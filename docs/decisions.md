@@ -97,8 +97,8 @@ How it is put together:
 - **Recipe filters** are validated by the route itself (`queryFromSearch`), so a
   hand-edited address can't break the page. Opening a recipe drops them from the
   address; Back returns to the filtered list.
-- **"Add to week" adds the recipe with its own servings**, as in cooking-rs, whatever
-  the stepper on the recipe page says: that stepper is for reading the recipe.
+- **"Add to week" adds the recipe at the servings on the recipe page's stepper**
+  (changed 2026-11-16, see "Bugs from the persona sweep"; it used to add the recipe's own).
 - **Sheets** are Vaul drawers: a bottom sheet on phones, the same panel centred from
   720px. A second step ("Move to…") replaces the sheet's content instead of stacking a
   sheet on a sheet. No snap points: no sheet is long enough to need them.
@@ -117,6 +117,37 @@ How it is put together:
   (captions, button labels, toasts); fixed labels are written where they are used.
 - Biome's `noArrayIndexKey` is off: meals, steps and ingredient lines have no identity
   but their position.
+
+## Bugs from the persona sweep: links and stored plans (2026-11-16)
+
+Six agents, each playing a user (a parent of three, an engineer, a low-vision reader,
+a couple sharing links, a first-time student, a designer), drove the production build.
+What they found that loses data or breaks the app, and what changed:
+
+- **"Add to week" carries the servings over.** Five of six set servings on a recipe page,
+  added it, and got a grocery list for the recipe's own servings. The user chose to
+  carry them over; the toast says so ("Added to tomorrow · serves 5").
+- **A plan reaches at most `PLAN_HORIZON_DAYS` (365) ahead.** The planner draws every
+  day up to the last planned one, so `9999-12-31` in a hand-edited link crashed the tab,
+  and, being stored, kept crashing it. Later days are dropped when a plan is read, from a
+  link or from storage, so a device that stored one heals on its next start.
+- **A link is read meal by meal.** A day, meal or extra that can't be read is dropped
+  and the rest kept; before, one bad meal lost the whole plan. Servings that make no
+  sense fall back to the recipe's own; more than `MAX_SERVINGS` (99) are capped, in the
+  steppers too. A plan with nothing readable at all is still "no plan".
+- **A link whose days have all passed opens nothing**: the plan on this device stays,
+  and a toast says "That plan's days have passed". It used to replace the plan with an
+  empty one and drop every tick.
+- **An unrelated plan starts with no ticks.** A link whose plan has no recipe in common
+  with the one on this device (at start, or pasted into an open tab) clears the ticks, so
+  nothing shows as bought that wasn't bought for it. A newer version of the same plan (a
+  partner's update) keeps them, under the usual rules.
+- **Spelled-out servings equal to the recipe's own are stored as absent** when a plan is
+  loaded, as the steppers already did.
+- **A link typed into an open tab is recognised** even when the browser gives its entry
+  the router's `history.state` (seen with Playwright's `goto`). urlSync now also keeps
+  every `plan` the app itself put in the address: Back and Forward land on those, and any
+  other is a link from outside.
 
 ## Any unit in a recipe; what doesn't add up is listed beside the total (2026-11-15)
 

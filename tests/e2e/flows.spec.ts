@@ -36,7 +36,9 @@ test("1. recipe filters live in the address and survive a reload and a visit to 
 	await expect(page).toHaveURL(/q=fennel/);
 });
 
-test("2. a recipe rescales with its servings and is added to the week", async ({ page }) => {
+test("2. a recipe rescales with its servings and is added to the week at them", async ({
+	page,
+}) => {
 	await open(page, "/recipe/beef_stew_wine_olives");
 	await expect(page.getByRole("heading", { name: "Beef Stew with Wine and Olives" })).toBeVisible();
 	await expect(page.getByRole("navigation", { name: "Sections" })).toBeHidden();
@@ -59,11 +61,14 @@ test("2. a recipe rescales with its servings and is added to the week", async ({
 
 	await page.getByRole("button", { name: "Add to week" }).click();
 	await page.getByRole("button", { name: /^Tomorrow/ }).click();
-	await expect(page.getByTestId("toast")).toHaveText("Added to tomorrow");
+	await expect(page.getByTestId("toast")).toHaveText("Added to tomorrow · serves 5");
 	await expect(page).toHaveURL(/plan=/);
 
 	await page.getByRole("button", { name: "Add to week" }).click();
 	await expect(page.getByRole("button", { name: "Tomorrow 1 meal" })).toBeVisible();
+	await page.getByRole("button", { name: "Close" }).click();
+	await page.goto(page.url().replace("#/recipe/beef_stew_wine_olives", "#/planner"));
+	await expect(page.getByRole("button", { name: /^Beef Stew.*serves 5/ })).toBeVisible();
 });
 
 test("an unknown recipe has a friendly way back", async ({ page }) => {

@@ -236,6 +236,7 @@ describe("format", () => {
 		const today = "2026-10-25";
 		expect(formatAddedTo(today, today)).toBe("Added to today");
 		expect(formatAddedTo(addDays(today, 1), today)).toBe("Added to tomorrow");
+		expect(formatAddedTo(addDays(today, 1), today, 5)).toBe("Added to tomorrow · serves 5");
 		expect(formatMovedTo(addDays(today, 6), today)).toBe("Moved to Sat 31 Oct");
 	});
 

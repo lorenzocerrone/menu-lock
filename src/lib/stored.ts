@@ -9,8 +9,8 @@
 import { z } from "zod";
 import type { Dictionary } from "./data";
 import type { IsoDate } from "./dates";
-import { DEFAULT_GROCERY, type GroceryState } from "./grocery";
-import { EMPTY_PLAN, type Plan } from "./plan";
+import { clearChecked, DEFAULT_GROCERY, type GroceryState } from "./grocery";
+import { EMPTY_PLAN, type Plan, sharesRecipe } from "./plan";
 import { fromWire, toWire } from "./planCodec";
 
 /** Bump when the stored shape changes incompatibly; a build refuses payloads newer than it knows. */
@@ -93,11 +93,13 @@ export function importCookingRsPlan(
 /**
  * Startup precedence: a plan in the URL wins (a link someone sent, or the
  * address bar on reload); otherwise the last plan stored on this device;
- * otherwise an empty plan. The grocery state is always this device's.
+ * otherwise an empty plan. The grocery state is always this device's, but its
+ * ticks are dropped when the URL brings an unrelated plan (no recipe in
+ * common), so nothing shows as bought that wasn't bought for it.
  */
 export function resolveInitial(urlPlan: Plan | null, storedState: StoredState | null): StoredState {
-	return {
-		plan: urlPlan ?? storedState?.plan ?? EMPTY_PLAN,
-		grocery: storedState?.grocery ?? DEFAULT_GROCERY,
-	};
+	const grocery = storedState?.grocery ?? DEFAULT_GROCERY;
+	if (urlPlan === null) return { plan: storedState?.plan ?? EMPTY_PLAN, grocery };
+	const related = storedState !== null && sharesRecipe(urlPlan, storedState.plan);
+	return { plan: urlPlan, grocery: related ? grocery : clearChecked(grocery) };
 }

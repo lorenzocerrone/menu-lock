@@ -185,9 +185,9 @@ function RecipeView({ recipe, planned }: { recipe: Recipe; planned: Planned | nu
 					plan={plan}
 					today={today}
 					onPick={(date) => {
-						addMeal(date, recipe.id);
+						addMeal(date, recipe.id, servings);
 						setPicking(false);
-						toast(formatAddedTo(date, today));
+						toast(formatAddedTo(date, today, servings === recipe.servings ? null : servings));
 					}}
 				/>
 			</Sheet>

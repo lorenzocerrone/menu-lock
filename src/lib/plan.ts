@@ -101,9 +101,51 @@ function withDay(plan: Plan, date: IsoDate, meals: MealEntry[]): Plan {
 	return { ...plan, dates };
 }
 
-/** Append a recipe to a day, with the recipe's own servings. */
-export function addMeal(plan: Plan, date: IsoDate, recipe: string): Plan {
-	return withDay(plan, date, [...day(plan, date), { recipe }]);
+/**
+ * Append a recipe to a day: with `servings`, or the recipe's own when they are
+ * absent or equal to `recipeServings` (stored as absent, which keeps links short).
+ */
+export function addMeal(
+	plan: Plan,
+	date: IsoDate,
+	recipe: string,
+	servings?: number,
+	recipeServings?: number,
+): Plan {
+	const meal: RecipeMeal = { recipe };
+	if (servings !== undefined && servings !== recipeServings) meal.servings = servings;
+	return withDay(plan, date, [...day(plan, date), meal]);
+}
+
+/**
+ * Store every meal's servings that equal its recipe's own as absent, as
+ * `setServings` does (a link written by hand or by another app may spell them
+ * out). `servingsOf` gives a recipe's own servings, `undefined` when unknown.
+ * Returns the same plan when nothing changes.
+ */
+export function withOwnServings(
+	plan: Plan,
+	servingsOf: (recipe: string) => number | undefined,
+): Plan {
+	let changed = false;
+	const dates: Plan["dates"] = {};
+	for (const [date, meals] of Object.entries(plan.dates)) {
+		dates[date] = meals.map((meal) => {
+			if (isItem(meal) || meal.servings === undefined) return meal;
+			if (meal.servings !== servingsOf(meal.recipe)) return meal;
+			changed = true;
+			const { servings: _, ...rest } = meal;
+			return rest;
+		});
+	}
+	return changed ? { ...plan, dates } : plan;
+}
+
+/** Whether two plans have a recipe in common: one is likely a newer version of the other. */
+export function sharesRecipe(a: Plan, b: Plan): boolean {
+	const ids = (plan: Plan) => entries(plan).flatMap((meal) => (isItem(meal) ? [] : [meal.recipe]));
+	const inA = new Set(ids(a));
+	return ids(b).some((id) => inA.has(id));
 }
 
 /** Append an extra to a day. */

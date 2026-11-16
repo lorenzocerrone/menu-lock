@@ -74,7 +74,7 @@ describe("stored state", () => {
 
 	it("starts from the URL plan, else the stored one, always with this device's grocery state", () => {
 		const storedState = sample();
-		const shared = addMeal(EMPTY_PLAN, d(6), "pancakes");
+		const shared = addMeal(EMPTY_PLAN, d(6), "dal");
 		expect(resolveInitial(shared, storedState)).toEqual({
 			plan: shared,
 			grocery: storedState.grocery,
@@ -82,6 +82,15 @@ describe("stored state", () => {
 		expect(resolveInitial(shared, null)).toEqual({ plan: shared, grocery: DEFAULT_GROCERY });
 		expect(resolveInitial(null, storedState)).toEqual(storedState);
 		expect(resolveInitial(null, null)).toEqual({ plan: EMPTY_PLAN, grocery: DEFAULT_GROCERY });
+	});
+
+	it("drops the ticks when the URL brings an unrelated plan, and keeps the range", () => {
+		const storedState = sample();
+		const unrelated = addMeal(EMPTY_PLAN, d(6), "pancakes");
+		expect(resolveInitial(unrelated, storedState)).toEqual({
+			plan: unrelated,
+			grocery: { checked: [], range: { days: 3 } },
+		});
 	});
 
 	it("imports only the plan from cooking-rs's stored state", () => {

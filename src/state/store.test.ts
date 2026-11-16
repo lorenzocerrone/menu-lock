@@ -20,6 +20,38 @@ const line = (store: ReturnType<typeof make>, key: string) => {
 };
 
 describe("store", () => {
+	it("adds a meal at the servings asked for, within bounds", () => {
+		const store = make();
+		const s = () => store.getState();
+		s().addMeal(d(0), "dal", 2);
+		s().addMeal(d(0), "dal", 4); // dal's own
+		s().addMeal(d(0), "dal", 500);
+		s().addMeal(d(0), "dal");
+		expect(s().plan.dates[d(0)]).toEqual([
+			{ recipe: "dal", servings: 2 },
+			{ recipe: "dal" },
+			{ recipe: "dal", servings: 99 },
+			{ recipe: "dal" },
+		]);
+	});
+
+	it("opens a link: keeps the ticks for a newer version of the plan, clears them for an unrelated one", () => {
+		const store = make(addMeal(EMPTY_PLAN, d(1), "dal"));
+		const s = () => store.getState();
+		s().toggleTick(line(store, "salt"));
+		s().loadPlan(addMeal(addMeal(EMPTY_PLAN, d(1), "dal"), d(2), "tacos", 2));
+		expect(isChecked(s().grocery, "salt")).toBe(true);
+		s().loadPlan(addMeal(EMPTY_PLAN, d(1), "tacos", 2));
+		expect(s().grocery.checked).toEqual([]);
+	});
+
+	it("stores spelled-out servings equal to the recipe's own as absent, from a link or at start", () => {
+		const store = make(addMeal(EMPTY_PLAN, d(1), "dal", 4));
+		expect(store.getState().plan.dates[d(1)]).toEqual([{ recipe: "dal" }]);
+		store.getState().loadPlan(addMeal(EMPTY_PLAN, d(1), "tacos", 2));
+		expect(store.getState().plan.dates[d(1)]).toEqual([{ recipe: "tacos" }]);
+	});
+
 	it("drops past days when it starts and when the date changes", () => {
 		const store = make(addMeal(addMeal(EMPTY_PLAN, d(-1), "dal"), d(1), "tacos"));
 		expect(Object.keys(store.getState().plan.dates)).toEqual([d(1)]);
