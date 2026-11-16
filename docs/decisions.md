@@ -158,6 +158,18 @@ What they found that loses data or breaks the app, and what changed:
 - **Grams and ml are rounded before choosing the unit** ("1 kg", not "1000 g"), and an
   amount above 0 never shows as "0 g".
 - **The grocery range names the month when it ends in another one** ("Today – Wed 20 Jan").
+- **Sheets take the keyboard focus**, keep it while open (vaul's `autoFocus`), and give
+  it back to what had it before, the button that opened them, when that is still there.
+- **An ingredient can be marked `vegetarian: false`** in the dictionary for an animal
+  product outside the Meat and Fish aisles. Gelatin is, so panna cotta is no longer
+  "vegetarian". Rennet in hard cheeses is not marked: the household's call.
+- **"Add to week" on desktop** is centred under the column (the button's `inline-flex`
+  ignored `mx-auto`, so it sat in the bottom-left corner over the ingredients).
+- **An address that is no page** ("#/shopping") shows "No such page" inside the app,
+  with its tabs and a way back that keeps the plan.
+- Small accessibility fixes: the grocery tab's count at full contrast and named
+  "left to buy"; filter options named with their count ("Asian, 0 recipes"); the drag
+  handle 44px wide.
 
 ## Any unit in a recipe; what doesn't add up is listed beside the total (2026-11-15)
 

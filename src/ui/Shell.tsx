@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import { useGrocery } from "../state/app";
 import { PREVIEW } from "../state/storage";
 import { spring } from "./motion";
@@ -17,7 +18,7 @@ const TABS = [
  * strip with a sienna pill on the current one. The strip floats at the bottom
  * on phones and sits at the top from 720px.
  */
-export function Shell() {
+export function Shell({ children }: { children?: ReactNode }) {
 	const { pathname } = useLocation();
 	const { left } = useGrocery();
 	// A recipe is read without the tabs: its "Add to week" button takes their place.
@@ -62,7 +63,8 @@ export function Shell() {
 										{tab.to === "/grocery" && left > 0 ? (
 											<>
 												{" "}
-												<Roll className="text-xs opacity-80">{String(left)}</Roll>
+												<Roll className="text-xs">{String(left)}</Roll>
+												<span className="sr-only"> left to buy</span>
 											</>
 										) : null}
 									</span>
@@ -72,9 +74,7 @@ export function Shell() {
 					</div>
 				</nav>
 
-				<main className="flex-1 pt-2 pb-28 wide:pb-10">
-					<Outlet />
-				</main>
+				<main className="flex-1 pt-2 pb-28 wide:pb-10">{children ?? <Outlet />}</main>
 			</div>
 			<Toasts />
 		</div>

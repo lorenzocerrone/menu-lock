@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 import { type QuerySearch, queryFromSearch, queryToSearch } from "./lib/filters";
 import { GroceryPage } from "./routes/grocery";
+import { NotFoundPage } from "./routes/notFound";
 import { PlannerPage } from "./routes/planner";
 import { RecipePage } from "./routes/recipe";
 import { RecipesPage } from "./routes/recipes";
@@ -24,6 +25,12 @@ const rootSearch = z.object({
 const rootRoute = createRootRoute({
 	validateSearch: rootSearch,
 	search: { middlewares: [retainSearchParams(["plan"])] },
+	// An address that is no page: still the app, with its tabs and a way back.
+	notFoundComponent: () => (
+		<Shell>
+			<NotFoundPage />
+		</Shell>
+	),
 });
 
 /** The app frame (wordmark and tabs) around the three pages. */
