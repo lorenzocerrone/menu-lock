@@ -459,8 +459,8 @@ is done.
       decimal commas accepted. While typing, dictionary names and aliases are suggested
       (starts-with first, then contains, each by name). Picking one makes a catalog extra
       **if the quantity converts** for it (§5.3); otherwise it is kept as a custom extra
-      exactly as typed ("1 loaf" of bread sold by weight). Enter without a pick adds a
-      custom extra (aisle `Other`). Extras are listed with a remove button, and they
+      exactly as typed ("1 loaf" of bread sold by weight). Enter without a pick picks an
+      exact dictionary name or alias; anything else is a custom extra (aisle `Other`). Extras are listed with a remove button, and they
       travel with the share link.
 - [ ] "Copy list" (§5.5), toast "List copied".
 

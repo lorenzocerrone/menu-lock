@@ -3,10 +3,10 @@
  * was typed ("milk 1 l"), suggest dictionary ingredients, and build the extra
  * to store.
  */
-import type { Dictionary } from "./data";
+import { type Dictionary, lookup } from "./data";
 import { capitalize } from "./grocery";
 import type { Extra } from "./plan";
-import { resolveUnit, toShopping } from "./units";
+import { parseUnit, resolveUnit, toShopping } from "./units";
 
 /** A typed extra, split into the item name and an optional quantity text. */
 export type ParsedExtra = { name: string; quantity: string | null };
@@ -20,13 +20,23 @@ export function parseNumber(token: string): number | null {
 	return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+/** A number with a unit stuck to it ("500g", "1,5l"). */
+const GLUED = /^(\d+(?:[.,]\d*)?|[.,]\d+)([a-z]+)$/i;
+
+/** "500g" as "500", "g" when the letters are a unit; anything else as it is. */
+function unglue(token: string): string[] {
+	const m = GLUED.exec(token);
+	return m?.[1] && m[2] && parseUnit(m[2]) !== null ? [m[1], m[2]] : [token];
+}
+
 /**
  * Split "milk 1 l" into `milk` and "1 l". The first number starts the
  * quantity; the token after it joins the quantity unless that would leave no
- * name ("2 eggs" → `eggs`, "2").
+ * name ("2 eggs" → `eggs`, "2"). A unit written without a space counts as its
+ * own word ("pasta 500g").
  */
 export function parseExtra(input: string): ParsedExtra {
-	const tokens = input.trim().split(/\s+/).filter(Boolean);
+	const tokens = input.trim().split(/\s+/).filter(Boolean).flatMap(unglue);
 	const at = tokens.findIndex((t) => parseNumber(t) !== null);
 	if (at === -1) return { name: tokens.join(" "), quantity: null };
 	const name = tokens.slice(0, at);
@@ -137,9 +147,12 @@ export function suggest(dictionary: Dictionary, name: string, max: number): Sugg
  * The extra to store. With a dictionary pick (`key`), the quantity becomes an
  * amount if it converts for that ingredient; if it doesn't ("1 loaf" of bread
  * sold by weight) the item is kept exactly as typed, so nothing is silently
- * mis-measured. Without a pick it is a custom extra.
+ * mis-measured. Without a pick, a name that is exactly a dictionary name or
+ * alias counts as picking it ("milk 2 l" adds up with the recipes' milk);
+ * anything else is a custom extra.
  */
-export function toExtra(parsed: ParsedExtra, key: string | null, dictionary: Dictionary): Extra {
+export function toExtra(parsed: ParsedExtra, picked: string | null, dictionary: Dictionary): Extra {
+	const key = picked ?? lookup(dictionary, parsed.name)?.key ?? null;
 	const entry = key === null ? undefined : dictionary.entries.get(key);
 	if (key === null || !entry) {
 		return { kind: "custom", name: capitalize(parsed.name.trim()), quantity: parsed.quantity };

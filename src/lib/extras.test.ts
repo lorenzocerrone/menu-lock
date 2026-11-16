@@ -15,6 +15,10 @@ describe("extras", () => {
 		expect(parseExtra("coffee 250")).toEqual({ name: "coffee", quantity: "250" });
 		expect(parseExtra("")).toEqual({ name: "", quantity: null });
 		expect(parseExtra("7up")).toEqual({ name: "7up", quantity: null });
+		// A unit written without a space.
+		expect(parseExtra("pasta 500g")).toEqual({ name: "pasta", quantity: "500 g" });
+		expect(parseExtra("milk 1,5L")).toEqual({ name: "milk", quantity: "1,5 L" });
+		expect(parseExtra("2x eggs")).toEqual({ name: "2x eggs", quantity: null });
 	});
 
 	it("reads positive numbers, with a decimal comma", () => {
@@ -133,6 +137,19 @@ describe("extras", () => {
 			quantity: "3",
 		});
 		expect(make("éclair", null, null)).toEqual({ kind: "custom", name: "Éclair", quantity: null });
+		// No pick, but exactly a dictionary name or alias: as if it were picked.
+		expect(make("milk", "2 l", null)).toEqual({
+			kind: "catalog",
+			key: "milk",
+			amount: 2,
+			unit: "l",
+		});
+		expect(make("Eggs", "6", null)).toEqual({ kind: "catalog", key: "egg", amount: 6 });
+		expect(make("flour", "1 bag", null)).toEqual({
+			kind: "custom",
+			name: "Flour",
+			quantity: "1 bag",
+		});
 		expect(make("milk", "1 l", "no_such_key")).toEqual({
 			kind: "custom",
 			name: "Milk",

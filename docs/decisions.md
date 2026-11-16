@@ -148,6 +148,16 @@ What they found that loses data or breaks the app, and what changed:
   the router's `history.state` (seen with Playwright's `goto`). urlSync now also keeps
   every `plan` the app itself put in the address: Back and Forward land on those, and any
   other is a link from outside.
+- **A typed extra that names a dictionary ingredient joins that ingredient's line**, in
+  its aisle, whether or not a recipe needs it. Before, it joined only when a recipe
+  did, else it got a line in Other under another tick key: a ticked "Milk" came back
+  unticked when the recipe with milk was removed, and "Eggs" sat in Other.
+- **Enter in the extras input picks an exact dictionary name or alias**, as tapping the
+  suggestion would: "milk 2 l" adds up with the recipes' milk ("2.9 l") instead of
+  "896 ml + 2 l". A unit stuck to its number is read ("pasta 500g").
+- **Grams and ml are rounded before choosing the unit** ("1 kg", not "1000 g"), and an
+  amount above 0 never shows as "0 g".
+- **The grocery range names the month when it ends in another one** ("Today – Wed 20 Jan").
 
 ## Any unit in a recipe; what doesn't add up is listed beside the total (2026-11-15)
 
