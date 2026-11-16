@@ -42,10 +42,15 @@ export function formatLineAmount(
 	return formatQuantity((line.amount * servings) / recipeServings, line.unit, line.count);
 }
 
-/** Mass or volume with a step up to the large unit at 1000. */
+/**
+ * Mass or volume with a step up to the large unit at 1000, decided after
+ * rounding (999.6 g is "1 kg", not "1000 g"). Something is never shown as 0.
+ */
 function scaled(amount: number, small: string, big: string): string {
-	if (amount >= 1000) return `${trimDecimals(amount / 1000, 2)} ${big}`;
-	return `${trimDecimals(amount, amount < 10 ? 1 : 0)} ${small}`;
+	const rounded = amount < 10 ? Math.round(amount * 10) / 10 : Math.round(amount);
+	if (rounded >= 1000) return `${trimDecimals(amount / 1000, 2)} ${big}`;
+	if (rounded === 0 && amount > 0) return `0.1 ${small}`;
+	return `${trimDecimals(rounded, 1)} ${small}`;
 }
 
 /**
@@ -174,15 +179,20 @@ export function formatDayInline(date: IsoDate, today: IsoDate): string {
 }
 
 /**
- * The days a grocery list covers: "Today", "Today – Tomorrow", "Sun 25 – Sat 31"
- * (no month: the dates of a range are at most weeks apart).
+ * The days a grocery list covers: "Today", "Today – Tomorrow", "Sun 25 – Sat 31",
+ * with the month when the range ends in another month ("Today – Wed 20 Jan").
  */
 export function formatRange(from: IsoDate, to: IsoDate, today: IsoDate): string {
+	const [fromYear, fromMonth] = ymd(from);
+	const [toYear, toMonth] = ymd(to);
+	const months = fromYear !== toYear || fromMonth !== toMonth;
 	const short = (date: IsoDate) => {
 		const ahead = daysUntil(today, date);
 		if (ahead === 0) return "Today";
 		if (ahead === 1) return "Tomorrow";
-		return `${WEEKDAY_SHORT[weekday(date)]} ${ymd(date)[2]}`;
+		const [, month, dayOfMonth] = ymd(date);
+		const name = `${WEEKDAY_SHORT[weekday(date)]} ${dayOfMonth}`;
+		return months ? `${name} ${MONTH_SHORT[month - 1]}` : name;
 	};
 	return to <= from ? short(from) : `${short(from)} – ${short(to)}`;
 }
