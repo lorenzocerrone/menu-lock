@@ -10,24 +10,24 @@ test("1. recipe filters live in the address and survive a reload and a visit to 
 	await expect(page.getByText("39 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Filters" }).click();
-	await page.getByRole("button", { name: /^vegetarian \d+$/ }).click();
-	await page.getByRole("button", { name: /^≤20 min \d+$/ }).click();
-	await page.getByRole("button", { name: "Show 12 recipes" }).click();
+	await page.getByRole("button", { name: /^vegetarian, \d+ recipes?$/ }).click();
+	await page.getByRole("button", { name: /^≤20 min, \d+ recipes?$/ }).click();
+	await page.getByRole("button", { name: "Show 11 recipes" }).click();
 
 	await expect(page).toHaveURL(/diet=veg/);
 	await expect(page).toHaveURL(/time=20/);
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Filters · 2" })).toBeVisible();
 	await expect(page.getByRole("heading", { name: "Spaghetti Carbonara" })).toHaveCount(0);
 
 	await page.reload();
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Remove filter vegetarian" })).toBeVisible();
 
 	await page.getByRole("link", { name: /Fennel and Orange Salad/ }).click();
 	await expect(page.getByRole("heading", { name: "Fennel and Orange Salad" })).toBeVisible();
 	await page.getByRole("button", { name: "‹ Back" }).click();
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Remove filter vegetarian" }).click();
 	await expect(page).not.toHaveURL(/diet=/);
@@ -98,7 +98,7 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 	await page.getByRole("dialog").getByRole("button", { name: "Filters" }).click();
 	await page
 		.getByRole("dialog")
-		.getByRole("button", { name: /^Greek \d+$/ })
+		.getByRole("button", { name: /^Greek, \d+ recipes?$/ })
 		.click();
 	await page
 		.getByRole("dialog")

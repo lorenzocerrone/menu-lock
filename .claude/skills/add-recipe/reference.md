@@ -119,6 +119,8 @@ at the end of its aisle's group.
 - `aisle`: exactly one of, in shop order: `Produce`, `Meat`, `Fish`, `Dairy & Eggs`,
   `Pasta & Grains`, `Bakery`, `Legumes`, `Pantry`, `Frozen`, `Spices & Oils`. Meat and
   Fish make a recipe non-vegetarian.
+- `vegetarian: false` (optional) for an animal product in another aisle (gelatin, lard,
+  anchovy paste in Pantry): it makes a recipe non-vegetarian too.
 - `count` (optional), needed whenever recipes count it in pieces:
   - `perPiece`: one piece in the shopping unit (onion 150 g, garlic clove 4 g, can
     400 ml). For a `pcs` entry: the grams in one piece, so recipes can still write grams.
