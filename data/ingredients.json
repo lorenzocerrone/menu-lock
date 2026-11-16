@@ -114,7 +114,7 @@
   "capers": { "name": "Capers", "unit": "g", "aisle": "Pantry" },
   "espresso": { "name": "Espresso", "unit": "ml", "aisle": "Pantry", "aliases": ["coffee"] },
   "cocoa_powder": { "name": "Cocoa powder", "unit": "g", "aisle": "Pantry" },
-  "gelatin": { "name": "Gelatin sheets", "unit": "g", "aisle": "Pantry", "count": { "label": "sheet", "perPiece": 2 } },
+  "gelatin": { "name": "Gelatin sheets", "unit": "g", "aisle": "Pantry", "vegetarian": false, "count": { "label": "sheet", "perPiece": 2 } },
   "vanilla_extract": { "name": "Vanilla extract", "unit": "ml", "aisle": "Pantry" },
   "tahini": { "name": "Tahini", "unit": "g", "aisle": "Pantry" },
   "tortilla_chips": { "name": "Tortilla chips", "unit": "g", "aisle": "Pantry" },

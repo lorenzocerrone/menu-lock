@@ -34,6 +34,11 @@
         ],
         "description": "Grocery aisle. Meat and Fish make a recipe non-vegetarian."
       },
+      "vegetarian": {
+        "description": "false for an animal product outside the Meat and Fish aisles (gelatin): it makes a recipe non-vegetarian.",
+        "type": "boolean",
+        "const": false
+      },
       "count": {
         "type": "object",
         "properties": {

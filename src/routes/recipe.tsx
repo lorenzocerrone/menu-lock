@@ -169,12 +169,13 @@ function RecipeView({ recipe, planned }: { recipe: Recipe; planned: Planned | nu
 
 			<div
 				data-fixed
-				className="fixed inset-x-0 bottom-0 z-10 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+				className="fixed inset-x-0 bottom-0 z-10 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
 			>
 				<button
 					type="button"
 					onClick={() => setPicking(true)}
-					className={`${buttonPrimary} mx-auto flex w-full max-w-md shadow-lift`}
+					// Centred by its row: the button's inline-flex would ignore mx-auto.
+					className={`${buttonPrimary} w-full max-w-md shadow-lift`}
 				>
 					Add to week
 				</button>
@@ -185,9 +186,9 @@ function RecipeView({ recipe, planned }: { recipe: Recipe; planned: Planned | nu
 					plan={plan}
 					today={today}
 					onPick={(date) => {
-						addMeal(date, recipe.id);
+						addMeal(date, recipe.id, servings);
 						setPicking(false);
-						toast(formatAddedTo(date, today));
+						toast(formatAddedTo(date, today, servings === recipe.servings ? null : servings));
 					}}
 				/>
 			</Sheet>

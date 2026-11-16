@@ -166,10 +166,11 @@ describe("aggregate", () => {
 		]);
 		let plan = addMeal(EMPTY_PLAN, d(0), "r");
 		plan = addExtra(plan, { kind: "custom", name: "Flour", quantity: "1 bag" });
-		// Bread is in the dictionary but not on the list: its own line, in Other.
-		plan = addExtra(plan, { kind: "custom", name: "Bread", quantity: "1 loaf" });
+		// Bread is in the dictionary but no recipe needs it: its own line, in its aisle,
+		// under the same key a recipe's bread would have, so its tick holds either way.
+		plan = addExtra(plan, { kind: "custom", name: "bread", quantity: "1 loaf" });
 		const list = aggregate(plan, d(0), d(13), data);
-		expect(names(list)).toEqual(["Bakery", "Other"]);
+		expect(names(list)).toEqual(["Bakery"]);
 		const flour = find(list, "flour");
 		expect(flour).toMatchObject({
 			amount: 500,
@@ -178,7 +179,12 @@ describe("aggregate", () => {
 			extra: true,
 		});
 		expect(formatLineQuantity(flour)).toBe("500 g + 1 bag");
-		expect(find(list, "custom:bread").customQuantities).toEqual(["1 loaf"]);
+		expect(find(list, "bread")).toMatchObject({
+			name: "Bread",
+			amount: null,
+			customQuantities: ["1 loaf"],
+			extra: true,
+		});
 	});
 
 	it("skips unknown recipes", () => {
@@ -362,6 +368,22 @@ const aisle = (name: string, ...lines: GroceryLine[]): GroceryAisle => ({ name, 
 const tick = (state: GroceryState, ...lines: GroceryLine[]) => lines.reduce(toggleChecked, state);
 
 describe("ticks", () => {
+	it("hold for a typed extra when the recipe that shared its line goes", () => {
+		const data = fixtureData([
+			recipeFile("pie", 1, [{ ingredient: "milk", amount: 200, unit: "ml" }]),
+		]);
+		const both = addExtra(addMeal(EMPTY_PLAN, d(1), "pie"), {
+			kind: "custom",
+			name: "Milk",
+			quantity: null,
+		});
+		const list = (p: Plan) => aggregate(p, TODAY, d(5), data);
+		const ticked = toggleChecked(DEFAULT_GROCERY, find(list(both), "milk"));
+		const extraOnly = { ...both, dates: {} };
+		expect(find(list(extraOnly), "milk").extra).toBe(true);
+		expect(pruneChecked(ticked, list(extraOnly))).toBe(ticked);
+	});
+
 	it("drop when a quantity beside the total grows, and stay when it shrinks", () => {
 		const data = fixtureData([
 			recipeFile("cake", 1, [{ ingredient: "lemon", amount: 60, unit: "g" }]),

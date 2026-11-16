@@ -32,6 +32,7 @@ export const DICTIONARY = {
 		count: { label: "loaf", plural: "loaves" },
 	},
 	breadcrumbs: { name: "Breadcrumbs", unit: "g", aisle: "Pantry" },
+	gelatin: { name: "Gelatin sheets", unit: "g", aisle: "Pantry", vegetarian: false },
 	flour: { name: "Flour", unit: "g", aisle: "Bakery" },
 	salmon: {
 		name: "Salmon fillet",

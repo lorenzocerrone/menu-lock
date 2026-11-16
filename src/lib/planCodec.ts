@@ -15,7 +15,7 @@
 import { z } from "zod";
 import { freeKey } from "./changes";
 import { type Dictionary, lookup } from "./data";
-import { type IsoDate, isIsoDate } from "./dates";
+import { addDays, type IsoDate, isIsoDate } from "./dates";
 import {
 	type Extra,
 	isEmpty,
@@ -55,10 +55,11 @@ const wireMeal = z.union([
 	z.string(),
 	z.looseObject({
 		recipe: z.string(),
-		servings: z.number().int().min(1).nullish(),
+		// Read leniently: servings that make no sense fall back to the recipe's own.
+		servings: z.unknown().optional(),
 		changes: z.array(z.unknown()).nullish(),
 	}),
-	z.looseObject({ item: z.unknown(), buy: z.boolean().nullish() }),
+	z.looseObject({ item: z.looseObject({}), buy: z.boolean().nullish() }),
 ]);
 
 const wireChange = z.looseObject({
@@ -81,10 +82,27 @@ const wireExtra = z.looseObject({
 	unit: z.string().nullish(),
 });
 
+/** Only the outline is checked here: each day, meal and extra is read on its own, so one bad one is dropped, not fatal. */
 const wirePlan = z.looseObject({
-	dates: z.record(z.string(), z.array(wireMeal)).optional(),
-	extras: z.array(wireExtra).optional(),
+	dates: z.record(z.string(), z.unknown()).optional(),
+	extras: z.array(z.unknown()).optional(),
 });
+
+/** The most servings a meal can have: more is a typo (or a hand-edited link). */
+export const MAX_SERVINGS = 99;
+
+/**
+ * How far ahead a plan may reach. The planner draws every day up to the last
+ * planned one, so a date centuries away (a hand-edited link) would hang it.
+ */
+export const PLAN_HORIZON_DAYS = 365;
+
+/** Servings as read from a link or storage: a whole number from 1 to MAX_SERVINGS, or none. */
+function readServings(raw: unknown): number | undefined {
+	if (typeof raw !== "number" || !Number.isFinite(raw)) return undefined;
+	const n = Math.round(raw);
+	return n < 1 ? undefined : Math.min(n, MAX_SERVINGS);
+}
 
 function writeChange(change: MealChange): WireChange {
 	if (change.kind === "swapFree")
@@ -176,7 +194,8 @@ function readMeal(meal: z.infer<typeof wireMeal>, dictionary: Dictionary): MealE
 	}
 	if (!("recipe" in meal) || typeof meal.recipe !== "string") return null;
 	const out: RecipeMeal = { recipe: meal.recipe };
-	if (typeof meal.servings === "number") out.servings = meal.servings;
+	const servings = readServings(meal.servings);
+	if (servings !== undefined) out.servings = servings;
 	// One change per ingredient: a later one for the same key replaces the earlier.
 	const changes = new Map<string, MealChange>();
 	for (const raw of Array.isArray(meal.changes) ? meal.changes : []) {
@@ -210,31 +229,73 @@ function readExtra(raw: z.infer<typeof wireExtra>, dictionary: Dictionary): Extr
 		: { kind: "catalog", key: known.key, amount, unit };
 }
 
+/** What reading a plan left out, besides days without meals. */
+export type Dropped = {
+	/** Days before today, with meals on them. */
+	past: number;
+	/** Days, meals and extras that couldn't be read, and days beyond the horizon. */
+	unreadable: number;
+};
+
 /**
- * Read a wire value as of `today`: days before today and days without meals
- * are dropped; unknown recipe ids are kept. `null` for anything that isn't a
- * dated plan.
+ * Read a wire value as of `today`: days before today, days more than
+ * PLAN_HORIZON_DAYS ahead and days without meals are dropped; a day, meal or
+ * extra that can't be read is dropped and the rest kept; unknown recipe ids
+ * are kept. `plan` is `null` for anything that isn't a dated plan, and when
+ * nothing at all could be read.
  */
-export function fromWire(json: unknown, today: IsoDate, dictionary: Dictionary): Plan | null {
+export function readWire(
+	json: unknown,
+	today: IsoDate,
+	dictionary: Dictionary,
+): { plan: Plan | null; dropped: Dropped } {
+	const dropped: Dropped = { past: 0, unreadable: 0 };
 	const parsed = wirePlan.safeParse(json);
-	if (!parsed.success) return null;
+	if (!parsed.success) return { plan: null, dropped };
 	const wire = parsed.data;
 	// The weekday shape from before plans were dated is no longer read.
-	if ("days" in wire && wire.dates === undefined) return null;
+	if ("days" in wire && wire.dates === undefined) return { plan: null, dropped };
 
+	const horizon = addDays(today, PLAN_HORIZON_DAYS);
 	const dates: Record<IsoDate, MealEntry[]> = {};
 	for (const date of Object.keys(wire.dates ?? {}).sort()) {
-		if (!isIsoDate(date)) return null;
-		if (date < today) continue;
-		const meals = (wire.dates?.[date] ?? []).flatMap((meal) => readMeal(meal, dictionary) ?? []);
+		const raw = wire.dates?.[date];
+		if (!isIsoDate(date) || !Array.isArray(raw)) {
+			dropped.unreadable++;
+			continue;
+		}
+		if (raw.length === 0) continue;
+		if (date < today) {
+			dropped.past++;
+			continue;
+		}
+		if (date > horizon) {
+			dropped.unreadable++;
+			continue;
+		}
+		const meals: MealEntry[] = [];
+		for (const item of raw) {
+			const meal = wireMeal.safeParse(item);
+			const read = meal.success ? readMeal(meal.data, dictionary) : null;
+			if (read) meals.push(read);
+			else dropped.unreadable++;
+		}
 		if (meals.length > 0) dates[date] = meals;
 	}
 	const extras: Extra[] = [];
 	for (const raw of wire.extras ?? []) {
-		const extra = readExtra(raw, dictionary);
+		const parsedExtra = wireExtra.safeParse(raw);
+		const extra = parsedExtra.success ? readExtra(parsedExtra.data, dictionary) : null;
 		if (extra) extras.push(extra);
+		else dropped.unreadable++;
 	}
-	return { dates, extras };
+	const plan = { dates, extras };
+	return { plan: dropped.unreadable > 0 && isEmpty(plan) ? null : plan, dropped };
+}
+
+/** `readWire`, for when only the plan matters (storage). */
+export function fromWire(json: unknown, today: IsoDate, dictionary: Dictionary): Plan | null {
+	return readWire(json, today, dictionary).plan;
 }
 
 const BASE64URL = /^[A-Za-z0-9_-]*={0,2}$/;
@@ -263,15 +324,31 @@ export function encodePlan(plan: Plan): string | null {
 	return toBase64Url(JSON.stringify(toWire(plan)));
 }
 
-/** Read a `plan` parameter as of `today`. Garbage decodes to `null`: no plan in the URL. */
-export function decodePlan(encoded: string, today: IsoDate, dictionary: Dictionary): Plan | null {
+/**
+ * Read a `plan` parameter as of `today`. `plan` is `null` when there is nothing
+ * to open: garbage, and a link whose days have all passed (`passed`), which
+ * would otherwise open as an empty plan.
+ */
+export function readPlanParam(
+	encoded: string,
+	today: IsoDate,
+	dictionary: Dictionary,
+): { plan: Plan | null; passed: boolean; dropped: Dropped } {
+	const none = { plan: null, passed: false, dropped: { past: 0, unreadable: 0 } };
 	const text = fromBase64Url(encoded);
-	if (text === null) return null;
+	if (text === null) return none;
 	let json: unknown;
 	try {
 		json = JSON.parse(text);
 	} catch {
-		return null;
+		return none;
 	}
-	return fromWire(json, today, dictionary);
+	const { plan, dropped } = readWire(json, today, dictionary);
+	const passed = plan !== null && dropped.past > 0 && Object.keys(plan.dates).length === 0;
+	return { plan: passed || (plan && isEmpty(plan)) ? null : plan, passed, dropped };
+}
+
+/** Read a `plan` parameter as of `today`. Garbage, and a link with nothing left to cook, decode to `null`. */
+export function decodePlan(encoded: string, today: IsoDate, dictionary: Dictionary): Plan | null {
+	return readPlanParam(encoded, today, dictionary).plan;
 }

@@ -37,7 +37,10 @@ import {
 	setChanges,
 	setItem,
 	setServings,
+	sharesRecipe,
+	withOwnServings,
 } from "../lib/plan";
+import { MAX_SERVINGS } from "../lib/planCodec";
 import type { StoredState } from "../lib/stored";
 
 export type AppState = {
@@ -45,11 +48,15 @@ export type AppState = {
 	plan: Plan;
 	grocery: GroceryState;
 
-	/** Replace the whole plan (a link was opened). */
+	/**
+	 * Replace the whole plan (a link was opened). The ticks are kept for a newer
+	 * version of the same plan and cleared for an unrelated one.
+	 */
 	loadPlan: (plan: Plan) => void;
 	/** The date changed while the app was open. */
 	setToday: (today: IsoDate) => void;
-	addMeal: (date: IsoDate, recipe: string) => void;
+	/** `servings` absent: the recipe's own. */
+	addMeal: (date: IsoDate, recipe: string, servings?: number) => void;
 	/** An ingredient on a day, without a recipe; `buy` puts it on the grocery list too. */
 	addItem: (date: IsoDate, item: Extra, buy: boolean) => void;
 	/** Change a day's ingredient: how much of it, or whether it is on the grocery list. */
@@ -80,7 +87,14 @@ export function groceryList(
 	return aggregate(plan, today, rangeEnd(grocery.range, plan, today), data);
 }
 
+/** Servings as the steppers allow them: a whole number from 1 to MAX_SERVINGS. */
+export function clampServings(servings: number): number {
+	return Math.min(MAX_SERVINGS, Math.max(1, Math.round(servings)));
+}
+
 export function createAppStore(data: Data, today: IsoDate, initial: StoredState) {
+	const servingsOf = (recipe: string) => data.recipeById.get(recipe)?.servings;
+	const ownServings = (plan: Plan) => withOwnServings(plan, servingsOf);
 	type Core = Pick<AppState, "today" | "plan" | "grocery">;
 
 	/** Drop past days, then the ticks that no longer hold. */
@@ -101,11 +115,24 @@ export function createAppStore(data: Data, today: IsoDate, initial: StoredState)
 			update((state) => ({ plan: change(state.plan) }));
 
 		return {
-			...settle({ today, plan: initial.plan, grocery: initial.grocery }),
+			...settle({ today, plan: ownServings(initial.plan), grocery: initial.grocery }),
 
-			loadPlan: (plan) => updatePlan(() => plan),
+			loadPlan: (plan) =>
+				update((state) => ({
+					plan: ownServings(plan),
+					grocery: sharesRecipe(state.plan, plan) ? state.grocery : clearChecked(state.grocery),
+				})),
 			setToday: (next) => update(() => ({ today: next })),
-			addMeal: (date, recipe) => updatePlan((plan) => addMeal(plan, date, recipe)),
+			addMeal: (date, recipe, servings) =>
+				updatePlan((plan) =>
+					addMeal(
+						plan,
+						date,
+						recipe,
+						servings === undefined ? undefined : clampServings(servings),
+						servingsOf(recipe),
+					),
+				),
 			addItem: (date, item, buy) => updatePlan((plan) => addItem(plan, date, item, buy)),
 			setItem: (date, index, change) => updatePlan((plan) => setItem(plan, date, index, change)),
 			changeMeal: (date, index, change) =>
@@ -133,7 +160,7 @@ export function createAppStore(data: Data, today: IsoDate, initial: StoredState)
 					const meal = day(plan, date)[index];
 					const own =
 						!meal || isItem(meal) ? undefined : data.recipeById.get(meal.recipe)?.servings;
-					return setServings(plan, date, index, Math.max(1, Math.round(servings)), own);
+					return setServings(plan, date, index, clampServings(servings), own);
 				}),
 			clearPlan: (what) =>
 				update((state) => ({

@@ -8,10 +8,12 @@ import { useStore } from "zustand";
 import { DATA } from "../dataset";
 import { localIsoDate } from "../lib/dates";
 import { type GroceryAisle, progress } from "../lib/grocery";
-import { decodePlan } from "../lib/planCodec";
+import { readPlanParam } from "../lib/planCodec";
 import { resolveInitial } from "../lib/stored";
+import { toast } from "../ui/toast";
 import { browserStorage, loadStored, saveStored } from "./storage";
 import { type AppState, createAppStore, groceryList } from "./store";
+import { PASSED_LINK } from "./urlSync";
 
 /** The `plan` parameter of the address the app was opened with, if any. */
 function planInAddress(): string | null {
@@ -22,16 +24,18 @@ function planInAddress(): string | null {
 const today = localIsoDate(new Date());
 const storage = browserStorage();
 const inAddress = planInAddress();
+const opened = inAddress === null ? null : readPlanParam(inAddress, today, DATA.dictionary);
 
-/** A plan in the URL wins; else the last plan stored on this device; else empty. */
+/**
+ * A plan in the URL wins; else the last plan stored on this device; else empty.
+ * A link whose days have all passed opens nothing: the stored plan stays.
+ */
 export const store = createAppStore(
 	DATA,
 	today,
-	resolveInitial(
-		inAddress === null ? null : decodePlan(inAddress, today, DATA.dictionary),
-		loadStored(storage, today, DATA.dictionary),
-	),
+	resolveInitial(opened?.plan ?? null, loadStored(storage, today, DATA.dictionary)),
 );
+if (opened?.passed) toast(PASSED_LINK);
 
 const save = ({ plan, grocery }: AppState) => saveStored(storage, { plan, grocery });
 save(store.getState());

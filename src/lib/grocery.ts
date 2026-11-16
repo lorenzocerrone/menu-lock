@@ -156,8 +156,9 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		line.extra = true;
 	}
 
-	// Hand-typed things join the line of the dictionary ingredient they name, if it
-	// is on the list; otherwise they get their own line in "Other", by name.
+	// Hand-typed things join the line of the dictionary ingredient they name, in its
+	// aisle, whether or not a recipe needs it (so its tick is the same either way);
+	// anything else gets its own line in "Other", by name.
 	for (const extra of plan.extras) {
 		if (extra.kind === "custom")
 			typed.push({ name: extra.name, quantity: extra.quantity, extra: true });
@@ -166,7 +167,8 @@ export function aggregate(plan: Plan, from: IsoDate, to: IsoDate, data: Data): G
 		const name = extra.name.trim();
 		if (name === "") continue;
 		const known = lookup(data.dictionary, name);
-		const key = known && lines.has(known.key) ? known.key : customKey(name);
+		if (known) lineFor(known.key);
+		const key = known ? known.key : customKey(name);
 		let slot = lines.get(key);
 		if (!slot) {
 			slot = {

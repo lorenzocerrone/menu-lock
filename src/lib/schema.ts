@@ -47,6 +47,12 @@ export const ingredientSchema = z.strictObject({
 	name: text.describe("Display name, capitalised: shown on the recipe and the grocery list."),
 	unit: z.enum(SHOPPING_UNITS).describe("The shopping unit: how it is bought and summed."),
 	aisle: z.enum(AISLES).describe("Grocery aisle. Meat and Fish make a recipe non-vegetarian."),
+	vegetarian: z
+		.literal(false)
+		.optional()
+		.describe(
+			"false for an animal product outside the Meat and Fish aisles (gelatin): it makes a recipe non-vegetarian.",
+		),
 	count: countSchema.optional(),
 	aliases: z.array(text).optional().describe("Other names for the same thing to buy."),
 });

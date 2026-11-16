@@ -264,7 +264,7 @@ function resolveRecipe(
 			);
 			return;
 		}
-		if (MEAT_AISLES.includes(entry.aisle)) vegetarian = false;
+		if (MEAT_AISLES.includes(entry.aisle) || entry.vegetarian === false) vegetarian = false;
 		if (line.amount === undefined && line.unit !== undefined)
 			problems.push(`${at}: "unit" without "amount" ("to taste" has no unit)`);
 		const resolved: RecipeLine = {

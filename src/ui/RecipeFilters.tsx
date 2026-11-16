@@ -10,7 +10,7 @@ import {
 	TIME_CAPS,
 	toggle,
 } from "../lib/filters";
-import { formatOption } from "../lib/format";
+import { formatCount, formatOption } from "../lib/format";
 import { Chip } from "./Chip";
 
 type Props = {
@@ -56,6 +56,7 @@ export function RecipeFilters({ recipes, query, onChange }: Props) {
 									<Chip
 										key={`${option.kind}:${option.value}`}
 										label={formatOption(optionLabel(option), count)}
+										ariaLabel={`${optionLabel(option)}, ${formatCount(count, "recipe")}`}
 										on={isOn(query, option)}
 										dim={count === 0}
 										onClick={() => onChange(toggle(query, option))}

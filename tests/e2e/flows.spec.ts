@@ -10,24 +10,24 @@ test("1. recipe filters live in the address and survive a reload and a visit to 
 	await expect(page.getByText("39 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Filters" }).click();
-	await page.getByRole("button", { name: /^vegetarian \d+$/ }).click();
-	await page.getByRole("button", { name: /^≤20 min \d+$/ }).click();
-	await page.getByRole("button", { name: "Show 12 recipes" }).click();
+	await page.getByRole("button", { name: /^vegetarian, \d+ recipes?$/ }).click();
+	await page.getByRole("button", { name: /^≤20 min, \d+ recipes?$/ }).click();
+	await page.getByRole("button", { name: "Show 11 recipes" }).click();
 
 	await expect(page).toHaveURL(/diet=veg/);
 	await expect(page).toHaveURL(/time=20/);
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Filters · 2" })).toBeVisible();
 	await expect(page.getByRole("heading", { name: "Spaghetti Carbonara" })).toHaveCount(0);
 
 	await page.reload();
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 	await expect(page.getByRole("button", { name: "Remove filter vegetarian" })).toBeVisible();
 
 	await page.getByRole("link", { name: /Fennel and Orange Salad/ }).click();
 	await expect(page.getByRole("heading", { name: "Fennel and Orange Salad" })).toBeVisible();
 	await page.getByRole("button", { name: "‹ Back" }).click();
-	await expect(page.getByText("12 of 39")).toBeVisible();
+	await expect(page.getByText("11 of 39")).toBeVisible();
 
 	await page.getByRole("button", { name: "Remove filter vegetarian" }).click();
 	await expect(page).not.toHaveURL(/diet=/);
@@ -36,7 +36,9 @@ test("1. recipe filters live in the address and survive a reload and a visit to 
 	await expect(page).toHaveURL(/q=fennel/);
 });
 
-test("2. a recipe rescales with its servings and is added to the week", async ({ page }) => {
+test("2. a recipe rescales with its servings and is added to the week at them", async ({
+	page,
+}) => {
 	await open(page, "/recipe/beef_stew_wine_olives");
 	await expect(page.getByRole("heading", { name: "Beef Stew with Wine and Olives" })).toBeVisible();
 	await expect(page.getByRole("navigation", { name: "Sections" })).toBeHidden();
@@ -59,11 +61,14 @@ test("2. a recipe rescales with its servings and is added to the week", async ({
 
 	await page.getByRole("button", { name: "Add to week" }).click();
 	await page.getByRole("button", { name: /^Tomorrow/ }).click();
-	await expect(page.getByTestId("toast")).toHaveText("Added to tomorrow");
+	await expect(page.getByTestId("toast")).toHaveText("Added to tomorrow · serves 5");
 	await expect(page).toHaveURL(/plan=/);
 
 	await page.getByRole("button", { name: "Add to week" }).click();
 	await expect(page.getByRole("button", { name: "Tomorrow 1 meal" })).toBeVisible();
+	await page.getByRole("button", { name: "Close" }).click();
+	await page.goto(page.url().replace("#/recipe/beef_stew_wine_olives", "#/planner"));
+	await expect(page.getByRole("button", { name: /^Beef Stew.*serves 5/ })).toBeVisible();
 });
 
 test("an unknown recipe has a friendly way back", async ({ page }) => {
@@ -93,7 +98,7 @@ test("3. the planner adds a meal, changes servings, moves, reorders and removes"
 	await page.getByRole("dialog").getByRole("button", { name: "Filters" }).click();
 	await page
 		.getByRole("dialog")
-		.getByRole("button", { name: /^Greek \d+$/ })
+		.getByRole("button", { name: /^Greek, \d+ recipes?$/ })
 		.click();
 	await page
 		.getByRole("dialog")

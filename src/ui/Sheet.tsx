@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useRef } from "react";
 import { Drawer } from "vaul";
 
 type Props = {
@@ -13,15 +13,28 @@ type Props = {
 /**
  * A sheet of paper over the page: a bottom sheet on phones (drag down to
  * dismiss), a centred dialog from 720px. Closes on the backdrop, Esc and its
- * close button.
+ * close button. It takes the keyboard focus while open and gives it back to
+ * what had it before (the button that opened it), if that is still there.
  */
 export function Sheet({ open, onClose, title, children, footer }: Props) {
+	// Read while rendering the sheet open, before it moves the focus into itself.
+	const opener = useRef<HTMLElement | null>(null);
+	const wasOpen = useRef(false);
+	if (open && !wasOpen.current && document.activeElement instanceof HTMLElement)
+		opener.current = document.activeElement;
+	wasOpen.current = open;
 	return (
-		<Drawer.Root open={open} onOpenChange={(next) => !next && onClose()}>
+		<Drawer.Root autoFocus open={open} onOpenChange={(next) => !next && onClose()}>
 			<Drawer.Portal>
 				<Drawer.Overlay className="fixed inset-0 z-40 bg-scrim" />
 				<Drawer.Content
 					aria-describedby={undefined}
+					onCloseAutoFocus={(event) => {
+						const back = opener.current;
+						if (!back?.isConnected) return;
+						event.preventDefault();
+						back.focus();
+					}}
 					// From 720px the content covers the screen to centre the panel; a click beside the panel closes.
 					onClick={(event) => event.target === event.currentTarget && onClose()}
 					className="fixed inset-x-0 bottom-0 z-40 flex max-h-[90dvh] flex-col outline-none wide:inset-0 wide:max-h-none wide:items-center wide:justify-center"

@@ -110,7 +110,7 @@ function Meal({ place, entry, onOpen }: { place: Place; entry: MealEntry; onOpen
 				{...attributes}
 				{...listeners}
 				aria-label={`Move ${mealTitle(entry)}`}
-				className="-mr-2 flex h-full w-10 shrink-0 cursor-grab touch-none items-center justify-center font-mono text-muted"
+				className="-mr-2 flex h-full w-11 shrink-0 cursor-grab touch-none items-center justify-center font-mono text-muted"
 			>
 				⋮⋮
 			</button>

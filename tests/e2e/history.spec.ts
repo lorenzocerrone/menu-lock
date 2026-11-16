@@ -62,3 +62,43 @@ test("a link pasted into an open tab loads its plan", async ({ page }) => {
 	await page.reload();
 	await expect(page.getByText("2 meals · 14 days")).toBeVisible();
 });
+
+test("a link typed into a tab that is already open loads its plan", async ({ page }) => {
+	await open(page, "/", { dates: { [iso(1)]: ["carbonara"] } });
+	await expect(page.getByRole("heading", { name: "Recipes" })).toBeVisible();
+	// page.goto in the same tab carries the router's history state, as a typed address can.
+	await open(page, "/planner", { dates: { [iso(2)]: ["tiramisu"] } });
+	await expect(page.getByText("1 meal · 14 days")).toBeVisible();
+	await expect(page.getByRole("button", { name: "Tiramisù", exact: true })).toBeVisible();
+});
+
+test("a link whose days have all passed keeps the plan on this device", async ({ page }) => {
+	await open(page, "/planner", { dates: { [iso(1)]: ["carbonara"] } });
+	await expect(page.getByText("1 meal · 14 days")).toBeVisible();
+	await page.evaluate(
+		(plan) => {
+			window.location.hash = `#/planner?plan=${plan}`;
+		},
+		planParam({
+			dates: { [iso(-3)]: ["lasagna"] },
+			extras: [{ name: "Bin bags", quantity: null }],
+		}),
+	);
+	await expect(page.getByTestId("toast")).toHaveText("That plan's days have passed");
+	await expect(
+		page.getByRole("button", { name: "Spaghetti Carbonara", exact: true }),
+	).toBeVisible();
+
+	// Opened cold, the same.
+	await page.goto(`/#/planner?plan=${planParam({ dates: { [iso(-3)]: ["lasagna"] } })}`);
+	await page.reload();
+	await expect(
+		page.getByRole("button", { name: "Spaghetti Carbonara", exact: true }),
+	).toBeVisible();
+});
+
+test("a date far in the future can't hang the planner", async ({ page }) => {
+	await open(page, "/planner", { dates: { "9999-12-31": ["carbonara"], [iso(1)]: ["lasagna"] } });
+	await expect(page.getByText("1 meal · 14 days")).toBeVisible();
+	await expect(page.getByRole("button", { name: "Lasagna", exact: true })).toBeVisible();
+});

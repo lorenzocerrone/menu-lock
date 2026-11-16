@@ -82,17 +82,19 @@ describe("loadData", () => {
 		expect(dal?.image).toBe("placeholder.svg");
 	});
 
-	it("computes vegetarian from the Meat and Fish aisles, and total time", () => {
+	it("computes vegetarian from the Meat and Fish aisles, an ingredient marked not vegetarian, and total time", () => {
 		const { data } = load([
 			recipeFile("carbonara", 2, [{ ingredient: "guanciale", amount: 100, unit: "g" }], {
 				prepTime: 10,
 			}),
 			recipeFile("salmon_rice", 2, [{ ingredient: "salmon", amount: 2, unit: "fillets" }]),
 			recipeFile("eggs", 1, [{ ingredient: "egg", amount: 2 }], { cookTime: 0 }),
+			recipeFile("jelly", 1, [{ ingredient: "gelatin", amount: 4, unit: "g" }]),
 		]);
 		expect(data?.recipes.map((r) => [r.id, r.vegetarian, r.totalTime])).toEqual([
 			["carbonara", false, 10],
 			["eggs", true, 0],
+			["jelly", false, null],
 			["salmon_rice", false, null],
 		]);
 	});

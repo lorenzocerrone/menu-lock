@@ -103,6 +103,10 @@ describe("format", () => {
 			[2.54, { unit: "g" }, "2.5 g"],
 			[249.6, { unit: "g" }, "250 g"],
 			[999, { unit: "g" }, "999 g"],
+			[999.6, { unit: "g" }, "1 kg"],
+			[999.5, { unit: "ml" }, "1 l"],
+			[9.96, { unit: "g" }, "10 g"],
+			[0.04, { unit: "g" }, "0.1 g"],
 			[1000, { unit: "g" }, "1 kg"],
 			[1500, { unit: "g" }, "1.5 kg"],
 			[1234, { unit: "g" }, "1.23 kg"],
@@ -211,7 +215,9 @@ describe("format", () => {
 		expect(formatRange(today, today, today)).toBe("Today");
 		expect(formatRange(today, d(1), today)).toBe("Today – Tomorrow");
 		expect(formatRange(today, d(6), today)).toBe("Today – Sat 31");
-		expect(formatRange(d(2), d(9), today)).toBe("Tue 27 – Tue 3");
+		expect(formatRange(d(2), d(4), today)).toBe("Tue 27 – Thu 29");
+		expect(formatRange(d(2), d(9), today)).toBe("Tue 27 Oct – Tue 3 Nov");
+		expect(formatRange(today, d(87), today)).toBe("Today – Wed 20 Jan");
 	});
 
 	it("counts things, with the right noun", () => {
@@ -236,6 +242,7 @@ describe("format", () => {
 		const today = "2026-10-25";
 		expect(formatAddedTo(today, today)).toBe("Added to today");
 		expect(formatAddedTo(addDays(today, 1), today)).toBe("Added to tomorrow");
+		expect(formatAddedTo(addDays(today, 1), today, 5)).toBe("Added to tomorrow · serves 5");
 		expect(formatMovedTo(addDays(today, 6), today)).toBe("Moved to Sat 31 Oct");
 	});
 

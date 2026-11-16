@@ -23,6 +23,8 @@ import {
 	setChanges,
 	setItem,
 	setServings,
+	sharesRecipe,
+	withOwnServings,
 } from "./plan";
 
 /** A Sunday. */
@@ -79,6 +81,37 @@ describe("plan", () => {
 		plan = setServings(plan, d(0), 0, undefined);
 		expect(day(plan, d(0))[0]).toEqual({ recipe: "dal" });
 		expect(setServings(plan, d(0), 0, undefined)).toBe(plan);
+	});
+
+	it("adds a meal with the servings it was given, or the recipe's own", () => {
+		let plan = addMeal(EMPTY_PLAN, d(0), "dal", 5, 4);
+		plan = addMeal(plan, d(0), "dal", 4, 4);
+		plan = addMeal(plan, d(0), "soup");
+		expect(day(plan, d(0))).toEqual([
+			{ recipe: "dal", servings: 5 },
+			{ recipe: "dal" },
+			{ recipe: "soup" },
+		]);
+	});
+
+	it("stores spelled-out servings equal to the recipe's own as absent", () => {
+		const own = (id: string) => (id === "dal" ? 4 : undefined);
+		let plan = addMeal(EMPTY_PLAN, d(0), "dal", 4); // spelled out, as in a hand-written link
+		plan = addMeal(plan, d(0), "dal", 6, 4);
+		plan = addMeal(plan, d(1), "unknown", 4);
+		expect(withOwnServings(plan, own).dates).toEqual({
+			[d(0)]: [{ recipe: "dal" }, { recipe: "dal", servings: 6 }],
+			[d(1)]: [{ recipe: "unknown", servings: 4 }],
+		});
+		const clean = addMeal(EMPTY_PLAN, d(0), "dal", 6, 4);
+		expect(withOwnServings(clean, own)).toBe(clean);
+	});
+
+	it("tells whether two plans have a recipe in common", () => {
+		const a = addMeal(addMeal(EMPTY_PLAN, d(0), "dal"), d(1), "soup");
+		expect(sharesRecipe(a, addMeal(EMPTY_PLAN, d(3), "soup"))).toBe(true);
+		expect(sharesRecipe(a, addMeal(EMPTY_PLAN, d(0), "tacos"))).toBe(false);
+		expect(sharesRecipe(a, EMPTY_PLAN)).toBe(false);
 	});
 
 	it("moves a meal to the end of another day, keeping servings and dropping an emptied day", () => {

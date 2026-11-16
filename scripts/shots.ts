@@ -45,6 +45,7 @@ const SCREENS = [
 	{ name: "planner-empty", hash: "#/planner" },
 	{ name: "grocery", hash: `#/grocery?plan=${PLAN}` },
 	{ name: "grocery-empty", hash: "#/grocery" },
+	{ name: "not-found", hash: "#/shopping" },
 ];
 
 const VIEWPORTS = [

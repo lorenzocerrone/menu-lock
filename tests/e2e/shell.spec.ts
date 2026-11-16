@@ -34,3 +34,32 @@ test("a deep link survives a reload", async ({ page }) => {
 	await page.reload();
 	await expect(page.getByRole("heading", { name: "Grocery" })).toBeVisible();
 });
+
+test("a sheet takes the keyboard focus, keeps it, and gives it back", async ({ page }, info) => {
+	test.skip(info.project.name !== "desktop", "keyboard");
+	await open(page, "/planner");
+	const trigger = page.getByRole("button", { name: /^Add a meal on / }).first();
+	await trigger.focus();
+	await page.keyboard.press("Enter");
+	const dialog = page.getByRole("dialog");
+	await expect(dialog).toBeVisible();
+	for (let i = 0; i < 25; i++) {
+		await page.keyboard.press("Tab");
+		const inside = await dialog.evaluate((el) => el.contains(document.activeElement));
+		expect(inside, `Tab ${i + 1} stays in the sheet`).toBe(true);
+	}
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+	await expect(trigger).toBeFocused();
+});
+
+test("an address that is no page has the tabs and a way back, keeping the plan", async ({
+	page,
+}) => {
+	const param = planParam({ dates: { [iso(1)]: ["carbonara"] } });
+	await page.goto(`/#/shopping?plan=${param}`);
+	await expect(page.getByRole("heading", { name: "No such page" })).toBeVisible();
+	await page.getByRole("link", { name: "‹ All recipes" }).click();
+	await expect(page.getByText("39 of 39")).toBeVisible();
+	await expect(page).toHaveURL(new RegExp(`plan=${param}`));
+});
