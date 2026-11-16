@@ -1,7 +1,15 @@
-type Props = { value: number; onChange: (value: number) => void; label: string; min?: number };
+import { MAX_SERVINGS } from "../lib/planCodec";
 
-/** − n +, for servings. Never goes below `min`. */
-export function Stepper({ value, onChange, label, min = 1 }: Props) {
+type Props = {
+	value: number;
+	onChange: (value: number) => void;
+	label: string;
+	min?: number;
+	max?: number;
+};
+
+/** − n +, for servings. Stays between `min` and `max`. */
+export function Stepper({ value, onChange, label, min = 1, max = MAX_SERVINGS }: Props) {
 	const button =
 		"flex size-11 items-center justify-center font-mono text-xl text-sienna disabled:text-faint";
 	return (
@@ -24,7 +32,8 @@ export function Stepper({ value, onChange, label, min = 1 }: Props) {
 			<button
 				type="button"
 				aria-label={`More ${label.toLowerCase()}`}
-				onClick={() => onChange(value + 1)}
+				disabled={value >= max}
+				onClick={() => onChange(Math.min(max, value + 1))}
 				className={button}
 			>
 				+

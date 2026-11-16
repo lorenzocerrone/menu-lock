@@ -2,7 +2,16 @@ import { describe, expect, it } from "vitest";
 import { addDays } from "./dates";
 import { fixtureData, recipeFile } from "./fixtures";
 import { addExtra, addItem, addMeal, EMPTY_PLAN, type Plan, setChanges, setServings } from "./plan";
-import { decodePlan, encodePlan, fromWire, toWire } from "./planCodec";
+import {
+	decodePlan,
+	encodePlan,
+	fromWire,
+	MAX_SERVINGS,
+	PLAN_HORIZON_DAYS,
+	readPlanParam,
+	readWire,
+	toWire,
+} from "./planCodec";
 
 /** A Sunday. */
 const TODAY = "2026-10-25";
@@ -103,7 +112,6 @@ describe("plan wire format", () => {
 		])
 			expect(read(json), json).toBeNull();
 		expect(read('{"dates":{"2026-10-25":[{"servings":2}]}}')).toBeNull();
-		expect(read('{"dates":{"2026-10-25":[{"recipe":"dal","servings":0}]}}')).toBeNull();
 		expect(read('{"extras":[{"ingredient":"milk"}]}')).toBeNull();
 		// Weekday plans and meal slots from before plans were dated.
 		expect(read('{"days":[["oats"],[],[],[],[],["pizza"],["roast"]]}')).toBeNull();
@@ -223,6 +231,59 @@ describe("what menu.lock added to the wire", () => {
 	});
 });
 
+describe("reading a plan that is partly wrong", () => {
+	const dates = (json: string) => read(json)?.dates;
+
+	it("drops a meal it can't read and keeps the rest of the day and the plan", () => {
+		expect(dates(`{"dates":{"${d(1)}":[{"servings":2},null,7,"dal"],"${d(2)}":["soup"]}}`)).toEqual(
+			{ [d(1)]: [{ recipe: "dal" }], [d(2)]: [{ recipe: "soup" }] },
+		);
+	});
+
+	it("drops a day it can't read and keeps the others", () => {
+		expect(dates(`{"dates":{"tomorrow":["x"],"${d(1)}":"dal","${d(2)}":["soup"]}}`)).toEqual({
+			[d(2)]: [{ recipe: "soup" }],
+		});
+	});
+
+	it("drops an extra it can't read and keeps the others", () => {
+		expect(
+			read('{"extras":[{"ingredient":"milk"},{"name":"Candles","quantity":null}]}')?.extras,
+		).toEqual([{ kind: "custom", name: "Candles", quantity: null }]);
+	});
+
+	it("falls back to the recipe's servings when they make no sense, and caps them", () => {
+		const meals = dates(
+			`{"dates":{"${d(1)}":[{"recipe":"a","servings":0},{"recipe":"b","servings":2.6},` +
+				`{"recipe":"c","servings":"3"},{"recipe":"d","servings":100000}]}}`,
+		)?.[d(1)];
+		expect(meals).toEqual([
+			{ recipe: "a" },
+			{ recipe: "b", servings: 3 },
+			{ recipe: "c" },
+			{ recipe: "d", servings: MAX_SERVINGS },
+		]);
+	});
+
+	it("drops days beyond the horizon, so a hand-edited date can't hang the planner", () => {
+		expect(
+			dates(
+				`{"dates":{"9999-12-31":["a"],"${d(PLAN_HORIZON_DAYS + 1)}":["b"],"${d(PLAN_HORIZON_DAYS)}":["c"]}}`,
+			),
+		).toEqual({ [d(PLAN_HORIZON_DAYS)]: [{ recipe: "c" }] });
+		expect(read('{"dates":{"9999-12-31":["a"]}}')).toBeNull();
+	});
+
+	it("says what it dropped", () => {
+		const { dropped } = readWire(
+			JSON.parse(`{"dates":{"${d(-3)}":["a"],"${d(-1)}":[],"${d(1)}":["b",null]},"extras":[7]}`),
+			TODAY,
+			dictionary,
+		);
+		expect(dropped).toEqual({ past: 1, unreadable: 2 });
+	});
+});
+
 describe("plan parameter", () => {
 	it("round-trips through base64url without padding", () => {
 		let plan = addMeal(EMPTY_PLAN, d(3), "carbonara");
@@ -243,6 +304,19 @@ describe("plan parameter", () => {
 		plan = addMeal(plan, d(2), "dal");
 		const later = decode(encodePlan(plan) ?? "", d(1));
 		expect(later).toEqual({ dates: { [d(2)]: [{ recipe: "dal" }] }, extras: [] });
+	});
+
+	it("opens nothing for a link whose days have all passed, and says so", () => {
+		const old = encodePlan({
+			dates: { [d(0)]: [{ recipe: "soup" }] },
+			extras: [{ kind: "custom", name: "Bin bags", quantity: null }],
+		});
+		expect(readPlanParam(old ?? "", d(1), dictionary)).toMatchObject({ plan: null, passed: true });
+		expect(readPlanParam(old ?? "", d(0), dictionary)).toMatchObject({ passed: false });
+		// A link with only extras was never about days.
+		const extras = encodePlan(addExtra(EMPTY_PLAN, { kind: "catalog", key: "salt" })) ?? "";
+		expect(readPlanParam(extras, d(5), dictionary)).toMatchObject({ passed: false });
+		expect(readPlanParam(extras, d(5), dictionary).plan?.extras).toHaveLength(1);
 	});
 
 	it("rejects garbage", () => {

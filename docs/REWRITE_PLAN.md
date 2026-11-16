@@ -310,7 +310,10 @@ without padding:
   the amount + unit as its quantity text.
 - Unknown recipe ids in a link are kept (not dropped), and shown as
   "Unknown recipe (id)", so a link from a newer version doesn't lose data.
-- Garbage (bad base64, bad JSON, wrong shape) decodes to "no plan in the URL".
+- Garbage (bad base64, bad JSON, wrong shape) decodes to "no plan in the URL". Within a
+  plan, a day, meal or extra that can't be read is dropped and the rest kept; days more
+  than 365 ahead are dropped; servings are whole numbers from 1 to 99. A link whose days
+  have all passed is "no plan" too, with a toast.
 
 Location: `?plan=<base64url>` in the hash-route search params, e.g.
 `/menu-lock/#/grocery?plan=eyJkYXRlcyI6…`. Every route carries it. After each plan change,
@@ -378,7 +381,8 @@ not, as in cooking-rs). With nothing to buy: "No meals selected yet."
   [{ key, amount, custom }], range: "all" | { days: n } } }`. Refuse a payload with a
   newer `version` than the build knows. Writes ignore failures (private mode, quota).
 - **Startup precedence:** a plan in the URL wins; else the last plan stored on this
-  device; else empty. The grocery state is always this device's.
+  device; else empty. The grocery state is always this device's; its ticks are cleared
+  when the URL brings a plan with no recipe in common with the stored one.
 - PR previews use their own key (`menu-lock.pr-12.state`) so they never touch the real
   data.
 - **One-time import from cooking-rs:** both apps live on the same origin
